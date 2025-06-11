@@ -34,12 +34,12 @@ void registerCoreCellOctSerialTests() {
 // Test instanciation of core template classes
 bool testCoreTemplateClasses() {
   Cell<2> cell2;
-  Cell<2,2> cell22;
-  Cell<2,2,2> cell222;
+  Cell<2, 2> cell22;
+  Cell<2, 2, 2> cell222;
   Oct< Cell<2> > oct2;
-  Oct< Cell<2,2> > oct22;
-  Oct< Cell<2,2,2> > oct222;
-  CellData< Cell<2> > cellData2;
+  Oct< Cell<2, 2> > oct22;
+  Oct< Cell<2, 2, 2> > oct222;
+  CellData cellData;
 
   bool passed = true;
   // Number of dimensions

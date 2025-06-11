@@ -5,8 +5,7 @@
 //***********************************************************//
 
 // Constructor
-template<typename CellType>
-CellData<CellType>::CellData(): value{0} {}
+CellData::CellData(): value{0} {}
 
 
 //***********************************************************//
@@ -14,9 +13,23 @@ CellData<CellType>::CellData(): value{0} {}
 //***********************************************************//
 
 // Get the computation load of the cell
-template<typename CellType>
-double CellData<CellType>::getLoad(const std::shared_ptr<CellType> &cell) const {
-  return cell->isLeaf() ? 1. : 0.;
+double CellData::getLoad(bool isLeaf, const std::shared_ptr<void> &cell) const {
+  return isLeaf ? 1. : 0.;
+}
+
+// Get the value of the cell
+double CellData::getValue() const {
+  return value;
+}
+
+
+//***********************************************************//
+//  MUTATORS                                                 //
+//***********************************************************//
+
+// Set the value of the cell
+void CellData::setValue(const double value) {
+  this->value = value;
 }
 
 
@@ -25,19 +38,16 @@ double CellData<CellType>::getLoad(const std::shared_ptr<CellType> &cell) const 
 //***********************************************************//
 
 // Init cell data as a vector of double
-template<typename CellType>
-void CellData<CellType>::fromVectorOfData(const std::vector<double> &buffer) {
+void CellData::fromVectorOfData(const std::vector<double> &buffer) {
   value = buffer[0];
 }
 
 // Return cell data as a vector of double
-template<typename CellType>
-std::vector<double> CellData<CellType >::toVectorOfData() const {
+std::vector<double> CellData::toVectorOfData() const {
   return {value};
 }
 
 // Return cell data size
-template<typename CellType>
-unsigned CellData<CellType>::getDataSize() const {
+unsigned CellData::getDataSize() const {
   return 1;
 }

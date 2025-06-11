@@ -12,16 +12,16 @@
 #include <memory>
 #include <tuple>
 
-template<int Nx, int Ny, int Nz> class Cell;
+template<int Nx, int Ny, int Nz, typename DataType> class Cell;
 
 #include "CellData.h"
 #include "Oct.h"
 
-template<int Nx = 2, int Ny = 1, int Nz = 1>
+template<int Nx = 2, int Ny = 1, int Nz = 1, typename DataType = CellData>
 class Cell {
  public:
-  using CellDataType = CellData<Cell<Nx, Ny, Nz>>;
-  using OctType = Oct<Cell<Nx, Ny, Nz>>;
+  using CellDataType = DataType;
+  using OctType = Oct<Cell<Nx, Ny, Nz, DataType>>;
   static constexpr int number_dimensions = (Nx>1) + (Ny>1) + (Nz>1);
   static constexpr int number_children = Nx * Ny * Nz;
   static constexpr int number_neighbors = 2 * number_dimensions;
@@ -38,7 +38,7 @@ class Cell {
   //  VARIABLES                                                //
   //***********************************************************//
  private:
-  std::unique_ptr<CellDataType> data;
+  std::unique_ptr<DataType> data;
   std::shared_ptr<OctType> parent_oct;
   std::shared_ptr<OctType> child_oct;
   // Cell flags indicator
@@ -84,14 +84,8 @@ class Cell {
   std::shared_ptr<OctType> getParentOct() const;
   // Get the sibling number (position of the cell in the parent oct child_cells array)
   unsigned getSiblingNumber() const;
-  // Get cell value
-  double getCellValue() { return data->getValue(); };
   // Get cell data
-  CellDataType getCellData() const { return *data; };
-  // Get cell data
-  std::unique_ptr<CellDataType> getDataSize() const { return data->getDataSize(); };
-  // Get cell vector of data
-  std::vector<double> getVectorOfData() const { return data->toVectorOfData(); };
+  DataType& getCellData() const { return *data; };
   // Get the computation load of the cell
   double getLoad() const;
   // Flags accessors
@@ -108,12 +102,8 @@ class Cell {
 	//  MUTATORS                                                 //
 	//***********************************************************//
  public:
- // Set cell value
-  void setCellValue(const double value) { data->setValue(value); };
   // Set cell data
-  void setCellData(std::unique_ptr<CellDataType>&& new_data) { data = std::move(new_data); };
-  // Set cell data
-  void setVectorOfData(const std::vector<double> &buffer) const { return data->fromVectorOfData(buffer); };
+  void setCellData(std::unique_ptr<DataType>&& new_data) { data = std::move(new_data); };
   // Flags mutators
   void setToThisProc()  { indicator = indicator%3; }
   void setToOtherProc() { indicator = 3 + indicator%3; }

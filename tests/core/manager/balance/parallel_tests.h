@@ -10,6 +10,7 @@
 
 bool balanceEmptyPartitionsParallel(int rank, int size);
 bool balanceEmptyPartitionsDataParallel(int rank, int size);
+bool balanceEmptyPartitionsCustomDataParallel(int rank, int size);
 bool balanceSmallOneRootParallel(int rank, int size);
 bool balanceBigOneRootParallel(int rank, int size);
 bool balanceSmallTwoRootsParallel(int rank, int size);
@@ -22,13 +23,14 @@ void registerCoreManagerBalanceParallelTests() {
   UnitTestRegistry::label = "P_" + std::to_string(rank) + ": ";
   UnitTestRegistry::registerParallelTest("Load balancing (empty partitions)", [=]() { return balanceEmptyPartitionsParallel(rank, size); }, "core/manager/balance");
   UnitTestRegistry::registerParallelTest("Load balancing (empty partitions, data exchange)", [=]() { return balanceEmptyPartitionsDataParallel(rank, size); }, "core/manager/balance");
+  UnitTestRegistry::registerParallelTest("Load balancing (empty partitions, custom data)", [=]() { return balanceEmptyPartitionsCustomDataParallel(rank, size); }, "core/manager/balance");
   UnitTestRegistry::registerParallelTest("Small load balancing (one root)", [=]() { return balanceSmallOneRootParallel(rank, size); }, "core/manager/balance");
   UnitTestRegistry::registerParallelTest("Big load balancing (one root)", [=]() { return balanceBigOneRootParallel(rank, size); }, "core/manager/balance");
   UnitTestRegistry::registerParallelTest("Small load balancing (two roots)", [=]() { return balanceSmallTwoRootsParallel(rank, size); }, "core/manager/balance");
 }
 
 // Load balancing (empty partitions)
-// Mesh at level 3 on first process (serial) and all other process have empty opartitions
+// Mesh at level 3 on first process (serial) and all other process have empty partitions
 // Then load balance between process
 bool balanceEmptyPartitionsParallel(int rank, int size) {
   using Cell2D = Cell<2,2>;
@@ -80,7 +82,7 @@ bool balanceEmptyPartitionsParallel(int rank, int size) {
 }
 
 // Load balancing (empty partitions)
-// Mesh cells on first process (serial) and all other process have empty opartitions
+// Mesh cells on first process (serial) and all other process have empty partitions
 // Set cell value data as the cell level then load balance between process
 // All process then check if cell data is equal to level
 // The cell structure in processor 0 is
@@ -127,7 +129,7 @@ bool balanceEmptyPartitionsDataParallel(int rank, int size) {
   TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
   if (iterator.toOwnedBegin())
     do {
-      iterator.getCell()->setCellValue(iterator.getCell()->getLevel());
+      iterator.getCell()->getCellData().setValue(iterator.getCell()->getLevel());
     } while (iterator.ownedNext());
 
   // Load balance the tree
@@ -150,7 +152,108 @@ bool balanceEmptyPartitionsDataParallel(int rank, int size) {
   // Check if cell data is valid (value==level)
   if (iterator.toOwnedBegin())
     do {
-      passed &= iterator.getCell()->getCellValue() == iterator.getCell()->getLevel();
+      passed &= iterator.getCell()->getCellData().getValue() == iterator.getCell()->getLevel();
+    } while (iterator.ownedNext());
+
+  // Test should pass on all processes
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
+}
+
+class TestCellData: public AbstractCellData {
+ private:
+  unsigned u_value;
+  double d_value;
+ public:
+  TestCellData(): u_value(0), d_value(1.) {};
+  ~TestCellData() = default;
+ public:
+  unsigned getUnsigned() { return u_value; }
+  void setUnsigned(unsigned u_value) { this->u_value = u_value; }
+  double getDouble() { return d_value; }
+  void setDouble(double d_value) { this->d_value = d_value; }
+  double getLoad(bool isLeaf, const std::shared_ptr<void> &cell=nullptr) const override {
+    return isLeaf ? 1. : 0.; // Can use custom load here for load balancing
+  }
+  // Conversion as vector of double for data communication
+  void fromVectorOfData(const std::vector<double> &buffer) override {
+    std::memcpy(&u_value, &buffer[0], sizeof(double));
+    d_value = buffer[1];
+  }
+  std::vector<double> toVectorOfData() const override {
+    double u_value_as_d;
+    std::memcpy(&u_value_as_d, &u_value, sizeof(double));
+    return {u_value_as_d, d_value};
+  }
+  unsigned getDataSize() const override {
+    return 2;
+  }
+};
+
+// Load balancing (empty partitions) with custom cell data
+// Same as previous test with custom CellData (TestCellData)
+bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
+  using Cell2D = Cell<2, 2, 1, TestCellData>;
+  // Create root cell
+  auto A = std::make_shared<Cell2D>(nullptr);
+
+  // Create root cell entries
+  RootCellEntry<Cell2D> eA{A};
+  std::vector< RootCellEntry<Cell2D> > entries { eA };
+
+  // Construction of the tree
+  int min_level = 2, max_level = 3;
+  Tree<Cell2D> tree(min_level, max_level, rank, size);
+  tree.createRootCells(entries);
+
+  // Split to level 3 in process 0
+  if (rank==1) {
+    unsigned counter = 0;
+    for (const auto &child: A->getChildCells())
+      if (++counter%2==0)
+        child->split(max_level);
+    for (const auto &child: A->getChildCells())
+      if (++counter%2==0)
+        for (const auto &gc: child->getChildCells())
+          if (++counter%2==0)
+            gc->split(max_level);
+    A->setToThisProcRecurs();
+  } else
+    A->setToOtherProcRecurs();
+
+  // Set cell values
+  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
+  if (iterator.toOwnedBegin())
+    do {
+      TestCellData & cellData = iterator.getCell()->getCellData();
+      cellData.setUnsigned(iterator.getCell()->getLevel());
+      cellData.setDouble(2.*iterator.getCell()->getLevel());
+    } while (iterator.ownedNext());
+
+  // Load balance the tree
+  tree.loadBalance();
+
+  // Count number of leaf cells
+  int number_leaf_cells = 1;
+  iterator.toOwnedBegin();
+  while (iterator.ownedNext())
+    ++number_leaf_cells;
+
+  // Compute the sum of all the leaf cells owned
+  unsigned total_leaf_cells;
+  unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
+
+  // Also the number of cells should be equally distributed
+  bool passed = number_leaf_cells >= total_leaf_cells/size-1;
+  passed &= number_leaf_cells <= (total_leaf_cells/size+2);
+
+  // Check if cell data is valid (value==level)
+  if (iterator.toOwnedBegin())
+    do {
+      TestCellData & cellData = iterator.getCell()->getCellData();
+      passed &= (cellData.getUnsigned() == iterator.getCell()->getLevel());
+      passed &= (cellData.getDouble() == 2.*iterator.getCell()->getLevel());
     } while (iterator.ownedNext());
 
   // Test should pass on all processes

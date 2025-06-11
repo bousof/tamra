@@ -264,7 +264,6 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
           iterator.getCell()->setCellData(std::unique_ptr<typename CellType::CellDataType>(
             static_cast<typename CellType::CellDataType*>(all_cell_data_recv[cell_counter++].release())
           ));
-          //std::cout << "P_" << rank << ": value " << iterator.getCell()->getCellValue() << std::endl;
         }
       }
   }
