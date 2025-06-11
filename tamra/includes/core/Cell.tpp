@@ -6,7 +6,8 @@
 
 // Constructor
 template<int Nx, int Ny, int Nz>
-Cell<Nx, Ny, Nz>::Cell() {
+Cell<Nx, Ny, Nz>::Cell(): data() {
+  data = std::make_unique<CellDataType>();
   indicator = 0;
 }
 
@@ -14,6 +15,7 @@ Cell<Nx, Ny, Nz>::Cell() {
 template<int Nx, int Ny, int Nz>
 Cell<Nx, Ny, Nz>::Cell(std::shared_ptr<OctType> parent_oct, int indicator)
 : indicator(indicator) {
+  data = std::make_unique<CellDataType>();
   this->parent_oct = parent_oct;
   child_oct.reset();
 }
@@ -67,7 +69,7 @@ const std::array< std::shared_ptr<Cell<Nx, Ny, Nz>>, Cell<Nx, Ny, Nz>::number_ch
 
 // Get level of the cell
 template<int Nx, int Ny, int Nz>
-int Cell<Nx, Ny, Nz>::getLevel() const {
+unsigned Cell<Nx, Ny, Nz>::getLevel() const {
   return (!isRoot() ? parent_oct->getLevel() : 0);
 }
 
@@ -85,12 +87,20 @@ unsigned Cell<Nx, Ny, Nz>::getSiblingNumber() const {
   throw std::runtime_error("No parent Oct in Cell::getSiblingNumber()");
 }
 
+// Get the computation load of the cell
+template<int Nx, int Ny, int Nz>
+double Cell<Nx, Ny, Nz>::getLoad() const {
+  return data->getLoad(thisAsSmartPtr());
+}
+
 // Get the cell as a smart pointer for referencing
 template<int Nx, int Ny, int Nz>
 std::shared_ptr< Cell<Nx, Ny, Nz> > Cell<Nx, Ny, Nz>::thisAsSmartPtr() const {
-  if (parent_oct)
+  if (!isLeaf())
+    return child_oct->getParentCell();
+  if (!isRoot())
     return parent_oct->getChildCell(parent_oct->getSiblingNumber(this));
-  throw std::runtime_error("No parent Oct in Cell::thisAsSmartPtr()");
+  throw std::runtime_error("No child/parent Oct in Cell::thisAsSmartPtr()");
 }
 
 
@@ -107,7 +117,7 @@ bool Cell<Nx, Ny, Nz>::isLeaf() const {
 // True if root cell (no parent oct)
 template<int Nx, int Ny, int Nz>
 bool Cell<Nx, Ny, Nz>::isRoot() const {
-  return parent_oct==nullptr;
+  return !parent_oct;
 }
 
 // Split a root cell (a pointer to the root is needed for back reference in child oct)

@@ -38,7 +38,7 @@ void registerCoreManagerMinLevelParallelTests() {
 // X show the leaf cells that belong to each process
 bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
   using Cell2D = Cell<2,2>;
-  // Create 4 root cells
+  // Create root cell
   auto A = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
@@ -73,9 +73,9 @@ bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
   passed &= number_leaf_cells <= (total_cells_min_level/size+1);
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Mesh at min level and count number of leaf cells belong to this process (2 root cells)
@@ -111,7 +111,7 @@ bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
 // X show the leaf cells that belong to each process
 bool meshTreeToMinLevelTwoRootsParallel(int rank, int size) {
   using Cell2D = Cell<2,2>;
-  // Create 4 root cells
+  // Create 2 root cells
   auto A = std::make_shared<Cell2D>(nullptr);
   auto B = std::make_shared<Cell2D>(nullptr);
 
@@ -149,9 +149,9 @@ bool meshTreeToMinLevelTwoRootsParallel(int rank, int size) {
   passed &= number_leaf_cells <= (total_cells_min_level/size+1);
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Mesh at min level (1 root per process)
@@ -165,7 +165,7 @@ bool meshTreeToMinLevelTwoRootsParallel(int rank, int size) {
 // root i should be the partition of process i
 bool meshTreeToMinLevelOneRootPerProcParallel(int rank, int size) {
   using Cell2D = Cell<2,2>;
-  // Create 4 root cells
+  // Create 2 root cells
   auto A = std::make_shared<Cell2D>(nullptr);
   auto B = std::make_shared<Cell2D>(nullptr);
 
@@ -203,7 +203,7 @@ bool meshTreeToMinLevelOneRootPerProcParallel(int rank, int size) {
   passed &= number_leaf_cells <= (total_cells_min_level/size+1);
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }

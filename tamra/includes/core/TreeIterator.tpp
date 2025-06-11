@@ -49,6 +49,30 @@ typename TreeIterator<CellType>::CellIdManagerType TreeIterator<CellType>::getCe
   return cell_id_manager;
 };
 
+// Construct cell id
+template<typename CellType>
+std::vector<unsigned> TreeIterator<CellType>::getCellId(const std::shared_ptr<CellType>& cell) const {
+  return indexPathToId(getCellIndexPath((cell)));
+}
+
+// Construct cell index path
+template<typename CellType>
+std::vector<unsigned> TreeIterator<CellType>::getCellIndexPath(const std::shared_ptr<CellType>& cell) const {
+  std::vector<unsigned> cell_index_path(cell->getLevel()+1);
+  // Browse parents until root  to extract index path
+  std::shared_ptr<CellType> parent = cell;
+  for (unsigned l{parent->getLevel()}; l>0; --l) {
+    cell_index_path[l] = parent->getSiblingNumber();
+    parent = parent->getParentOct()->getParentCell();
+  }
+  // Find the associated root (parent should be a root now)
+  for (unsigned i{0}; i<root_cells.size(); ++i)
+    if (root_cells[i] == parent)
+      cell_index_path[0] = i;
+
+  return cell_index_path;
+}
+
 //***********************************************************//
 //  METHODS                                                  //
 //***********************************************************//
@@ -114,16 +138,23 @@ void TreeIterator<CellType>::toBegin(const int sweep_level) {
 }
 // Go to the first leaf cell of first root belonging to this process
 template<typename CellType>
-void TreeIterator<CellType>::toOwnedBegin(const int sweep_level) {
+bool TreeIterator<CellType>::toOwnedBegin(const int sweep_level) {
   // Find first owned root
   unsigned i;
+  bool found = false;
   for (i=0; i<root_cells.size(); ++i)
-    if (root_cells[i]->belongToThisProc())
+    if (root_cells[i]->belongToThisProc()) {
+      found = true;
       break;
+    }
+
+  if (!found)
+    return false;
 
   // Go to first owned root
   toRoot(i);
   toOwnedLeaf(sweep_level, false);
+  return true;
 }
 
 // Go to the last leaf cell of last root
@@ -135,16 +166,23 @@ void TreeIterator<CellType>::toEnd(const int sweep_level) {
 }
 // Go to the last leaf cell of last root belonging to this process
 template<typename CellType>
-void TreeIterator<CellType>::toOwnedEnd(const int sweep_level) {
+bool TreeIterator<CellType>::toOwnedEnd(const int sweep_level) {
   // Find last owned root
   unsigned i;
+  bool found = false;
   for (i=root_cells.size()-1; i>=0; --i)
-    if (root_cells[i]->belongToThisProc())
+    if (root_cells[i]->belongToThisProc()) {
+      found = true;
       break;
+    }
+
+  if (!found)
+    return false;
 
   // Go to last owned root
   toRoot(i);
   toOwnedLeaf(sweep_level, true);
+  return true;
 }
 
 // Moves the iterator to a leaf cell of the current cell

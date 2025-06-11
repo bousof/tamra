@@ -1,14 +1,12 @@
 #include "../../includes/utils/array_utils.h"
 
-int cumulative_sum(const std::vector<int>& counts, std::vector<int>& displacements, bool startAtZero) {
-  displacements.resize(counts.size());
-  int sum = 0;
-  for (unsigned i = 0; i < counts.size(); ++i) {
-    if (startAtZero) 
-      displacements[i] = sum;
-    sum += counts[i];
-    if (!startAtZero) 
-      displacements[i] = sum;
-  }
-  return sum;
+std::vector<double> linspace(const double min, const double max, const unsigned count) {
+  std::vector<double> result(count);
+  result[0] = min;
+  for (unsigned i = 1; i < count-1; ++i)
+    result[i] = min + (i*(max-min))/(count-1);
+
+  if (count > 1)
+    result[count-1] = max;
+  return result;
 }

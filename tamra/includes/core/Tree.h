@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "Cell.h"
+#include "manager/BalanceManager.h"
 #include "manager/CoarseManager.h"
 #include "manager/MinLevelMeshManager.h"
 #include "manager/RefineManager.h"
@@ -20,6 +21,7 @@
 
 template<typename CellType, typename TreeIteratorType = TreeIterator<CellType>>
 class Tree {
+  using BalanceManagerType = BalanceManager<CellType>;
   using CoarseManagerType = CoarseManager<CellType>;
   using MinLevelMeshManagerType = MinLevelMeshManager<CellType>;
   using RefineManagerType = RefineManager<CellType>;
@@ -38,12 +40,14 @@ class Tree {
   const int size;
   // Root cells
   std::vector< std::shared_ptr<CellType> > root_cells;
+  // Load balancing manager
+	BalanceManagerType balanceManager;
+  // Mesh coarsening manager
+	CoarseManagerType coarseManager;
   // Min level meshing manager
 	MinLevelMeshManagerType minLevelMeshManager;
   // Mesh refinement manager
 	RefineManagerType refineManager;
-  // Mesh coarsening manager
-	CoarseManagerType coarseManager;
 
   //***********************************************************//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -78,15 +82,16 @@ class Tree {
   void meshAtMinLevel();
   void meshAtMinLevel(TreeIteratorType& iterator);
 
-  // Split all the leaf cells belonging to this proc that need to be refined  and are not at max level
+  // Split all the leaf cells belonging to this proc that need to be refined and are not at max level
   void refine();
 
   //--- Ghosts cells ------------------------------------------//
   void createGhostCells() {};
   void exchangeGhostValues() {};
   
-  //--- Load balancing ----------------------------------------//
-  void loadBalance() {};
+  // Redistribute cells among processes to balance computation load
+  void loadBalance();
+  void loadBalance(TreeIteratorType &iterator);
   
   //--- Propagating -------------------------------------------//
   void propagate() {};

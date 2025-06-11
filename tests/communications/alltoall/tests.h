@@ -44,9 +44,9 @@ bool testIntAllToAll(int rank, int size) {
   }
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Vector Int AllToAll
@@ -65,9 +65,9 @@ bool testVectorIntAllToAll(int rank, int size) {
   }
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Vector Double AllToAll (flat)
@@ -86,9 +86,9 @@ bool testVectorDoubleAllToAllFlat(int rank, int size) {
   }
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Vector Double AllToAll (split)
@@ -110,9 +110,9 @@ bool testVectorDoubleAllToAllSplit(int rank, int size) {
   }
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Mock ParallelData class for testing vectorDataAllToAll
@@ -164,9 +164,9 @@ bool testVectorDataAllToAllFixed(int rank, int size) {
   }
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Vector Data AllToAll (dynamic size)
@@ -195,7 +195,7 @@ bool testVectorDataAllToAllDynamic(int rank, int size) {
   }
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
