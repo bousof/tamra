@@ -14,12 +14,12 @@
 #include <utility>
 #include <vector>
 
-#include "manager/CellIdManager.h"
+#include "manager/BitStackedCellIdManager.h"
 
 template<typename CellType>
 class TreeIterator {
  private:
-  using CellIdManagerType = CellIdManager<CellType>;
+  using CellIdManagerType = BitStackedCellIdManager<CellType>;
   //***********************************************************//
   //  DATA                                                     //
   //***********************************************************//
