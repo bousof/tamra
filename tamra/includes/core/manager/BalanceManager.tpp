@@ -272,11 +272,14 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
 // Compress the structure of cells (1 cell ID + other cell levels)
 template<typename CellType, typename TreeIteratorType>
 void BalanceManager<CellType, TreeIteratorType>::compressCellStructure(const std::vector<unsigned> &first_cell_id, const std::vector<unsigned> &cell_levels, std::vector<unsigned> &cell_structure) {
-  cell_structure.resize(first_cell_id.size() + cell_levels.size());
+  cell_structure.resize(first_cell_id.size());
   // Insert the first cell ID
   std::copy(first_cell_id.begin(), first_cell_id.end(), cell_structure.begin());
   // Insert the other cells levels
-  std::copy(cell_levels.begin(), cell_levels.end(), cell_structure.begin()+first_cell_id.size());
+  std::vector<unsigned> cell_levels_data;
+  compress_unsigned_vector(cell_levels, cell_levels_data, max_level);
+  cell_structure.resize(first_cell_id.size() + cell_levels_data.size());
+  std::copy(cell_levels_data.begin(), cell_levels_data.end(), cell_structure.begin()+first_cell_id.size());
 }
 
 // Uncompress the structure of cells (1 cell ID + other cell levels)
@@ -286,8 +289,9 @@ void BalanceManager<CellType, TreeIteratorType>::uncompressCellStructure(const s
   first_cell_id.resize(cell_id_size);
   std::copy(cell_structure.begin(), cell_structure.begin() + cell_id_size, first_cell_id.begin());
   // Extract the other cells levels
-  cell_levels.resize(cell_structure.size()-cell_id_size);
-  std::copy(cell_structure.begin() + cell_id_size, cell_structure.end(), cell_levels.begin());
+  std::vector<unsigned> cell_levels_data(cell_structure.size()-cell_id_size);
+  std::copy(cell_structure.begin() + cell_id_size, cell_structure.end(), cell_levels_data.begin());
+  uncompress_unsigned_vector(cell_levels_data, cell_levels, max_level);
 }
 
 // Set a parent to belong to this proc if any of its child do else set to other proc

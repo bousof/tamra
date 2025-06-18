@@ -17,6 +17,7 @@
 #include "../../parallel/bcast.h"
 #include "../../parallel/gather.h"
 #include "../../utils/array_utils.h"
+#include "../../utils/compression_utils.h"
 #include "../TreeIterator.h"
 
 template<typename CellType, typename TreeIteratorType = TreeIterator<CellType>>
