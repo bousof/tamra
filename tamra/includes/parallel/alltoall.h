@@ -14,7 +14,7 @@
 #include <iostream>
 #include <numeric>
 #include <vector>
-#include"parallel_data.h"
+#include"ParallelData.h"
 #include"../utils/array_utils.h"
 
 void intAllToAll(const std::vector<int>& send_buffer, std::vector<int>& recv_buffer, const int size);

@@ -12,15 +12,16 @@
 #include <memory>
 #include <tuple>
 
-template<int Nx, int Ny, int Nz> class Cell;
+template<int Nx, int Ny, int Nz, typename DataType> class Cell;
 
 #include "CellData.h"
 #include "Oct.h"
 
-template<int Nx = 2, int Ny = 1, int Nz = 1>
+template<int Nx = 2, int Ny = 1, int Nz = 1, typename DataType = CellData>
 class Cell {
  public:
-  using OctType = Oct<Cell<Nx, Ny, Nz>>;
+  using CellDataType = DataType;
+  using OctType = Oct<Cell<Nx, Ny, Nz, DataType>>;
   static constexpr int number_dimensions = (Nx>1) + (Ny>1) + (Nz>1);
   static constexpr int number_children = Nx * Ny * Nz;
   static constexpr int number_neighbors = 2 * number_dimensions;
@@ -37,7 +38,7 @@ class Cell {
   //  VARIABLES                                                //
   //***********************************************************//
  private:
-  std::unique_ptr<CellData> data;
+  std::unique_ptr<DataType> data;
   std::shared_ptr<OctType> parent_oct;
   std::shared_ptr<OctType> child_oct;
   // Cell flags indicator
@@ -78,11 +79,15 @@ class Cell {
   // Get child cells
   const std::array< std::shared_ptr<Cell>, number_children >& getChildCells() const;
   // Get level of the cell
-  int getLevel() const;
+  unsigned getLevel() const;
   // Get parent oct
   std::shared_ptr<OctType> getParentOct() const;
   // Get the sibling number (position of the cell in the parent oct child_cells array)
   unsigned getSiblingNumber() const;
+  // Get cell data
+  DataType& getCellData() const { return *data; };
+  // Get the computation load of the cell
+  double getLoad() const;
   // Flags accessors
   bool belongToThisProc() const  { return (indicator < 3); }
   bool belongToOtherProc() const { return (indicator >= 3) && (indicator < 6); }
@@ -97,7 +102,9 @@ class Cell {
 	//  MUTATORS                                                 //
 	//***********************************************************//
  public:
- // Flags mutators
+  // Set cell data
+  void setCellData(std::unique_ptr<DataType>&& new_data) { data = std::move(new_data); };
+  // Flags mutators
   void setToThisProc()  { indicator = indicator%3; }
   void setToOtherProc() { indicator = 3 + indicator%3; }
   void setToUnchange()  { indicator = indicator - (indicator%3); }

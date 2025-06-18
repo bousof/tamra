@@ -38,9 +38,9 @@ bool testVectorUnsignedBCastCount(int rank, int size) {
   bool passed = buffer == std::vector<unsigned>({2, 7, 8});
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Broadcast vector of unsigned (count unknown)
@@ -55,9 +55,9 @@ bool testVectorUnsignedBCastNoCount(int rank, int size) {
   bool passed = buffer == std::vector<unsigned>({2, 7, 8});
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Broadcast matrix of unsigned (count known)
@@ -75,9 +75,9 @@ bool testMatrixUnsignedBCastCount(int rank, int size) {
   passed &= buffer[3] == std::vector<unsigned>({10, 11, 12});
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Broadcast matrix of unsigned (count unknown)
@@ -95,7 +95,7 @@ bool testMatrixUnsignedBCastNoCount(int rank, int size) {
   passed &= buffer[3] == std::vector<unsigned>({10, 11, 12});
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }

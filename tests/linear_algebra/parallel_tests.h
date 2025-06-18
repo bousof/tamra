@@ -51,9 +51,9 @@ bool testJacobiNoOverlapParallel100(int rank, int size) {
   }
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }
 
 // Jacobi parallel (no overlap, 100 iter)
@@ -95,7 +95,7 @@ bool testJacobiOverlapParallel100(int rank, int size) {
   }
 
   // Test should pass on all processes
-  bool allpassed;
-  boolAndAllReduce(passed, allpassed);
-  return allpassed;
+  bool all_passed;
+  boolAndAllReduce(passed, all_passed);
+  return all_passed;
 }

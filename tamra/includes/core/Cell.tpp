@@ -5,34 +5,36 @@
 //***********************************************************//
 
 // Constructor
-template<int Nx, int Ny, int Nz>
-Cell<Nx, Ny, Nz>::Cell() {
+template<int Nx, int Ny, int Nz, typename DataType>
+Cell<Nx, Ny, Nz, DataType>::Cell(): data() {
+  data = std::make_unique<DataType>();
   indicator = 0;
 }
 
 // Constructor (parent_oct=nullptr for root cell)
-template<int Nx, int Ny, int Nz>
-Cell<Nx, Ny, Nz>::Cell(std::shared_ptr<OctType> parent_oct, int indicator)
+template<int Nx, int Ny, int Nz, typename DataType>
+Cell<Nx, Ny, Nz, DataType>::Cell(std::shared_ptr<OctType> parent_oct, int indicator)
 : indicator(indicator) {
+  data = std::make_unique<DataType>();
   this->parent_oct = parent_oct;
   child_oct.reset();
 }
 
 // Destructor
-template<int Nx, int Ny, int Nz>
-Cell<Nx, Ny, Nz>::~Cell() {};
+template<int Nx, int Ny, int Nz, typename DataType>
+Cell<Nx, Ny, Nz, DataType>::~Cell() {};
 
 // Clear Cell
-template<int Nx, int Ny, int Nz>
-void Cell<Nx, Ny, Nz>::clear() {
+template<int Nx, int Ny, int Nz, typename DataType>
+void Cell<Nx, Ny, Nz, DataType>::clear() {
   if (child_oct)
     child_oct->clear();
   reset();
 }
 
 // Reset Cell
-template<int Nx, int Ny, int Nz>
-void Cell<Nx, Ny, Nz>::reset() {
+template<int Nx, int Ny, int Nz, typename DataType>
+void Cell<Nx, Ny, Nz, DataType>::reset() {
   data.reset();
   parent_oct.reset();
   if (child_oct) {
@@ -46,51 +48,59 @@ void Cell<Nx, Ny, Nz>::reset() {
 //***********************************************************//
 
 // Get child oct
-template<int Nx, int Ny, int Nz>
-std::shared_ptr< typename Cell<Nx, Ny, Nz>::OctType > Cell<Nx, Ny, Nz>::getChildOct() const {
+template<int Nx, int Ny, int Nz, typename DataType>
+std::shared_ptr< typename Cell<Nx, Ny, Nz, DataType>::OctType > Cell<Nx, Ny, Nz, DataType>::getChildOct() const {
   return child_oct;
 };
 
 // Get a specific child cell
-template<int Nx, int Ny, int Nz>
-std::shared_ptr< Cell<Nx, Ny, Nz> > Cell<Nx, Ny, Nz>::getChildCell(const unsigned neighbor_sibling_number) const {
+template<int Nx, int Ny, int Nz, typename DataType>
+std::shared_ptr< Cell<Nx, Ny, Nz, DataType> > Cell<Nx, Ny, Nz, DataType>::getChildCell(const unsigned neighbor_sibling_number) const {
   if (!isLeaf())
     return getChildOct()->getChildCell(neighbor_sibling_number);
   return nullptr;
 };
 
 // Get child cells
-template<int Nx, int Ny, int Nz>
-const std::array< std::shared_ptr<Cell<Nx, Ny, Nz>>, Cell<Nx, Ny, Nz>::number_children >& Cell<Nx, Ny, Nz>::getChildCells() const {
+template<int Nx, int Ny, int Nz, typename DataType>
+const std::array< std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>, Cell<Nx, Ny, Nz, DataType>::number_children >& Cell<Nx, Ny, Nz, DataType>::getChildCells() const {
   return child_oct->getChildCells();
 };
 
 // Get level of the cell
-template<int Nx, int Ny, int Nz>
-int Cell<Nx, Ny, Nz>::getLevel() const {
+template<int Nx, int Ny, int Nz, typename DataType>
+unsigned Cell<Nx, Ny, Nz, DataType>::getLevel() const {
   return (!isRoot() ? parent_oct->getLevel() : 0);
 }
 
 // Get parent oct
-template<int Nx, int Ny, int Nz>
-std::shared_ptr< typename Cell<Nx, Ny, Nz>::OctType > Cell<Nx, Ny, Nz>::getParentOct() const {
+template<int Nx, int Ny, int Nz, typename DataType>
+std::shared_ptr< typename Cell<Nx, Ny, Nz, DataType>::OctType > Cell<Nx, Ny, Nz, DataType>::getParentOct() const {
   return parent_oct;
 };
 
 // Get the sibling number (position of the cell in the parent oct child_cells array)
-template<int Nx, int Ny, int Nz>
-unsigned Cell<Nx, Ny, Nz>::getSiblingNumber() const {
+template<int Nx, int Ny, int Nz, typename DataType>
+unsigned Cell<Nx, Ny, Nz, DataType>::getSiblingNumber() const {
   if (parent_oct)
     return parent_oct->getSiblingNumber(this);
   throw std::runtime_error("No parent Oct in Cell::getSiblingNumber()");
 }
 
+// Get the computation load of the cell
+template<int Nx, int Ny, int Nz, typename DataType>
+double Cell<Nx, Ny, Nz, DataType>::getLoad() const {
+  return data->getLoad(isLeaf(), std::static_pointer_cast<void>(thisAsSmartPtr()));
+}
+
 // Get the cell as a smart pointer for referencing
-template<int Nx, int Ny, int Nz>
-std::shared_ptr< Cell<Nx, Ny, Nz> > Cell<Nx, Ny, Nz>::thisAsSmartPtr() const {
-  if (parent_oct)
+template<int Nx, int Ny, int Nz, typename DataType>
+std::shared_ptr< Cell<Nx, Ny, Nz, DataType> > Cell<Nx, Ny, Nz, DataType>::thisAsSmartPtr() const {
+  if (!isLeaf())
+    return child_oct->getParentCell();
+  if (!isRoot())
     return parent_oct->getChildCell(parent_oct->getSiblingNumber(this));
-  throw std::runtime_error("No parent Oct in Cell::thisAsSmartPtr()");
+  throw std::runtime_error("No child/parent Oct in Cell::thisAsSmartPtr()");
 }
 
 
@@ -99,20 +109,20 @@ std::shared_ptr< Cell<Nx, Ny, Nz> > Cell<Nx, Ny, Nz>::thisAsSmartPtr() const {
 //***********************************************************//
 
 // True if leaf cell (no child oct)
-template<int Nx, int Ny, int Nz>
-bool Cell<Nx, Ny, Nz>::isLeaf() const {
+template<int Nx, int Ny, int Nz, typename DataType>
+bool Cell<Nx, Ny, Nz, DataType>::isLeaf() const {
   return !child_oct;
 }
 
 // True if root cell (no parent oct)
-template<int Nx, int Ny, int Nz>
-bool Cell<Nx, Ny, Nz>::isRoot() const {
-  return parent_oct==nullptr;
+template<int Nx, int Ny, int Nz, typename DataType>
+bool Cell<Nx, Ny, Nz, DataType>::isRoot() const {
+  return !parent_oct;
 }
 
 // Split a root cell (a pointer to the root is needed for back reference in child oct)
-template<int Nx, int Ny, int Nz>
-const std::array< std::shared_ptr< Cell<Nx, Ny, Nz> >, Cell<Nx, Ny, Nz>::number_children >& Cell<Nx, Ny, Nz>::splitRoot(const int max_level, std::shared_ptr<Cell> root_cell) {
+template<int Nx, int Ny, int Nz, typename DataType>
+const std::array< std::shared_ptr< Cell<Nx, Ny, Nz, DataType> >, Cell<Nx, Ny, Nz, DataType>::number_children >& Cell<Nx, Ny, Nz, DataType>::splitRoot(const int max_level, std::shared_ptr<Cell> root_cell) {
   if (!isRoot()) {
     throw std::runtime_error("Can be call only on root in Cell::splitRoot()");
   }
@@ -126,8 +136,8 @@ const std::array< std::shared_ptr< Cell<Nx, Ny, Nz> >, Cell<Nx, Ny, Nz>::number_
 }
 
 // Split a cell and it's direct neighbors if needed for mesh conformity
-template<int Nx, int Ny, int Nz>
-const std::array< std::shared_ptr< Cell<Nx, Ny, Nz> >, Cell<Nx, Ny, Nz>::number_children >& Cell<Nx, Ny, Nz>::split(const int max_level) {
+template<int Nx, int Ny, int Nz, typename DataType>
+const std::array< std::shared_ptr< Cell<Nx, Ny, Nz, DataType> >, Cell<Nx, Ny, Nz, DataType>::number_children >& Cell<Nx, Ny, Nz, DataType>::split(const int max_level) {
   if (!isLeaf() || getLevel()>=max_level) {
     throw std::runtime_error("Cell cannot be splitted in Cell::split()");
   }
@@ -159,8 +169,8 @@ const std::array< std::shared_ptr< Cell<Nx, Ny, Nz> >, Cell<Nx, Ny, Nz>::number_
 }
 
 // Coarsen a cell if neighbors cell allow to preserve consistency else nothing is done
-template<int Nx, int Ny, int Nz>
-bool Cell<Nx, Ny, Nz>::coarsen(const int min_level) {
+template<int Nx, int Ny, int Nz, typename DataType>
+bool Cell<Nx, Ny, Nz, DataType>::coarsen(const int min_level) {
   if (isLeaf() || getLevel()<min_level) {
     throw std::runtime_error("Cell cannot be coarsened in Cell::coarsenn()");
   }
@@ -209,8 +219,8 @@ bool Cell<Nx, Ny, Nz>::coarsen(const int min_level) {
 //  +X +Y +Z  |  Nx>1 Ny>1 Nz>1  |
 //____________|__________________|_________________________________
 // Get a pointer to a neighbor cell
-template<int Nx, int Ny, int Nz>
-std::shared_ptr< Cell<Nx, Ny, Nz> > Cell<Nx, Ny, Nz>::getNeighborCell(const int dir) const {
+template<int Nx, int Ny, int Nz, typename DataType>
+std::shared_ptr< Cell<Nx, Ny, Nz, DataType> > Cell<Nx, Ny, Nz, DataType>::getNeighborCell(const int dir) const {
   if (dir<0 || dir>=number_volume_neighbors)
     throw std::runtime_error("Invalid neighbor direction in Cell::getNeighborCell()");
 
@@ -249,8 +259,8 @@ std::shared_ptr< Cell<Nx, Ny, Nz> > Cell<Nx, Ny, Nz>::getNeighborCell(const int 
 }
 
 // Verify if neighbors splitting is needed before cell splitting
-template<int Nx, int Ny, int Nz>
-bool Cell<Nx, Ny, Nz>::verifySplitNeighbors(const int max_level) {
+template<int Nx, int Ny, int Nz, typename DataType>
+bool Cell<Nx, Ny, Nz, DataType>::verifySplitNeighbors(const int max_level) {
   if (isRoot() && max_level>0)
     return (max_level>0);
 
@@ -264,8 +274,8 @@ bool Cell<Nx, Ny, Nz>::verifySplitNeighbors(const int max_level) {
 }
 
 // Split neighbors first if needed before cell splitting
-template<int Nx, int Ny, int Nz>
-void Cell<Nx, Ny, Nz>::checkSplitNeighbors(const int max_level) {
+template<int Nx, int Ny, int Nz, typename DataType>
+void Cell<Nx, Ny, Nz, DataType>::checkSplitNeighbors(const int max_level) {
   if (isRoot())
     return;
 
@@ -278,8 +288,8 @@ void Cell<Nx, Ny, Nz>::checkSplitNeighbors(const int max_level) {
 }
 
 // Verify if children coarsening is needed before cell coarsening
-template<int Nx, int Ny, int Nz>
-bool Cell<Nx, Ny, Nz>::verifyCoarsenChildren() {
+template<int Nx, int Ny, int Nz, typename DataType>
+bool Cell<Nx, Ny, Nz, DataType>::verifyCoarsenChildren() {
   if (isLeaf())
     return false;
 
@@ -292,8 +302,8 @@ bool Cell<Nx, Ny, Nz>::verifyCoarsenChildren() {
 }
 
 // Verify if neighbors coarsening is needed before cell coarsening
-template<int Nx, int Ny, int Nz>
-bool Cell<Nx, Ny, Nz>::verifyCoarsenNeighbors() {
+template<int Nx, int Ny, int Nz, typename DataType>
+bool Cell<Nx, Ny, Nz, DataType>::verifyCoarsenNeighbors() {
   if (isLeaf())
     return false;
 
@@ -329,8 +339,8 @@ bool Cell<Nx, Ny, Nz>::verifyCoarsenNeighbors() {
 }
 
 // Transform sibling number to (i,j,k) coordinates
-template<int Nx, int Ny, int Nz>
-inline std::tuple<unsigned, unsigned, unsigned> Cell<Nx, Ny, Nz>::siblingNumberToCoords(const int sibling_number) const {
+template<int Nx, int Ny, int Nz, typename DataType>
+inline std::tuple<unsigned, unsigned, unsigned> Cell<Nx, Ny, Nz, DataType>::siblingNumberToCoords(const int sibling_number) const {
   unsigned sibling_coord_1 = sibling_number % N1,
            sibling_coord_2 = (sibling_number / N1) % N2,
            sibling_coord_3 = (sibling_number / (N12)) % N3;
@@ -339,16 +349,16 @@ inline std::tuple<unsigned, unsigned, unsigned> Cell<Nx, Ny, Nz>::siblingNumberT
 }
 
 // Transform (i,j,k) coordinates to sibling number
-template<int Nx, int Ny, int Nz>
-inline int Cell<Nx, Ny, Nz>::coordsToSiblingNumber(const unsigned sibling_coord_1, const unsigned sibling_coord_2, const unsigned sibling_coord_3) const {
+template<int Nx, int Ny, int Nz, typename DataType>
+inline int Cell<Nx, Ny, Nz, DataType>::coordsToSiblingNumber(const unsigned sibling_coord_1, const unsigned sibling_coord_2, const unsigned sibling_coord_3) const {
   return sibling_coord_1 + sibling_coord_2 * N1 + sibling_coord_3 * N12;
 }
 
 // For a given sibling number, determine if the neighbor cell in a given direction:
 // - shares the same parent cell (true) or belongs to another cell (false)
 // - it's sibling number
-template<int Nx, int Ny, int Nz>
-std::pair<bool, unsigned> Cell<Nx, Ny, Nz>::getDirectNeighborCellInfos(const int sibling_number, const int dir) const {
+template<int Nx, int Ny, int Nz, typename DataType>
+std::pair<bool, unsigned> Cell<Nx, Ny, Nz, DataType>::getDirectNeighborCellInfos(const int sibling_number, const int dir) const {
   unsigned sibling_coord_1, sibling_coord_2, sibling_coord_3;
   std::tie(sibling_coord_1, sibling_coord_2, sibling_coord_3) = siblingNumberToCoords(sibling_number);
 
@@ -371,8 +381,8 @@ std::pair<bool, unsigned> Cell<Nx, Ny, Nz>::getDirectNeighborCellInfos(const int
 }
 
 // Get a pointer to a neighbor cell accessible by 2 consecutive othogonal direction (corners in 2D)
-template<int Nx, int Ny, int Nz>
-std::shared_ptr< Cell<Nx, Ny, Nz> > Cell<Nx, Ny, Nz>::getPlaneNeighborCell(const int sibling_number, const int dir1, const int dir2) const {
+template<int Nx, int Ny, int Nz, typename DataType>
+std::shared_ptr< Cell<Nx, Ny, Nz, DataType> > Cell<Nx, Ny, Nz, DataType>::getPlaneNeighborCell(const int sibling_number, const int dir1, const int dir2) const {
   unsigned sibling_coord_1, sibling_coord_2, sibling_coord_3;
   std::tie(sibling_coord_1, sibling_coord_2, sibling_coord_3) = siblingNumberToCoords(sibling_number);
 
@@ -403,14 +413,14 @@ std::shared_ptr< Cell<Nx, Ny, Nz> > Cell<Nx, Ny, Nz>::getPlaneNeighborCell(const
 }
 
 // Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)
-template<int Nx, int Ny, int Nz>
-std::shared_ptr< Cell<Nx, Ny, Nz> > Cell<Nx, Ny, Nz>::getVolumeNeighborCell(const int sibling_number, const int dir1, const int dir2, const int dir3) const {
+template<int Nx, int Ny, int Nz, typename DataType>
+std::shared_ptr< Cell<Nx, Ny, Nz, DataType> > Cell<Nx, Ny, Nz, DataType>::getVolumeNeighborCell(const int sibling_number, const int dir1, const int dir2, const int dir3) const {
   throw std::runtime_error("3D implementation not done yet in Cell::getVolumeNeighborCell()");
 }
 
 // Flags propagation from parent to children
-template<int Nx, int Ny, int Nz>
-void Cell<Nx, Ny, Nz>::setIndicatorFromParent(const Cell& parent_cell) {
+template<int Nx, int Ny, int Nz, typename DataType>
+void Cell<Nx, Ny, Nz, DataType>::setIndicatorFromParent(const Cell& parent_cell) {
   // If parent belong to this proc then child also
   if (parent_cell.belongToThisProc()) {
     setToThisProc();

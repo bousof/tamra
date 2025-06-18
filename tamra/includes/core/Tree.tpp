@@ -8,9 +8,10 @@
 template<typename CellType, typename TreeIteratorType>
 Tree<CellType, TreeIteratorType>::Tree(const int min_level, const int max_level, const int rank, const int size)
 : min_level(min_level), max_level(max_level), rank(rank), size(size),
+  balanceManager(min_level, max_level, rank, size),
+  coarseManager(min_level, max_level, rank, size),
   minLevelMeshManager(min_level, max_level, rank, size),
-  refineManager(min_level, max_level, rank, size),
-  coarseManager(min_level, max_level, rank, size) {}
+  refineManager(min_level, max_level, rank, size) {}
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>
@@ -75,7 +76,7 @@ int Tree<CellType, TreeIteratorType>::getMaxLevel() const {
 template<typename CellType, typename TreeIteratorType>
 void Tree<CellType, TreeIteratorType>::meshAtMinLevel() {
   TreeIteratorType iterator(root_cells, max_level);
-  minLevelMeshManager.meshAtMinLevel(root_cells, iterator);
+  meshAtMinLevel(iterator);
 }
 template<typename CellType, typename TreeIteratorType>
 void Tree<CellType, TreeIteratorType>::meshAtMinLevel(TreeIteratorType &iterator) {
@@ -96,4 +97,17 @@ template<typename CellType, typename TreeIteratorType>
 void Tree<CellType, TreeIteratorType>::coarsen() {
 	// Coarsening mesh
 	coarseManager.coarsen(root_cells);
+}
+
+// Redistribute cells among processes to balance computation load
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::loadBalance() {
+	TreeIteratorType iterator(root_cells, max_level);
+	return loadBalance(iterator);
+}
+// Redistribute cells among processes to balance computation load
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::loadBalance(TreeIteratorType &iterator) {
+	// Load balancing mesh
+	return balanceManager.loadBalance(root_cells, iterator, 0.1);
 }

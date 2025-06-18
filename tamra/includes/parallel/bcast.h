@@ -14,13 +14,28 @@
 #include <iostream>
 #include <numeric>
 #include <vector>
-#include"parallel_data.h"
+#include"ParallelData.h"
+
+template<typename T>
+void scalarBCast(T &value, const int root, const MPI_Datatype data_type) {
+  static_assert(
+    std::is_same<T, bool>::value || std::is_same<T, int>::value,
+    "scalarBCast only supports T = bool, and int"
+  );
+
+	// Communication of cells IDs between all processors
+	MPI_Bcast(&value, 1, data_type, root, MPI_COMM_WORLD);
+}
+
+void boolBCast(bool &value, const int root);
+
+void intBCast(int &value, const int root);
 
 template<typename T>
 void vectorBCast(std::vector<T> &buffer, const int root, const int rank, const MPI_Datatype data_type, int count = 0) {
   static_assert(
-    std::is_same<T, unsigned>::value,
-    "vectorBCast only supports T = unsigned"
+    std::is_same<T, double>::value || std::is_same<T, unsigned>::value,
+    "vectorBCast only supports T = double, and unsigned"
   );
 
 	// Number of elements to broadcast to all processes
@@ -68,5 +83,7 @@ void matrixBCast(std::vector< std::vector<T> > &buffer, const int root, const in
 }
 
 void vectorUnsignedBCast(std::vector<unsigned> &buffer, const int root, const int rank, int count = 0);
+
+void vectorDoubleBCast(std::vector<double> &buffer, const int root, const int rank, int count = 0);
 
 void matrixUnsignedBCast(std::vector< std::vector<unsigned> > &buffer, const int root, const int rank, int rowCount = 0, int colCount = 0);

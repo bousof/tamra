@@ -66,6 +66,11 @@ class TreeIterator {
   std::vector<unsigned> getCellId() const;
   // Get cell ID manager
   CellIdManagerType getCellIdManager() const;
+  // Construct cell index path
+  std::vector<unsigned> getCellId(const std::shared_ptr<CellType>& cell) const;
+ private:
+  // Construct cell index path
+  std::vector<unsigned> getCellIndexPath(const std::shared_ptr<CellType>& cell) const;
 
   //***********************************************************//
   //  METHODS                                                  //
@@ -82,11 +87,11 @@ class TreeIterator {
   // Go to the first leaf cell of first root
   void toBegin(const int sweep_level = std::numeric_limits<int>::max());
   // Go to the first leaf cell of first root belonging to this process
-  void toOwnedBegin(const int sweep_level = std::numeric_limits<int>::max());
+  bool toOwnedBegin(const int sweep_level = std::numeric_limits<int>::max());
   // Go to the last leaf cell of last root
   void toEnd(const int sweep_level = std::numeric_limits<int>::max());
   // Go to the last leaf cell of last root belonging to this process
-  void toOwnedEnd(const int sweep_level = std::numeric_limits<int>::max());
+  bool toOwnedEnd(const int sweep_level = std::numeric_limits<int>::max());
   // Moves the iterator to a leaf cell of the current cell
   void toLeaf(const int sweep_level = std::numeric_limits<int>::max(), const bool reverse = false);
   // Moves the iterator to a leaf cell of the current cell that belong to the process
