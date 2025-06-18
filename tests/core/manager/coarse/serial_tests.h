@@ -60,15 +60,11 @@ bool coarsenTreeOneRootSerial() {
   // Coarsen the tree
   tree.coarsen();
 
-  // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_lef_cells = 1;
-  iterator.toBegin();
-  while (iterator.next())
-    ++number_lef_cells;
+  // Count number of owned leaf cells
+  int number_leaf_cells = A->countOwnedLeaves();
 
   // Verify that number of leaf cells is right
-  bool passed = number_lef_cells==10;
+  bool passed = number_leaf_cells==10;
   return passed;
 }
 
@@ -143,14 +139,10 @@ bool coarsenTreeTwoRootsSerial() {
   // Coarse the tree
   tree.coarsen();
 
-  // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_lef_cells = 1;
-  iterator.toBegin();
-  while (iterator.next())
-    ++number_lef_cells;
+  // Count number of owned leaf cells
+  int number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
 
   // Verify that number of leaf cells is right
-  bool passed = number_lef_cells==11;
+  bool passed = number_leaf_cells==11;
   return passed;
 }

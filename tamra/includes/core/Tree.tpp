@@ -10,6 +10,7 @@ Tree<CellType, TreeIteratorType>::Tree(const int min_level, const int max_level,
 : min_level(min_level), max_level(max_level), rank(rank), size(size),
   balanceManager(min_level, max_level, rank, size),
   coarseManager(min_level, max_level, rank, size),
+  ghostManager(min_level, max_level, rank, size),
   minLevelMeshManager(min_level, max_level, rank, size),
   refineManager(min_level, max_level, rank, size) {}
 
@@ -90,6 +91,12 @@ template<typename CellType, typename TreeIteratorType>
 void Tree<CellType, TreeIteratorType>::refine() {
 	// Refining mesh
 	refineManager.refine(root_cells);
+}
+
+// Creation of ghost cells
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::buildGhostLayer(TreeIteratorType &iterator) {
+  ghostManager.buildGhostLayer(root_cells, iterator);
 }
 
 // Coarse all the cells for which all child are set to be coarsened

@@ -58,7 +58,7 @@ std::vector<unsigned> CellIdManager<CellType>::idToIndexPath(const std::vector<u
 // partitions obatined by splitting into equal parts and taking
 // the n-th one
 template<typename CellType>
-std::vector< std::vector<unsigned> > CellIdManager<CellType>::getEqualPartitions(const int level, const int size) {
+std::vector< std::vector<unsigned> > CellIdManager<CellType>::getEqualPartitions(const int level, const int size) const {
   // Compute all partitions start and end positions
   std::vector< std::vector<unsigned> > partitions(size);
 
@@ -137,7 +137,7 @@ void CellIdManager<CellType>::setIdChild(std::vector<unsigned> &cell_id, const i
 
 // Moves the cell ID to a leaf cell
 template<typename CellType>
-void CellIdManager<CellType>::toLeaf(std::vector<unsigned> &cell_id, const int level, const bool reverse) {
+void CellIdManager<CellType>::toLeaf(std::vector<unsigned> &cell_id, const int level, const bool reverse) const {
   // Edit the cell_id level and keep the old one
   unsigned old_level = getIdLevel(cell_id);
   setIdLevel(cell_id, level);
@@ -151,7 +151,7 @@ void CellIdManager<CellType>::toLeaf(std::vector<unsigned> &cell_id, const int l
 
 // Moves the cell ID to child cell
 template<typename CellType>
-void CellIdManager<CellType>::toChild(std::vector<unsigned> &cell_id, const unsigned order) {
+void CellIdManager<CellType>::toChild(std::vector<unsigned> &cell_id, const unsigned order) const {
   // Extract level (number of entries in index path - 1)
   unsigned level = getIdLevel(cell_id);
   // Encode the level (size of index_path - 1)
@@ -162,7 +162,7 @@ void CellIdManager<CellType>::toChild(std::vector<unsigned> &cell_id, const unsi
 
 // Moves the cell ID to parent cell
 template<typename CellType>
-void CellIdManager<CellType>::toParent(std::vector<unsigned> &cell_id) {
+void CellIdManager<CellType>::toParent(std::vector<unsigned> &cell_id) const {
   // Extract level (number of entries in index path - 1)
   unsigned level = getIdLevel(cell_id);
   // Encode the level (size of index_path - 1)
@@ -173,7 +173,7 @@ void CellIdManager<CellType>::toParent(std::vector<unsigned> &cell_id) {
 
 // Moves the cell ID to root cell
 template<typename CellType>
-void CellIdManager<CellType>::toRoot(std::vector<unsigned> &cell_id, const unsigned root_number) {
+void CellIdManager<CellType>::toRoot(std::vector<unsigned> &cell_id, const unsigned root_number) const {
   // Set ID level to zero
   setIdLevel(cell_id, 0);
   // Reset cell ID first root
@@ -184,14 +184,14 @@ void CellIdManager<CellType>::toRoot(std::vector<unsigned> &cell_id, const unsig
 
 // Reset cell ID
 template<typename CellType>
-void CellIdManager<CellType>::resetCellID(std::vector<unsigned> &cell_id) {
+void CellIdManager<CellType>::resetCellID(std::vector<unsigned> &cell_id) const {
   // Reset cell ID first root
   cell_id.assign(cell_id_size, 0);
 }
 
 // Check if a cell ID is greater than
 template<typename CellType>
-bool CellIdManager<CellType>::cellIdGt(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2, bool &sure) {
+bool CellIdManager<CellType>::cellIdGt(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2, bool &sure) const {
   sure = true;
   // If root is different easy to conclude
   if (getIdRoot(cell_id_1) > getIdRoot(cell_id_2))
@@ -216,14 +216,14 @@ bool CellIdManager<CellType>::cellIdGt(std::vector<unsigned> &cell_id_1, std::ve
   return false;
 }
 template<typename CellType>
-bool CellIdManager<CellType>::cellIdGt(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2) {
+bool CellIdManager<CellType>::cellIdGt(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2) const {
   bool sure;
   return cellIdGt(cell_id_1, cell_id_2, sure);
 }
 
 // Check if a cell ID is greater than or equal another ID
 template<typename CellType>
-bool CellIdManager<CellType>::cellIdGte(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2) {
+bool CellIdManager<CellType>::cellIdGte(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2) const {
   bool sure, greater = cellIdGt(cell_id_1, cell_id_2, sure);
   if (sure)
     return greater;
@@ -244,7 +244,7 @@ bool CellIdManager<CellType>::cellIdGte(std::vector<unsigned> &cell_id_1, std::v
 
 // Check if a cell ID is smaller than
 template<typename CellType>
-bool CellIdManager<CellType>::cellIdLt(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2, bool &sure) {
+bool CellIdManager<CellType>::cellIdLt(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2, bool &sure) const {
   sure = true;
   // If root is different easy to conclude
   if (getIdRoot(cell_id_1) < getIdRoot(cell_id_2))
@@ -269,14 +269,14 @@ bool CellIdManager<CellType>::cellIdLt(std::vector<unsigned> &cell_id_1, std::ve
   return false;
 }
 template<typename CellType>
-bool CellIdManager<CellType>::cellIdLt(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2) {
+bool CellIdManager<CellType>::cellIdLt(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2) const {
   bool sure;
   return cellIdLt(cell_id_1, cell_id_2, sure);
 }
 
 // Check if a cell ID is smaller than or equal another ID
 template<typename CellType>
-bool CellIdManager<CellType>::cellIdLte(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2) {
+bool CellIdManager<CellType>::cellIdLte(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2) const {
   bool sure, lower = cellIdLt(cell_id_1, cell_id_2, sure);
   if (sure)
     return lower;

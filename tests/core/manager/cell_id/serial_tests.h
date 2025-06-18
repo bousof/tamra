@@ -41,8 +41,8 @@ bool cellIDInversion2x2() {
   // Initialize iterator
   std::vector< std::shared_ptr<Cell2D> > roots = {A};
   TreeIterator<Cell2D> iterator(roots, max_level);
-  
-  // Go to target cell 
+
+  // Go to target cell
   iterator.toBegin(max_level);
   for (int i{0}; i<5; ++i)
     iterator.next(max_level);
@@ -81,7 +81,7 @@ bool cellIDInversion3x2() {
   std::vector< std::shared_ptr<Cell2D> > roots = {A};
   TreeIterator<Cell2D> iterator(roots, max_level);
 
-  // Go to target cell 
+  // Go to target cell
   iterator.toBegin(max_level);
   bool passed = iterator.getIndexPath() == iterator.idToIndexPath(iterator.getCellId());
   while (iterator.next())
@@ -93,7 +93,7 @@ bool cellIDInversion3x2() {
 bool computeEqualPartition() {
   using Cell2D = Cell<2,2>;
   CellIdManager<Cell2D> cell_id_manager(1, 3);
-  
+
   cell_id_manager.getEqualPartitions(2, 3);
 
   return true;

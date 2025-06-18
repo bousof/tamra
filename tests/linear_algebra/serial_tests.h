@@ -12,11 +12,11 @@ void registerLinalgSerialTests() {
 }
 
 // Jacobi 2x2 serial (1 iter)
-// 
-//     [ 2  1 ]       [ 2 ]        [ 0 ]        [ 1/2 ] 
-// A = [      ] , b = [   ] , x0 = [   ] , x1 = [     ] 
-//     [ 1  1 ]       [ 1 ]        [ 0 ]        [  2  ] 
-// 
+//
+//     [ 2  1 ]       [ 2 ]        [ 0 ]        [ 1/2 ]
+// A = [      ] , b = [   ] , x0 = [   ] , x1 = [     ]
+//     [ 1  1 ]       [ 1 ]        [ 0 ]        [  2  ]
+//
 bool testJacobi2x2Serial1() {
   Eigen::SparseMatrix<double, Eigen::RowMajor> A(2, 2);
   A.insert(0, 0) = 2.; A.insert(0, 1) = 1.;
@@ -37,11 +37,11 @@ bool testJacobi2x2Serial1() {
 }
 
 // Jacobi 2x2 serial (100 iter)
-// 
-//     [ 2  1 ]       [ 2 ]        [ 0 ]         [ -1 ] 
-// A = [      ] , b = [   ] , x0 = [   ] , sol = [    ] 
-//     [ 1  1 ]       [ 1 ]        [ 0 ]         [  3 ] 
-// 
+//
+//     [ 2  1 ]       [ 2 ]        [ 0 ]         [ -1 ]
+// A = [      ] , b = [   ] , x0 = [   ] , sol = [    ]
+//     [ 1  1 ]       [ 1 ]        [ 0 ]         [  3 ]
+//
 bool testJacobi2x2Serial100() {
   // 2x2 diagonally dominant matrix
   Eigen::SparseMatrix<double, Eigen::RowMajor> A(2, 2);

@@ -23,15 +23,15 @@ void registerLinalgParallelTests() {
 }
 
 // Jacobi parallel (no overlap, 100 iter)
-// 
-//     [ 2 1           ]       [ 2 ]        [ 0 ]         [ -1 ] 
-//     [ 1 1      (0)  ]       [ 1 ]        [ | ]         [  3 ] 
-//     [     .         ]       [ : ]        [ | ]         [  : ] 
-// A = [       .       ] , b = [ : ] , x0 = [ | ] , sol = [  : ] 
-//     [         .     ]       [ : ]        [ | ]         [  : ] 
-//     [  (0)      2 1 ]       [ 2 ]        [ | ]         [ -1 ] 
-//     [           1 1 ]       [ 1 ]        [ 0 ]         [  3 ] 
-// 
+//
+//     [ 2 1           ]       [ 2 ]        [ 0 ]         [ -1 ]
+//     [ 1 1      (0)  ]       [ 1 ]        [ | ]         [  3 ]
+//     [     .         ]       [ : ]        [ | ]         [  : ]
+// A = [       .       ] , b = [ : ] , x0 = [ | ] , sol = [  : ]
+//     [         .     ]       [ : ]        [ | ]         [  : ]
+//     [  (0)      2 1 ]       [ 2 ]        [ | ]         [ -1 ]
+//     [           1 1 ]       [ 1 ]        [ 0 ]         [  3 ]
+//
 // dim(A) = (2*size) x (2*size)
 bool testJacobiNoOverlapParallel100(int rank, int size) {
   Eigen::SparseMatrix<double, Eigen::RowMajor> A_local(2, 2*size);
@@ -57,16 +57,16 @@ bool testJacobiNoOverlapParallel100(int rank, int size) {
 }
 
 // Jacobi parallel (no overlap, 100 iter)
-// 
-//     [ 2       1   (0) ]       [ 2 ]        [ 0 ]         [ -1 ] 
-//     [   \       \     ]       [ | ]        [ | ]         [  | ] 
-//     [     \       \   ]       [ | ]        [ | ]         [  | ] 
-// A = [       2  (0)  1 ] , b = [ 2 ] , x0 = [ | ] , sol = [ -1 ] 
-//     [ 1  (0)  1       ]       [ 1 ]        [ | ]         [  3 ] 
-//     [   \       \     ]       [ | ]        [ | ]         [  | ] 
-//     [     \       \   ]       [ | ]        [ | ]         [  | ] 
-//     [ (0)   1       1 ]       [ 1 ]        [ 0 ]         [  3 ] 
-// 
+//
+//     [ 2       1   (0) ]       [ 2 ]        [ 0 ]         [ -1 ]
+//     [   \       \     ]       [ | ]        [ | ]         [  | ]
+//     [     \       \   ]       [ | ]        [ | ]         [  | ]
+// A = [       2  (0)  1 ] , b = [ 2 ] , x0 = [ | ] , sol = [ -1 ]
+//     [ 1  (0)  1       ]       [ 1 ]        [ | ]         [  3 ]
+//     [   \       \     ]       [ | ]        [ | ]         [  | ]
+//     [     \       \   ]       [ | ]        [ | ]         [  | ]
+//     [ (0)   1       1 ]       [ 1 ]        [ 0 ]         [  3 ]
+//
 // dim(A) = (2*size) x (2*size)
 bool testJacobiOverlapParallel100(int rank, int size) {
   // 3x3 diagonally dominant matrix

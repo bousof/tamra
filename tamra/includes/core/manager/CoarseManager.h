@@ -15,7 +15,6 @@
 
 template<typename CellType>
 class CoarseManager {
-  static constexpr int number_children = CellType::number_children;
   //***********************************************************//
   //  VARIABLES                                                //
   //***********************************************************//
@@ -42,11 +41,11 @@ class CoarseManager {
   //***********************************************************//
  public:
   // Go through all the parent cells and coarse them one time if needed
-	void coarsen(const std::vector< std::shared_ptr<CellType> >& root_cells);
+	void coarsen(const std::vector< std::shared_ptr<CellType> >& root_cells) const;
 
  private:
   // Recursively coarse cells at a specific level
-  void coarsenToLevelRecurs(const std::shared_ptr<CellType>& cell, const int &coarse_level);
+  void coarsenToLevelRecurs(const std::shared_ptr<CellType>& cell, const int &coarse_level) const;
 };
 
 #include "./CoarseManager.tpp"

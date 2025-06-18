@@ -151,6 +151,10 @@ class Cell {
   bool isLeaf() const;
   // True if root cell (no parent oct)
   bool isRoot() const;
+  // Count the number of leaf cells
+  unsigned countLeaves() const;
+  // Count the number of owned leaf cells
+  unsigned countOwnedLeaves() const;
   // Split a root cell (a pointer to the root is needed for back reference in child oct)
   const std::array< std::shared_ptr<Cell>, number_children >& splitRoot(const int max_level, std::shared_ptr<Cell> root_cell);
   // Split a cell and it's direct neighbors if needed for mesh conformity

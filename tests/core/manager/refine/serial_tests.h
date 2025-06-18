@@ -47,14 +47,10 @@ bool refineTreeOneRootSerial() {
   tree.refine();
 
   // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_lef_cells = 1;
-  iterator.toBegin();
-  while (iterator.next())
-    ++number_lef_cells;
+  int number_leaf_cells = A->countLeaves();
 
   // Verify that number of leaf cells is right
-  bool passed = number_lef_cells==10;
+  bool passed = number_leaf_cells==10;
 
   // Set flags for cells to refine
   A->getChildCell(0)->getChildCell(0)->setToRefine();
@@ -64,13 +60,10 @@ bool refineTreeOneRootSerial() {
   tree.refine();
 
   // Count number of leaf cells
-  number_lef_cells = 1;
-  iterator.toBegin();
-  while (iterator.next())
-    ++number_lef_cells;
+  number_leaf_cells = A->countLeaves();
 
   // Verify that number of leaf cells is right
-  passed &= number_lef_cells==19;
+  passed &= number_leaf_cells==19;
   return passed;
 }
 
@@ -114,13 +107,9 @@ bool refineTreeTwoRootsSerial() {
   tree.refine();
 
   // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_lef_cells = 1;
-  iterator.toBegin();
-  while (iterator.next())
-    ++number_lef_cells;
+  int number_leaf_cells = A->countLeaves() + B->countLeaves();
 
   // Verify that number of leaf cells is right
-  bool passed = number_lef_cells==23;
+  bool passed = number_leaf_cells==23;
   return passed;
 }

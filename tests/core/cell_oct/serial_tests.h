@@ -147,7 +147,7 @@ bool testRecursiveSplittingPropagation1D() {
 
   // The level 1 cell should be leaf
   bool passed = children[1]->isLeaf();
-  
+
   // We now split the grandchild
   grandchildren[1]->split(max_level);
 
@@ -179,7 +179,7 @@ bool testRecursiveSplittingPropagation2DPlane() {
 
   // The level 1 cell should be leaf
   bool passed = children[1]->isLeaf();
-  
+
   // We now split the grandchild
   grandchildren[1]->split(max_level);
 
@@ -216,7 +216,7 @@ bool testRecursiveSplittingPropagation2DDirect() {
   // The level 1 cell should be leaf
   bool passed = children[0]->isLeaf();
   passed &= children[3]->isLeaf();
-  
+
   // We now split the grandchild
   grandchildren[2]->split(max_level);
 

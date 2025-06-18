@@ -14,6 +14,7 @@
 #include "Cell.h"
 #include "manager/BalanceManager.h"
 #include "manager/CoarseManager.h"
+#include "manager/GhostManager.h"
 #include "manager/MinLevelMeshManager.h"
 #include "manager/RefineManager.h"
 #include "RootCellEntry.h"
@@ -23,6 +24,7 @@ template<typename CellType, typename TreeIteratorType = TreeIterator<CellType>>
 class Tree {
   using BalanceManagerType = BalanceManager<CellType>;
   using CoarseManagerType = CoarseManager<CellType>;
+  using GhostManagerType = GhostManager<CellType>;
   using MinLevelMeshManagerType = MinLevelMeshManager<CellType>;
   using RefineManagerType = RefineManager<CellType>;
   using RootCellEntryType = RootCellEntry<CellType>;
@@ -44,6 +46,8 @@ class Tree {
 	BalanceManagerType balanceManager;
   // Mesh coarsening manager
 	CoarseManagerType coarseManager;
+  // Ghost cell manager
+	GhostManagerType ghostManager;
   // Min level meshing manager
 	MinLevelMeshManagerType minLevelMeshManager;
   // Mesh refinement manager
@@ -85,20 +89,20 @@ class Tree {
   // Split all the leaf cells belonging to this proc that need to be refined and are not at max level
   void refine();
 
-  //--- Ghosts cells ------------------------------------------//
-  void createGhostCells() {};
+  // Creation of ghost cells
+  void buildGhostLayer(TreeIteratorType &iterator);
   void exchangeGhostValues() {};
-  
+
   // Redistribute cells among processes to balance computation load
   void loadBalance();
   void loadBalance(TreeIteratorType &iterator);
-  
+
   //--- Propagating -------------------------------------------//
   void propagate() {};
-  
+
   //--- Coarsening --------------------------------------------//
   void coarsen();
-  
+
   //--- Computing SFC indices ---------------------------------//
   void boundaryConditions() {};
 };

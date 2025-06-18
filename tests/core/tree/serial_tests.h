@@ -18,7 +18,7 @@ void registerCoreTreeSerialTests() {
 }
 
 // RootCellEntry basic wiring (1D)
-// 
+//
 //                |   A   |   B   |
 // structure  ->  |___|___|___|___|
 bool testRootCellEntry1D() {
@@ -45,7 +45,7 @@ struct DummyIterator {
 };
 
 // Simple Tree (1D)
-// 
+//
 //                |   A   ||   B   |
 // structure  ->  |___|___||___|___|
 bool testTree1D() {

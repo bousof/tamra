@@ -105,7 +105,7 @@ std::vector<double> parallelSparseJacobi(const Eigen::SparseMatrix<double, Eigen
   // Share index of rows to receive from each process
   // and get index of rows to send to each process
   std::vector< std::vector<int> > send_indexes;
-	vectorIntAllToAll(recv_indexes_buffers, send_indexes, size);
+	vectorIntAlltoallv(recv_indexes_buffers, send_indexes, size);
 
   // Find the number of rows before
   int rows_offset = std::accumulate(nb_rows.begin(), nb_rows.begin()+rank, 0);
@@ -123,7 +123,7 @@ std::vector<double> parallelSparseJacobi(const Eigen::SparseMatrix<double, Eigen
         send_values[p][i] = x_next[send_indexes[p][i] - rows_offset];
     }
 
-    vectorDoubleAllToAll(send_values, recv_values, size);
+    vectorDoubleAlltoallv(send_values, recv_values, size);
 
     // Create a vector for storing lacking x values
     for (int i{0}; i<recv_indexes.size(); ++i)

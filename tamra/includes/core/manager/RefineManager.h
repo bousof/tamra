@@ -15,7 +15,6 @@
 
 template<typename CellType>
 class RefineManager {
-  static constexpr int number_children = CellType::number_children;
   //***********************************************************//
   //  VARIABLES                                                //
   //***********************************************************//
@@ -42,11 +41,11 @@ class RefineManager {
   //***********************************************************//
  public:
   // Go through all the leaf cells and split them one time if needed.
-	void refine(const std::vector< std::shared_ptr<CellType> >& root_cells);
+	void refine(const std::vector< std::shared_ptr<CellType> >& root_cells) const;
 
  private:
   // Recursively refine child cells if needed
-  void refineRecurs(const std::shared_ptr<CellType>& cell);
+  void refineRecurs(const std::shared_ptr<CellType>& cell) const;
 };
 
 #include "./RefineManager.tpp"

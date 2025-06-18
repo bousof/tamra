@@ -16,9 +16,9 @@ template<typename T>
 void scalarAllReduce(const T value, T &reduction, const MPI_Datatype data_type, const MPI_Op op_type) {
   static_assert(
     std::is_same<T, bool>::value || std::is_same<T, unsigned>::value,
-    "vectorBCast only supports T = bool, or unsigned"
+    "scalarAllReduce only supports T = bool, or unsigned"
   );
- 
+
 	// Reduction of values between all processors
   MPI_Allreduce(&value, &reduction, 1, data_type, op_type, MPI_COMM_WORLD);
 }

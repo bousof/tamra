@@ -120,6 +120,33 @@ bool Cell<Nx, Ny, Nz, DataType>::isRoot() const {
   return !parent_oct;
 }
 
+// Count the number of leaf cells
+template<int Nx, int Ny, int Nz, typename DataType>
+unsigned Cell<Nx, Ny, Nz, DataType>::countLeaves() const {
+  if (isLeaf())
+    return 1;
+
+  unsigned nb_leaves = 0;
+  for (const auto &child: getChildCells())
+    nb_leaves += child->countLeaves();
+  return nb_leaves;
+}
+
+// Count the number of owned leaf cells
+template<int Nx, int Ny, int Nz, typename DataType>
+unsigned Cell<Nx, Ny, Nz, DataType>::countOwnedLeaves() const {
+  if (!this->belongToThisProc())
+    return 0;
+
+  if (isLeaf())
+    return 1;
+
+  unsigned nb_owned_leaves = 0;
+  for (const auto &child: getChildCells())
+    nb_owned_leaves += child->countOwnedLeaves();
+  return nb_owned_leaves;
+}
+
 // Split a root cell (a pointer to the root is needed for back reference in child oct)
 template<int Nx, int Ny, int Nz, typename DataType>
 const std::array< std::shared_ptr< Cell<Nx, Ny, Nz, DataType> >, Cell<Nx, Ny, Nz, DataType>::number_children >& Cell<Nx, Ny, Nz, DataType>::splitRoot(const int max_level, std::shared_ptr<Cell> root_cell) {

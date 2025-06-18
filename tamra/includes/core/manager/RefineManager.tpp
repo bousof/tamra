@@ -19,7 +19,7 @@ RefineManager<CellType>::~RefineManager() {};
 //***********************************************************//
 // Go through all the root cells and call the recursive function
 template<typename CellType>
-void RefineManager<CellType>::refine(const std::vector< std::shared_ptr<CellType> >& root_cells) {
+void RefineManager<CellType>::refine(const std::vector< std::shared_ptr<CellType> >& root_cells) const {
   // Looping on all root cells
   for (const auto &root_cell: root_cells)
     // Recursively mesh cells at min level
@@ -28,7 +28,7 @@ void RefineManager<CellType>::refine(const std::vector< std::shared_ptr<CellType
 
 // Refine child cells if needed or call function to child recursively
 template<typename CellType>
-void RefineManager<CellType>::refineRecurs(const std::shared_ptr<CellType>& cell) {
+void RefineManager<CellType>::refineRecurs(const std::shared_ptr<CellType>& cell) const {
   if (!cell->belongToThisProc() || cell->getLevel()>=max_level)
     return;
   if (!cell->isLeaf()) {

@@ -31,7 +31,7 @@ std::vector<double> sparseJacobi(const Eigen::SparseMatrix<double, Eigen::RowMaj
 //#define USE_MPI
 #ifdef USE_MPI
 #include <mpi.h>
-#include "../parallel/alltoall.h"
+#include "../parallel/alltoallv.h"
 
 std::vector<double> parallelSparseJacobi(const Eigen::SparseMatrix<double, Eigen::RowMajor>& A_local,
                                          const std::vector<double>& b_local,

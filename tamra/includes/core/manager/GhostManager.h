@@ -3,19 +3,20 @@
  *  Copyright (c) 2025 Sofiane BOUSABAA
  *  Licensed under the MIT License (see LICENSE file in project root)
  *
- *  Description: Class that handles tree meshing at min level.
+ *  Description: Class that handles ghost cells.
  */
 
 #pragma once
 
-#include <cmath>
 #include <memory>
+#include <vector>
 
-#include "../../parallel/bcast.h"
+#include "../../parallel/allgather.h"
+#include "../../parallel/alltoallv.h"
 #include "../TreeIterator.h"
 
 template<typename CellType, typename TreeIteratorType = TreeIterator<CellType>>
-class MinLevelMeshManager {
+class GhostManager {
   //***********************************************************//
   //  VARIABLES                                                //
   //***********************************************************//
@@ -33,26 +34,21 @@ class MinLevelMeshManager {
   //***********************************************************//
  public :
   // Constructor
-  MinLevelMeshManager(int min_level, int max_level, int rank, int size);
+  GhostManager(int min_level, int max_level, int rank, int size);
   // Destructor
-  ~MinLevelMeshManager();
+  ~GhostManager();
 
   //***********************************************************//
   //  METHODS                                                  //
   //***********************************************************//
  public:
-  // Serial meshing at min level
-  void meshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells) const;
-  // Parallel meshing at min level
-  void meshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const;
-
+  // Creation of ghost cells and exchange of ghost values
+	void buildGhostLayer(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const;
  private:
-  // Recursively mesh cells at min level
-  void serialMeshAtMinLevelRecurs(const std::shared_ptr<CellType>& cell) const;
-  // Mesh all cells in the process partition at min level
-  void parallelMeshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const;
-  // Set a parent to belong to this proc if any of its child do
-  bool backPropagateToThisProc(const std::shared_ptr<CellType>& cell) const;
+  // Share the partitions start and end cells
+  void sharePartitions(std::vector< std::vector<unsigned> > &begin_ids, std::vector< std::vector<unsigned> > &end_ids, TreeIteratorType &iterator) const;
+  // Loop on owned cells and check if neighbors belong to another process
+  void findCellsToSend(const std::vector< std::shared_ptr<CellType> > &root_cells, const std::vector< std::vector<unsigned> > &begin_ids, const std::vector< std::vector<unsigned> > &end_ids, std::vector< std::vector<std::shared_ptr<CellType>> > &cells_to_send, TreeIteratorType &iterator) const;
 };
 
-#include "./MinLevelMeshManager.tpp"
+#include "./GhostManager.tpp"
