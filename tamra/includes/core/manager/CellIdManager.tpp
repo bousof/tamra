@@ -7,7 +7,8 @@
 // Constructor
 template<typename CellType>
 CellIdManager<CellType>::CellIdManager(const int number_root_cells, const int max_level)
-: number_root_cells(number_root_cells), max_level(max_level) {
+: number_root_cells(number_root_cells),
+  max_level(max_level) {
   cell_id_size = (number_root_cells > 1) ? (max_level+2) : (max_level+1);
 }
 

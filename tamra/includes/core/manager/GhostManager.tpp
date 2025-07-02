@@ -8,7 +8,10 @@
 // Constructor
 template<typename CellType, typename TreeIteratorType>
 GhostManager<CellType, TreeIteratorType>::GhostManager(const int min_level, const int max_level, const int rank, const int size)
-: min_level(min_level), max_level(max_level), rank(rank), size(size) {}
+: min_level(min_level),
+  max_level(max_level),
+  rank(rank),
+  size(size) {}
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>
@@ -21,7 +24,7 @@ GhostManager<CellType, TreeIteratorType>::~GhostManager() {};
 
 // Creation of ghost cells and exchange of ghost values
 template<typename CellType, typename TreeIteratorType>
-void GhostManager<CellType, TreeIteratorType>::buildGhostLayer(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const {
+typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostManager<CellType, TreeIteratorType>::buildGhostLayer(std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const {
   // Number of leaf cells before creating ghost.
 	unsigned old_nb_owned_leaves = 0;
   for (const auto &root_cell: root_cells)
@@ -29,6 +32,10 @@ void GhostManager<CellType, TreeIteratorType>::buildGhostLayer(const std::vector
 	// If the creation of ghost cells leads to the splitting of cells inside the partition of
 	// the proc, then it will be necessary to reapply the ghost cell creation process in
 	// order to be sure about the correctness of the tree after having those new cell values.
+
+  // Set all ghost cells to coarse
+  for (const auto &root_cell: root_cells)
+    setGhostToCoarseRecurs(root_cell);
 
   //std::cout << "P_" << rank << ": nb owned leaves " << old_nb_owned_leaves << std::endl;
 
@@ -90,7 +97,8 @@ void GhostManager<CellType, TreeIteratorType>::buildGhostLayer(const std::vector
     ));
 
     // If cell is alraedy split, ghost extrapolation should be done to set child values
-    extrapolate_ghost_cells.push_back(iterator.getCell());
+    if (!iterator.getCell()->isLeaf())
+      extrapolate_ghost_cells.push_back(iterator.getCell());
   }
 
   // Number of leaf cells befor creating ghost.
@@ -106,10 +114,22 @@ void GhostManager<CellType, TreeIteratorType>::buildGhostLayer(const std::vector
         if (!cell->isLeaf())
           extrapolate_owned_cells.push_back(cell);
 
-  if (extrapolate_owned_cells.size()>0 && extrapolate_ghost_cells.size()>0)
-    return; // TODO: return createGhostManagerTask(begin_ids, end_ids, cells_to_send, iterator)
-  else // return empty task
-    return; // TODO: return GhostManagerTask()
+  // Check if all process have finished
+  bool is_finished = extrapolate_owned_cells.size()==0 && extrapolate_ghost_cells.size()==0;
+  boolAndAllReduce(is_finished, is_finished);
+
+  if (is_finished) // Create a finished task (no need to keep a copy of anything)
+    return GhostManagerTaskType(*this, is_finished);
+  else // Create an unfinished task (keep a copy of arrays needed for finishing the task)
+    return GhostManagerTaskType(*this, is_finished, std::move(cells_to_send), std::move(extrapolate_owned_cells), std::move(extrapolate_ghost_cells), std::move(begin_ids), std::move(end_ids));
+}
+
+// Update ghost cells and exchange values for solving conflicts
+template<typename CellType, typename TreeIteratorType>
+void GhostManager<CellType, TreeIteratorType>::updateGhostLayer(GhostManagerTaskType &task, TreeIteratorType &iterator) const {
+  // This method handles the resend logic when conflicts are resolved
+  // It loops through children of owned cells that were split and checks their neighbors
+  // TODO: Implement this
 }
 
 // Share the partiion start and end cells
@@ -212,4 +232,14 @@ void GhostManager<CellType, TreeIteratorType>::findCellsToSend(const std::vector
         }
     }
   } while (iterator.ownedNext());
+}
+
+// Set all ghost cells to coarse
+template<typename CellType, typename TreeIteratorType>
+void GhostManager<CellType, TreeIteratorType>::setGhostToCoarseRecurs(const std::shared_ptr<CellType> &cell) const {
+  if (!cell->belongToThisProc())
+    cell->setToCoarseRecurs();
+  else if (!cell->isLeaf())
+    for (const auto &child: cell->getChildCells())
+      setGhostToCoarseRecurs(child);
 }

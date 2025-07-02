@@ -6,7 +6,8 @@
 
 // Constructor
 template<int Nx, int Ny, int Nz, typename DataType>
-Cell<Nx, Ny, Nz, DataType>::Cell(): data() {
+Cell<Nx, Ny, Nz, DataType>::Cell()
+: data() {
   data = std::make_unique<DataType>();
   indicator = 0;
 }

@@ -6,7 +6,9 @@
 
 // Constructor
 UnitTest::UnitTest(std::string name, std::string group, FuncType func)
-  : name(name), group(group), func(func) {}
+: name(name),
+  group(group),
+  func(func) {}
 
 
 //***********************************************************//

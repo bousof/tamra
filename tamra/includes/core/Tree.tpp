@@ -7,7 +7,10 @@
 // Constructor
 template<typename CellType, typename TreeIteratorType>
 Tree<CellType, TreeIteratorType>::Tree(const int min_level, const int max_level, const int rank, const int size)
-: min_level(min_level), max_level(max_level), rank(rank), size(size),
+: min_level(min_level),
+  max_level(max_level),
+  rank(rank),
+  size(size),
   balanceManager(min_level, max_level, rank, size),
   coarseManager(min_level, max_level, rank, size),
   ghostManager(min_level, max_level, rank, size),
@@ -95,8 +98,8 @@ void Tree<CellType, TreeIteratorType>::refine() {
 
 // Creation of ghost cells
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::buildGhostLayer(TreeIteratorType &iterator) {
-  ghostManager.buildGhostLayer(root_cells, iterator);
+typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, TreeIteratorType>::buildGhostLayer(TreeIteratorType &iterator) {
+  return ghostManager.buildGhostLayer(root_cells, iterator);
 }
 
 // Coarse all the cells for which all child are set to be coarsened

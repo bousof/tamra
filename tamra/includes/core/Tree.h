@@ -22,9 +22,11 @@
 
 template<typename CellType, typename TreeIteratorType = TreeIterator<CellType>>
 class Tree {
+ public:
   using BalanceManagerType = BalanceManager<CellType>;
   using CoarseManagerType = CoarseManager<CellType>;
   using GhostManagerType = GhostManager<CellType>;
+  using GhostManagerTaskType = typename GhostManager<CellType>::GhostManagerTaskType;
   using MinLevelMeshManagerType = MinLevelMeshManager<CellType>;
   using RefineManagerType = RefineManager<CellType>;
   using RootCellEntryType = RootCellEntry<CellType>;
@@ -90,7 +92,7 @@ class Tree {
   void refine();
 
   // Creation of ghost cells
-  void buildGhostLayer(TreeIteratorType &iterator);
+  GhostManagerTaskType buildGhostLayer(TreeIteratorType &iterator);
   void exchangeGhostValues() {};
 
   // Redistribute cells among processes to balance computation load

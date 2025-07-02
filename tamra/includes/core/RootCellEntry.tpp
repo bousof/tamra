@@ -6,7 +6,8 @@
 
 // Constructor
 template<typename CellType>
-RootCellEntry<CellType>::RootCellEntry(std::shared_ptr<CellType> cell) : cell(cell) {
+RootCellEntry<CellType>::RootCellEntry(std::shared_ptr<CellType> cell)
+: cell(cell) {
   neighbor_cells.fill(nullptr);
 }
 

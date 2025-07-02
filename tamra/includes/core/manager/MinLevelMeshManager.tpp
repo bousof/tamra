@@ -8,7 +8,10 @@
 // Constructor
 template<typename CellType, typename TreeIteratorType>
 MinLevelMeshManager<CellType, TreeIteratorType>::MinLevelMeshManager(const int min_level, const int max_level, const int rank, const int size)
-: min_level(min_level), max_level(max_level), rank(rank), size(size) {}
+: min_level(min_level),
+  max_level(max_level),
+  rank(rank),
+  size(size) {}
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>

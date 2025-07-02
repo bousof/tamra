@@ -7,7 +7,9 @@
 // Constructor
 template<typename CellType>
 TreeIterator<CellType>::TreeIterator(const std::vector< std::shared_ptr<CellType> > &root_cells, const int max_level)
-: root_cells(root_cells), max_level(max_level), cell_id_manager(root_cells.size(), max_level) {
+: root_cells(root_cells),
+  max_level(max_level),
+  cell_id_manager(root_cells.size(), max_level) {
   level_partition_sizes.assign(max_level+1, 1);
   for (int i{max_level-1}; i>=0; --i)
     level_partition_sizes[i] = level_partition_sizes[i+1] * CellType::number_children;
