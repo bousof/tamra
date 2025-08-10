@@ -22,23 +22,23 @@ RefineManager<CellType>::~RefineManager() {};
 //***********************************************************//
 // Go through all the root cells and call the recursive function
 template<typename CellType>
-void RefineManager<CellType>::refine(const std::vector< std::shared_ptr<CellType> >& root_cells) const {
+void RefineManager<CellType>::refine(const std::vector< std::shared_ptr<CellType> >& root_cells, ExtrapolationFunctionType extrapolation_function) const {
   // Looping on all root cells
   for (const auto &root_cell: root_cells)
     // Recursively mesh cells at min level
-    refineRecurs(root_cell);
+    refineRecurs(root_cell, extrapolation_function);
 }
 
 // Refine child cells if needed or call function to child recursively
 template<typename CellType>
-void RefineManager<CellType>::refineRecurs(const std::shared_ptr<CellType>& cell) const {
+void RefineManager<CellType>::refineRecurs(const std::shared_ptr<CellType>& cell, ExtrapolationFunctionType extrapolation_function) const {
   if (!cell->belongToThisProc() || cell->getLevel()>=max_level)
     return;
   if (!cell->isLeaf()) {
     std::array< std::shared_ptr<CellType>, CellType::number_children > child_cells = cell->getChildCells();
 
     for (const auto &child: child_cells)
-      refineRecurs(child);
+      refineRecurs(child, extrapolation_function);
   } else if (cell->isToRefine())
-    cell->split(max_level);
+    cell->split(max_level, extrapolation_function);
 }

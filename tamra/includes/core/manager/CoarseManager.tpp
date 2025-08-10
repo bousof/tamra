@@ -22,25 +22,25 @@ CoarseManager<CellType>::~CoarseManager() {};
 //***********************************************************//
 // Go through all the parent cells and coarse them one time if needed
 template<typename CellType>
-void CoarseManager<CellType>::coarsen(const std::vector< std::shared_ptr<CellType> >& root_cells) const {
+void CoarseManager<CellType>::coarsen(const std::vector< std::shared_ptr<CellType> >& root_cells, InterpolationFunctionType interpolation_function) const {
   // Looping on all root cells
   for (const auto &root_cell: root_cells)
     // Looping on levels starting from high to low level
     for (int coarse_level={max_level-1}; coarse_level>=min_level; --coarse_level)
       // Recursively coarse cells at min level
-      coarsenToLevelRecurs(root_cell, coarse_level);
+      coarsenToLevelRecurs(root_cell, coarse_level, interpolation_function);
 }
 
 // Recursively coarse cells at a specific level
 template<typename CellType>
-void CoarseManager<CellType>::coarsenToLevelRecurs(const std::shared_ptr<CellType>& cell, const int &coarse_level) const {
+void CoarseManager<CellType>::coarsenToLevelRecurs(const std::shared_ptr<CellType>& cell, const int &coarse_level, InterpolationFunctionType interpolation_function) const {
   if (cell->isLeaf() || cell->getLevel()>coarse_level)
     return;
 
   // If the cell is too low level we apply to children
   if (cell->getLevel()<coarse_level) {
     for (const auto &child: cell->getChildCells())
-      coarsenToLevelRecurs(child, coarse_level);
+      coarsenToLevelRecurs(child, coarse_level, interpolation_function);
     return;
   }
 
@@ -48,5 +48,5 @@ void CoarseManager<CellType>::coarsenToLevelRecurs(const std::shared_ptr<CellTyp
   for (const auto &child: cell->getChildCells())
     if (!child->isToCoarse())
       return;
-  cell->coarsen(min_level);
+  cell->coarsen(min_level, interpolation_function);
 }

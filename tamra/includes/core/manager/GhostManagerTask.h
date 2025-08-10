@@ -9,6 +9,7 @@
 #pragma once
 
 #include <parallel/allreduce.h>
+#include <parallel/wrapper.h>
 #include "../../utils/array_utils.h"
 #include "./GhostManager.h"
 
@@ -41,7 +42,7 @@ enum class GhostConflictResolutionStrategy {
 template<typename GhostManagerType>
 class GhostManagerTask {
   using CellType = typename GhostManagerType::CellType;
-  using ExtrapolationFunction = std::function<bool(const std::shared_ptr<CellType>&)>;
+  using ExtrapolationFunctionType = std::function<bool(const std::shared_ptr<CellType>&)>;
   using TreeIteratorType = typename GhostManagerType::TreeIteratorType;
 
   //***********************************************************//
@@ -64,9 +65,9 @@ class GhostManagerTask {
   // IDs of the last cells on each of the process
   std::vector<std::vector<unsigned>> partition_end_ids;
   // Function on how to interpolate owned cell values to children
-  ExtrapolationFunction owned_extrapolation_function;
+  ExtrapolationFunctionType owned_extrapolation_function;
   // Function on how to interpolate ghost cell values to children
-  ExtrapolationFunction ghost_extrapolation_function;
+  ExtrapolationFunctionType ghost_extrapolation_function;
   // Function on how to interpolate owned cell values to children
   std::vector<OwnedConflictResolutionStrategy> owned_strategies;
   // Function on how to interpolate ghost cell values to children
@@ -89,9 +90,9 @@ class GhostManagerTask {
 	//***********************************************************//
  public:
   // Set the extrapolation function for owned cells
-  void setOwnedExtrapolationFunction(ExtrapolationFunction extrapolation_function);
+  void setOwnedExtrapolationFunction(ExtrapolationFunctionType extrapolation_function);
   // Set the extrapolation function for ghost cells
-  void setGhostExtrapolationFunction(ExtrapolationFunction extrapolation_function);
+  void setGhostExtrapolationFunction(ExtrapolationFunctionType extrapolation_function);
   // Set the strategies on how to handle conflicts on owned cells.
   // First parameter `strategies` is the strategies on how to handle conflicts by priority.
   // The second parameter `resend` is if process should resend the cells to the other process.
@@ -124,7 +125,7 @@ class GhostManagerTask {
   void continueIgnoreTask(std::vector<bool> &resolution_flags);
   void continueSplitInOwnerTaskGhost(std::vector<bool> &resolution_flags);
   void continueTryCoarseTaskGhost(std::vector<bool> &resolution_flags);
-  bool applyExtrapolationFunctionRecurs(const std::shared_ptr<CellType> &cell, const ExtrapolationFunction &extrapolation_function);
+  bool applyExtrapolationFunctionRecurs(const std::shared_ptr<CellType> &cell, const ExtrapolationFunctionType &extrapolation_function);
 };
 
 #include "./GhostManagerTask.tpp"

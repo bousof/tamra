@@ -91,9 +91,9 @@ void Tree<CellType, TreeIteratorType>::meshAtMinLevel(TreeIteratorType &iterator
 // Split all the leaf cells belonging to this proc that need to
 // be refined  and are not at max level
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::refine() {
+void Tree<CellType, TreeIteratorType>::refine(ExtrapolationFunctionType extrapolation_function) {
 	// Refining mesh
-	refineManager.refine(root_cells);
+	refineManager.refine(root_cells, extrapolation_function);
 }
 
 // Creation of ghost cells
@@ -104,9 +104,9 @@ typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, T
 
 // Coarse all the cells for which all child are set to be coarsened
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::coarsen() {
+void Tree<CellType, TreeIteratorType>::coarsen(InterpolationFunctionType interpolation_function) {
 	// Coarsening mesh
-	coarseManager.coarsen(root_cells);
+	coarseManager.coarsen(root_cells, interpolation_function);
 }
 
 // Redistribute cells among processes to balance computation load
@@ -120,4 +120,15 @@ template<typename CellType, typename TreeIteratorType>
 void Tree<CellType, TreeIteratorType>::loadBalance(TreeIteratorType &iterator) {
 	// Load balancing mesh
 	return balanceManager.loadBalance(root_cells, iterator, 0.1);
+}
+
+// Count the number of owned leaf cells
+template<typename CellType, typename TreeIteratorType>
+unsigned Tree<CellType, TreeIteratorType>::countOwnedLeaves() const {
+  unsigned nb_owned_leaves = 0;
+
+  for (const auto &root_cell: root_cells)
+    if (root_cell->belongToThisProc())
+      nb_owned_leaves += root_cell->countOwnedLeaves();
+  return nb_owned_leaves;
 }

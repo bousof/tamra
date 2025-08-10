@@ -20,16 +20,20 @@
 #include "RootCellEntry.h"
 #include "TreeIterator.h"
 
-template<typename CellType, typename TreeIteratorType = TreeIterator<CellType>>
+template<typename CellTypeT, typename TreeIteratorTypeT = TreeIterator<CellTypeT>>
 class Tree {
  public:
+  using CellType = CellTypeT;
   using BalanceManagerType = BalanceManager<CellType>;
   using CoarseManagerType = CoarseManager<CellType>;
+  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
+  using InterpolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
   using GhostManagerType = GhostManager<CellType>;
   using GhostManagerTaskType = typename GhostManager<CellType>::GhostManagerTaskType;
   using MinLevelMeshManagerType = MinLevelMeshManager<CellType>;
   using RefineManagerType = RefineManager<CellType>;
   using RootCellEntryType = RootCellEntry<CellType>;
+  using TreeIteratorType = TreeIteratorTypeT;
   //***********************************************************//
   //  DATA                                                     //
   //***********************************************************//
@@ -89,7 +93,7 @@ class Tree {
   void meshAtMinLevel(TreeIteratorType& iterator);
 
   // Split all the leaf cells belonging to this proc that need to be refined and are not at max level
-  void refine();
+  void refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {});
 
   // Creation of ghost cells
   GhostManagerTaskType buildGhostLayer(TreeIteratorType &iterator);
@@ -103,10 +107,13 @@ class Tree {
   void propagate() {};
 
   //--- Coarsening --------------------------------------------//
-  void coarsen();
+  void coarsen(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
 
   //--- Computing SFC indices ---------------------------------//
   void boundaryConditions() {};
+
+  // Count the number of owned leaf cells
+  unsigned countOwnedLeaves() const;
 };
 
 #include "Tree.tpp"

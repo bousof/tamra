@@ -29,9 +29,9 @@ class AbstractCellData: public ParallelData {
   //  METHODS                                                  //
   //***********************************************************//
  public:
-  // Init cell data as a vector of double
+  // Set values from vector of double after data communication or backup
   virtual void fromVectorOfData(const std::vector<double> &buffer) = 0;
-  // Return cell data as a vector of double
+  // Convert cell data to vector of double for data communication or backup
   virtual std::vector<double> toVectorOfData() const = 0;
   // Return cell data size
   virtual unsigned getDataSize() const = 0;

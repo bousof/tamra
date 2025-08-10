@@ -20,8 +20,8 @@ GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType &gho
   extrapolate_ghost_cells(extrapolate_ghost_cells),
   partition_begin_ids(partition_begin_ids),
   partition_end_ids(partition_end_ids) {
-  owned_extrapolation_function = [](const std::shared_ptr<CellType>& cell) { return false; };
-  ghost_extrapolation_function = [](const std::shared_ptr<CellType>& cell) { return false; };
+  owned_extrapolation_function = [](const std::shared_ptr<CellType>& cell) { return true; };
+  ghost_extrapolation_function = [](const std::shared_ptr<CellType>& cell) { return true; };
 }
 
 // Destructor
@@ -35,13 +35,13 @@ GhostManagerTask<GhostManagerType>::~GhostManagerTask() {};
 
 // Set the extrapolation function for owned cells
 template<typename GhostManagerType>
-void GhostManagerTask<GhostManagerType>::setOwnedExtrapolationFunction(ExtrapolationFunction extrapolation_function) {
+void GhostManagerTask<GhostManagerType>::setOwnedExtrapolationFunction(ExtrapolationFunctionType extrapolation_function) {
   owned_extrapolation_function = extrapolation_function;
 }
 
 // Set the extrapolation function for ghost cells
 template<typename GhostManagerType>
-void GhostManagerTask<GhostManagerType>::setGhostExtrapolationFunction(ExtrapolationFunction extrapolation_function) {
+void GhostManagerTask<GhostManagerType>::setGhostExtrapolationFunction(ExtrapolationFunctionType extrapolation_function) {
   ghost_extrapolation_function = extrapolation_function;
 }
 
@@ -124,8 +124,8 @@ std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskGhost(TreeIter
   if (std::any_of(ghost_strategies.begin(), ghost_strategies.end(), [](const GhostConflictResolutionStrategy &strategy) {
     return strategy == GhostConflictResolutionStrategy::SPLIT_IN_OWNER || strategy == GhostConflictResolutionStrategy::TRY_COARSEN;
   })) {
-    throw std::runtime_error("Strategy SPLIT_IN_OWNER and TRY_COARSEN not implemented in GhostManagerTask::continueTaskGhost()");
     mpi_finalize();
+    throw std::runtime_error("Strategy SPLIT_IN_OWNER and TRY_COARSEN not implemented in GhostManagerTask::continueTaskGhost()");
   }
 
   std::vector<bool> resolution_flags(extrapolate_ghost_cells.size(), false);
@@ -155,7 +155,7 @@ std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskGhost(TreeIter
 }
 
 template<typename GhostManagerType>
-bool GhostManagerTask<GhostManagerType>::applyExtrapolationFunctionRecurs(const std::shared_ptr<CellType> &cell, const ExtrapolationFunction &extrapolation_function) {
+bool GhostManagerTask<GhostManagerType>::applyExtrapolationFunctionRecurs(const std::shared_ptr<CellType> &cell, const ExtrapolationFunctionType &extrapolation_function) {
   bool success = extrapolation_function(cell);
   for (auto &child: cell->getChildCells())
     if (!child->isLeaf())
