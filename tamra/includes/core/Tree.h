@@ -113,6 +113,9 @@ class Tree {
 
   // Count the number of owned leaf cells
   unsigned countOwnedLeaves() const;
+
+  // Apply a function to owned leaf cells
+  void applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, unsigned)>& f) const;
 };
 
 #include "Tree.tpp"

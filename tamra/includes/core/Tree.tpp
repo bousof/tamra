@@ -127,3 +127,16 @@ unsigned Tree<CellType, TreeIteratorType>::countOwnedLeaves() const {
       nb_owned_leaves += root_cell->countOwnedLeaves();
   return nb_owned_leaves;
 }
+
+// Apply a function to owned leaf cells
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, unsigned)>& f) const {
+  TreeIteratorType iterator(getRootCells(), getMaxLevel());
+
+  unsigned index = 0;
+  if (!iterator.toOwnedBegin())
+    return;
+  do {
+    f(iterator.getCell(), index++);
+  } while (iterator.ownedNext());
+}
