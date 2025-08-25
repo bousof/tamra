@@ -326,6 +326,29 @@ std::shared_ptr< Cell<Nx, Ny, Nz, DataType> > Cell<Nx, Ny, Nz, DataType>::getNei
   }
 }
 
+// Loop on all neighbor cells in a specific direction and apply a function
+template<int Nx, int Ny, int Nz, typename DataType>
+void Cell<Nx, Ny, Nz, DataType>::applyToDirNeighborCells(const unsigned dir, const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f) const {
+  // Get the neighbor cell
+  std::shared_ptr<Cell> neighbor = getNeighborCell(dir);
+
+  // No neighbor cell in this direction
+  if (!neighbor) {
+    f(thisAsSmartPtr(), nullptr, dir);
+    return;
+  }
+
+  // The neighbor leaf cell has the same level
+  if (neighbor->isLeaf()) {
+    f(thisAsSmartPtr(), neighbor, dir);
+    return;
+  }
+
+  // The neighbor cell is higher level so we loop on its children
+  for (const auto &nbChildCell: neighbor->getDirChildCells(dir))
+    f(thisAsSmartPtr(), nbChildCell, dir);
+}
+
 // Verify if neighbors splitting is needed before cell splitting
 template<int Nx, int Ny, int Nz, typename DataType>
 bool Cell<Nx, Ny, Nz, DataType>::verifySplitNeighbors(const int max_level) {

@@ -197,6 +197,8 @@ class Cell {
   //____________|__________________|_________________________________
   // Get a pointer to a neighbor cell
   std::shared_ptr<Cell> getNeighborCell(const int dir) const;
+  // Loop on all neighbor cells in a specific direction and apply a function
+  void applyToDirNeighborCells(const unsigned dir, const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f) const;
  private:
   // Verify if neighbors splitting is needed before cell splitting
   bool verifySplitNeighbors(const int max_level);
