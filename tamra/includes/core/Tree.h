@@ -96,12 +96,11 @@ class Tree {
   void refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {});
 
   // Creation of ghost cells
-  GhostManagerTaskType buildGhostLayer(TreeIteratorType &iterator);
+  GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
   void exchangeGhostValues() {};
 
   // Redistribute cells among processes to balance computation load
-  void loadBalance();
-  void loadBalance(TreeIteratorType &iterator);
+  void loadBalance(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
 
   //--- Propagating -------------------------------------------//
   void propagate() {};

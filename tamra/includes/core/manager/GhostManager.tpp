@@ -24,7 +24,7 @@ GhostManager<CellType, TreeIteratorType>::~GhostManager() {};
 
 // Creation of ghost cells and exchange of ghost values
 template<typename CellType, typename TreeIteratorType>
-typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostManager<CellType, TreeIteratorType>::buildGhostLayer(std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const {
+typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostManager<CellType, TreeIteratorType>::buildGhostLayer(std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
   // Number of leaf cells before creating ghost.
 	unsigned old_nb_owned_leaves = 0;
   for (const auto &root_cell: root_cells)
@@ -89,7 +89,7 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
   std::vector<std::shared_ptr<CellType>> extrapolate_ghost_cells;
   for (int i{0}; i<recv_cell_ids.size(); ++i) {
     // Move iterator to cell ID and create it if needed
-    iterator.toCellId(recv_cell_ids[i], true);
+    iterator.toCellId(recv_cell_ids[i], true, extrapolation_function);
 
     // Set cell data
     iterator.getCell()->setCellData(std::unique_ptr<typename CellType::CellDataType>(

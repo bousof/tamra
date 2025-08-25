@@ -98,8 +98,9 @@ void Tree<CellType, TreeIteratorType>::refine(ExtrapolationFunctionType extrapol
 
 // Creation of ghost cells
 template<typename CellType, typename TreeIteratorType>
-typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, TreeIteratorType>::buildGhostLayer(TreeIteratorType &iterator) {
-  return ghostManager.buildGhostLayer(root_cells, iterator);
+typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, TreeIteratorType>::buildGhostLayer(InterpolationFunctionType interpolation_function) {
+  TreeIteratorType iterator(root_cells, max_level);
+  return ghostManager.buildGhostLayer(root_cells, iterator, interpolation_function);
 }
 
 // Coarse all the cells for which all child are set to be coarsened
@@ -111,15 +112,9 @@ void Tree<CellType, TreeIteratorType>::coarsen(InterpolationFunctionType interpo
 
 // Redistribute cells among processes to balance computation load
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::loadBalance() {
+void Tree<CellType, TreeIteratorType>::loadBalance(InterpolationFunctionType interpolation_function) {
 	TreeIteratorType iterator(root_cells, max_level);
-	return loadBalance(iterator);
-}
-// Redistribute cells among processes to balance computation load
-template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::loadBalance(TreeIteratorType &iterator) {
-	// Load balancing mesh
-	return balanceManager.loadBalance(root_cells, iterator, 0.1);
+  return balanceManager.loadBalance(root_cells, iterator, 0.1, interpolation_function);
 }
 
 // Count the number of owned leaf cells

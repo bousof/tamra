@@ -21,6 +21,8 @@
 
 template<typename CellType, typename TreeIteratorType = TreeIterator<CellType>>
 class BalanceManager {
+  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
+
   //***********************************************************//
   //  VARIABLES                                                //
   //***********************************************************//
@@ -49,14 +51,14 @@ class BalanceManager {
   // Determine if load balancing is needed
   std::pair<bool, std::vector<double>> isLoadBalancingNeeded(const std::vector< std::shared_ptr<CellType> >& root_cells, const double max_pct_unbalance) const;
   // Performs load balancing between processes
-	void loadBalance(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, const double max_pct_unbalance = 0.) const;
+	void loadBalance(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, const double max_pct_unbalance = 0., ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {}) const;
  private:
   // Determine the local load for this process
   double computeLoad(const std::shared_ptr<CellType>& cell) const;
   // Determine the cells to send to each process
   std::vector< std::vector<std::shared_ptr<CellType>> > cellsToExchange(const std::vector<double> &cumulative_loads, const std::vector<double> &target_cumulative_loads, TreeIteratorType &iterator) const;
   // Exchange cells structure and data
-  void exchangeAndCreateCells(const std::vector< std::vector<std::shared_ptr<CellType>> > &cells_to_send, TreeIteratorType &iterator) const;
+  void exchangeAndCreateCells(const std::vector< std::vector<std::shared_ptr<CellType>> > &cells_to_send, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const;
   // Compress the structure of cells (1 cell ID + other cell levels)
   void compressCellStructure(const std::vector<unsigned> &cell_id, const std::vector<unsigned> &cell_levels, std::vector<unsigned> &cell_structure) const;
   // Uncompress the structure of cells (1 cell ID + other cell levels)

@@ -55,7 +55,7 @@ std::pair<bool, std::vector<double>> BalanceManager<CellType, TreeIteratorType>:
 
 // Parallel meshing at min level
 template<typename CellType, typename TreeIteratorType>
-void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, const double max_pct_unbalance) const {
+void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, const double max_pct_unbalance, ExtrapolationFunctionType extrapolation_function) const {
   // Root process that handles decision making
   const int root = 0;
 
@@ -100,7 +100,7 @@ void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector< 
   //std::cout << std::endl;
 
   // Exchange and create load balancing cells
-	exchangeAndCreateCells(cells_to_send, iterator);
+	exchangeAndCreateCells(cells_to_send, iterator, extrapolation_function);
 
   // Backpropagate flags from leaf to all cells
   for (const auto &root_cell: root_cells)
@@ -193,7 +193,7 @@ std::vector< std::vector<std::shared_ptr<CellType>> > BalanceManager<CellType, T
 
 // Exchange cells structure and data
 template<typename CellType, typename TreeIteratorType>
-void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const std::vector< std::vector<std::shared_ptr<CellType>> > &cells_to_send, TreeIteratorType &iterator) const {
+void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const std::vector< std::vector<std::shared_ptr<CellType>> > &cells_to_send, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
   // For the first cell we sent the cell ID to be able to locate it.
   // For the lacking ines only the level is set to avoid redundant information.
   std::vector< std::vector<unsigned> > cells_structure_to_send(size);
@@ -247,7 +247,7 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
         // Insert the first cell ID
         uncompressCellStructure(cells_structure_recv[p], first_cell_id, cell_levels, cell_id_size);
         // Create the first cell and assign it to this proc
-        iterator.toCellId(first_cell_id, true);
+        iterator.toCellId(first_cell_id, true, extrapolation_function);
         iterator.getCell()->setToThisProcRecurs();
         // Set first cell data
         iterator.getCell()->setCellData(std::unique_ptr<typename CellType::CellDataType>(
@@ -258,7 +258,7 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
           iterator.next(cell_level);
           while (iterator.getCell()->getLevel()<cell_level) {
             if (iterator.getCell()->isLeaf())
-              iterator.getCell()->split(max_level);
+              iterator.getCell()->split(max_level, extrapolation_function);
             iterator.toLeaf(cell_level);
           }
           iterator.getCell()->setToThisProcRecurs();

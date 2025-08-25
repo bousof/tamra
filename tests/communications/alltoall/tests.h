@@ -117,7 +117,7 @@ bool testVectorDoubleAllToAllSplit(int rank, int size) {
 }
 
 // Mock ParallelData class for testing vectorDataAllToAll
-struct MockData : public ParallelData {
+struct MockData: public ParallelData {
   int id = 0;
   double x = 0.0;
   std::vector<double> data;

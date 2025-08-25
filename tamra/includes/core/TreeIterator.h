@@ -20,6 +20,8 @@ template<typename CellType>
 class TreeIterator {
  public:
   using CellIdManagerType = CellIdManager<CellType>;
+  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
+
   //***********************************************************//
   //  DATA                                                     //
   //***********************************************************//
@@ -97,7 +99,7 @@ class TreeIterator {
   // Moves the iterator to a leaf cell of the current cell that belong to the process
   void toOwnedLeaf(const int sweep_level = std::numeric_limits<int>::max(), const bool reverse = false);
   // Move iterator to a specific cell ID (can also create it with a flag)
-  void toCellId(const std::vector<unsigned> &cell_id, const bool create = false);
+  void toCellId(const std::vector<unsigned> &cell_id, const bool create = false, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {});
   // Check if a cell ID is greater than
   bool cellIdGt(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdGt(current_cell_id, cell_id); }
   // Check if a cell ID is greater than or equal another ID

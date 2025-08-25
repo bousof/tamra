@@ -63,8 +63,7 @@ bool ghostOneRoot1DParallel(int rank, int size) {
     passed &= A->getChildCell((rank+1)%2)->isLeaf();
 
   // Create ghost cells
-  TreeIterator<Cell1D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  tree.buildGhostLayer(iterator);
+  tree.buildGhostLayer();
 
   // Ghost parent cell Y should not be leaf anymore
   if (rank==0 || rank==1) {
@@ -134,8 +133,7 @@ bool ghostOneRootExtrapolateConflict1DParallel(int rank, int size) {
   }
 
   // Create ghost cells
-  TreeIterator<Cell1D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  Tree<Cell1D>::GhostManagerTaskType task = tree.buildGhostLayer(iterator);
+  Tree<Cell1D>::GhostManagerTaskType task = tree.buildGhostLayer();
 
   // Task should not be finished because of conflicts
   bool passed = !task.is_finished;
@@ -143,9 +141,8 @@ bool ghostOneRootExtrapolateConflict1DParallel(int rank, int size) {
   // Set up the task conflict resolution strategy that consist nin copying value to child cells
   auto copyInterpolationFunction = [](const std::shared_ptr<Cell1D> & parent_cell) -> bool {
     // Example: simply duplicate the parent value for each child (placeholder logic)
-    for (const auto &child: parent_cell->getChildCells()) {
+    for (const auto &child: parent_cell->getChildCells())
       child->getCellData().setValue(parent_cell->getCellData().getValue());
-    }
     return true;
   };
   task.setOwnedExtrapolationFunction(copyInterpolationFunction);
@@ -154,6 +151,7 @@ bool ghostOneRootExtrapolateConflict1DParallel(int rank, int size) {
   task.setGhostConflictResolutionStrategy({GhostConflictResolutionStrategy::EXTRAPOLATE});
 
   // Continue ghost manager task
+  TreeIterator<Cell1D> iterator(tree.getRootCells(), tree.getMaxLevel());
   task.continueTask(iterator);
 
   // Task should be finished because of conflicts

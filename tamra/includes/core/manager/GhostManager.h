@@ -23,6 +23,7 @@ template<typename CellTypeT, typename TreeIteratorTypeT = TreeIterator<CellTypeT
 class GhostManager {
  public:
   using CellType = CellTypeT;
+  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
   using TreeIteratorType = TreeIteratorTypeT;
   using GhostManagerTaskType = GhostManagerTask<GhostManager<CellTypeT, TreeIteratorType>>;
 
@@ -53,7 +54,7 @@ class GhostManager {
   //***********************************************************//
  public:
   // Creation of ghost cells and exchange of ghost values
-	GhostManagerTaskType buildGhostLayer(std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const;
+	GhostManagerTaskType buildGhostLayer(std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {}) const;
   // Update ghost cells and exchange values for solving conflicts
 	void updateGhostLayer(GhostManagerTaskType &task, TreeIteratorType &iterator) const;
  private:
