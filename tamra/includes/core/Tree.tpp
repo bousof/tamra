@@ -91,9 +91,9 @@ void Tree<CellType, TreeIteratorType>::meshAtMinLevel(TreeIteratorType &iterator
 // Split all the leaf cells belonging to this proc that need to
 // be refined  and are not at max level
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::refine(ExtrapolationFunctionType extrapolation_function) {
+bool Tree<CellType, TreeIteratorType>::refine(ExtrapolationFunctionType extrapolation_function) {
 	// Refining mesh
-	refineManager.refine(root_cells, extrapolation_function);
+	return refineManager.refine(root_cells, extrapolation_function);
 }
 
 // Creation of ghost cells
@@ -105,9 +105,9 @@ typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, T
 
 // Coarse all the cells for which all child are set to be coarsened
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::coarsen(InterpolationFunctionType interpolation_function) {
+bool Tree<CellType, TreeIteratorType>::coarsen(InterpolationFunctionType interpolation_function) {
 	// Coarsening mesh
-	coarseManager.coarsen(root_cells, interpolation_function);
+	return coarseManager.coarsen(root_cells, interpolation_function);
 }
 
 // Redistribute cells among processes to balance computation load

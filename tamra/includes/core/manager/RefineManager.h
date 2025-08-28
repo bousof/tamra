@@ -43,11 +43,11 @@ class RefineManager {
   //***********************************************************//
  public:
   // Go through all the leaf cells and split them one time if needed.
-	void refine(const std::vector< std::shared_ptr<CellType> >& root_cells, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {}) const;
+	bool refine(const std::vector< std::shared_ptr<CellType> >& root_cells, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {}) const;
 
  private:
   // Recursively refine child cells if needed
-  void refineRecurs(const std::shared_ptr<CellType>& cell, ExtrapolationFunctionType extrapolation_function) const;
+  bool refineRecurs(const std::shared_ptr<CellType>& cell, ExtrapolationFunctionType extrapolation_function) const;
 };
 
 #include "./RefineManager.tpp"

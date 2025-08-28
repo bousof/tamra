@@ -93,7 +93,7 @@ class Tree {
   void meshAtMinLevel(TreeIteratorType& iterator);
 
   // Split all the leaf cells belonging to this proc that need to be refined and are not at max level
-  void refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {});
+  bool refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {});
 
   // Creation of ghost cells
   GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
@@ -106,7 +106,7 @@ class Tree {
   void propagate() {};
 
   //--- Coarsening --------------------------------------------//
-  void coarsen(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
+  bool coarsen(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
 
   //--- Computing SFC indices ---------------------------------//
   void boundaryConditions() {};
