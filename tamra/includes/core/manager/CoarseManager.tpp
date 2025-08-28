@@ -23,10 +23,10 @@ CoarseManager<CellType>::~CoarseManager() {};
 // Go through all the parent cells and coarse them one time if needed
 template<typename CellType>
 void CoarseManager<CellType>::coarsen(const std::vector< std::shared_ptr<CellType> >& root_cells, InterpolationFunctionType interpolation_function) const {
-  // Looping on all root cells
-  for (const auto &root_cell: root_cells)
-    // Looping on levels starting from high to low level
-    for (int coarse_level={max_level-1}; coarse_level>=min_level; --coarse_level)
+  // Looping on levels starting from high to low level
+  for (int coarse_level={max_level-1}; coarse_level>=min_level; --coarse_level)
+    // Looping on all root cells
+    for (const auto &root_cell: root_cells)
       // Recursively coarse cells at min level
       coarsenToLevelRecurs(root_cell, coarse_level, interpolation_function);
 }
