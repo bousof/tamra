@@ -96,9 +96,12 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
       static_cast<typename CellType::CellDataType*>(all_cell_data_recv[i].release())
     ));
 
-    // If cell is alraedy split, ghost extrapolation should be done to set child values
-    if (!iterator.getCell()->isLeaf())
+    if (!iterator.getCell()->isLeaf()) {
+      // Call extrapolation function on non-leaf cells
+      iterator.getCell()->extrapolateRecursively(extrapolation_function);
+      // Add cell to list for later processing
       extrapolate_ghost_cells.push_back(iterator.getCell());
+    }
   }
 
   // Number of leaf cells befor creating ghost.

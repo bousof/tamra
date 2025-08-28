@@ -253,6 +253,9 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
         iterator.getCell()->setCellData(std::unique_ptr<typename CellType::CellDataType>(
           static_cast<typename CellType::CellDataType*>(all_cell_data_recv[cell_counter++].release())
         ));
+        if (!iterator.getCell()->isLeaf())
+          // Call extrapolation function on non-leaf cells
+          iterator.getCell()->extrapolateRecursively(extrapolation_function);
         // Insert the other cells levels
         for (const unsigned &cell_level: cell_levels) {
           iterator.next(cell_level);
@@ -267,6 +270,10 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
           iterator.getCell()->setCellData(std::unique_ptr<typename CellType::CellDataType>(
             static_cast<typename CellType::CellDataType*>(all_cell_data_recv[cell_counter++].release())
           ));
+
+          if (!iterator.getCell()->isLeaf())
+            // Call extrapolation function on non-leaf cells
+            iterator.getCell()->extrapolateRecursively(extrapolation_function);
         }
       }
   }
