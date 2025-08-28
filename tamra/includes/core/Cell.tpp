@@ -349,6 +349,18 @@ void Cell<Nx, Ny, Nz, DataType>::applyToDirNeighborCells(const unsigned dir, con
     f(thisAsSmartPtr(), nbChildCell, dir);
 }
 
+//Apply extrapolation function to all non-leaf descendent cells recursively
+template<int Nx, int Ny, int Nz, typename DataType>
+void Cell<Nx, Ny, Nz, DataType>::extrapolateRecursively(ExtrapolationFunctionType extrapolation_function) const {
+  if (isLeaf())
+    return;
+
+  extrapolation_function(thisAsSmartPtr());
+
+  for (const auto &child: getChildCells())
+    child->extrapolateRecursively(extrapolation_function);
+}
+
 // Verify if neighbors splitting is needed before cell splitting
 template<int Nx, int Ny, int Nz, typename DataType>
 bool Cell<Nx, Ny, Nz, DataType>::verifySplitNeighbors(const int max_level) {
