@@ -15,8 +15,8 @@
 template<typename T>
 void scalarAllReduce(const T value, T &reduction, const MPI_Datatype data_type, const MPI_Op op_type) {
   static_assert(
-    std::is_same<T, bool>::value || std::is_same<T, unsigned>::value,
-    "scalarAllReduce only supports T = bool, or unsigned"
+    std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, unsigned>::value,
+    "scalarAllReduce only supports T = bool, double, or unsigned"
   );
 
 	// Reduction of values between all processors
@@ -25,4 +25,6 @@ void scalarAllReduce(const T value, T &reduction, const MPI_Datatype data_type, 
 
 void boolAndAllReduce(const bool value, bool& reduction);
 
-void unsignedSumAllReduce(const unsigned value, unsigned& reduction);
+void unsignedSumAllReduce(const unsigned value, unsigned &reduction);
+
+void doubleMinAllReduce(const double value, double &reduction);
