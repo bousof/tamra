@@ -32,14 +32,10 @@ bool meshTreeToMinLevelOneRootSerial() {
   // Mesh until min level (2)
   tree.meshAtMinLevel();
 
-  // Count nulber of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_lef_cells = 1;
-  iterator.toBegin();
-  while (iterator.next())
-    ++number_lef_cells;
+  // Count number of leaf cells
+  int number_leaf_cells = A->countLeaves();
 
-  bool passed = number_lef_cells==(int)(pow(Cell2D::number_children, min_level));
+  bool passed = number_leaf_cells==(int)(pow(Cell2D::number_children, min_level));
   return passed;
 }
 
@@ -64,13 +60,9 @@ bool meshTreeToMinLevelTwoRootsSerial() {
   // Mesh until min level (2)
   tree.meshAtMinLevel();
 
-  // Count nulber of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_lef_cells = 1;
-  iterator.toBegin();
-  while (iterator.next())
-    ++number_lef_cells;
+  // Count number of leaf cells
+  int number_leaf_cells = A->countLeaves() + B->countLeaves();
 
-  bool passed = number_lef_cells==tree.getRootCells().size() * (int)(pow(Cell2D::number_children, min_level));
+  bool passed = number_leaf_cells==tree.getRootCells().size() * (int)(pow(Cell2D::number_children, min_level));
   return passed;
 }

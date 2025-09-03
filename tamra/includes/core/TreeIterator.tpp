@@ -7,7 +7,9 @@
 // Constructor
 template<typename CellType>
 TreeIterator<CellType>::TreeIterator(const std::vector< std::shared_ptr<CellType> > &root_cells, const int max_level)
-: root_cells(root_cells), max_level(max_level), cell_id_manager(root_cells.size(), max_level) {
+: root_cells(root_cells),
+  max_level(max_level),
+  cell_id_manager(root_cells.size(), max_level) {
   level_partition_sizes.assign(max_level+1, 1);
   for (int i{max_level-1}; i>=0; --i)
     level_partition_sizes[i] = level_partition_sizes[i+1] * CellType::number_children;
@@ -21,7 +23,7 @@ TreeIterator<CellType>::TreeIterator(const std::vector< std::shared_ptr<CellType
 
 // Get current cell
 template<typename CellType>
-const std::shared_ptr<CellType>& TreeIterator<CellType>::getCell() const {
+std::shared_ptr<CellType> TreeIterator<CellType>::getCell() const {
   return current_cell;
 }
 
@@ -217,14 +219,14 @@ void TreeIterator<CellType>::toOwnedLeaf(const int sweep_level, const bool rever
 
 // Move iterator to a specific cell ID (can also create it with a flag)
 template<typename CellType>
-void TreeIterator<CellType>::toCellId(const std::vector<unsigned> &cell_id, const bool create) {
+void TreeIterator<CellType>::toCellId(const std::vector<unsigned> &cell_id, const bool create, ExtrapolationFunctionType extrapolation_function) {
   std::vector<unsigned> index_path = idToIndexPath(cell_id);
 
   // Go to right cell
   toRoot(index_path[0]);
   for (unsigned i{1}; i<index_path.size(); ++i) {
     if (create && current_cell->isLeaf())
-      current_cell->split(max_level);
+      current_cell->split(max_level, extrapolation_function);
     if (!current_cell->isLeaf())
       toChild(index_path[i]);
     else

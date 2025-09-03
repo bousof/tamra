@@ -44,13 +44,9 @@ bool countLeafOneRoot() {
   A->getChildCell(2)->split(max_level);
 
   // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_lef_cells = 1;
-  iterator.toBegin();
-  while (iterator.next())
-    ++number_lef_cells;
+  int number_leaf_cells = A->countLeaves();
 
-  bool passed = number_lef_cells==10;
+  bool passed = number_leaf_cells==10;
   return passed;
 }
 
@@ -77,7 +73,7 @@ bool countLeafTwoRoots() {
   eA.setNeighbor(1, B);          // A +x -> B
   eB.setNeighbor(0, A);          // B -x -> A
   std::vector< RootCellEntry<Cell2D> > entries { eA, eB };
- 
+
   // Construction of the tree
   int min_level = 1, max_level = 2;
   Tree<Cell2D> tree(min_level, max_level);
@@ -88,12 +84,8 @@ bool countLeafTwoRoots() {
   B->getChildCell(3)->split(max_level);
 
   // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_lef_cells = 1;
-  iterator.toBegin();
-  while (iterator.next())
-    ++number_lef_cells;
+  int number_leaf_cells = A->countLeaves() + B->countLeaves();
 
-  bool passed = number_lef_cells==14;
+  bool passed = number_leaf_cells==14;
   return passed;
 }

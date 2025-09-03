@@ -25,7 +25,7 @@ void registerCoreManagerMinLevelParallelTests() {
 
 // Mesh at min level and count number of leaf cells belong to this process
 // Example for size==3
-//                      rank 0               rank 1               rank 2     
+//                      rank 0               rank 1               rank 2
 //                 _______________      _______________      _______________ 
 //                |       |       |    |   |   |       |    | X | X | X | X |
 //                |       |       |    |___|___|       |    |___|___|___|___|
@@ -53,12 +53,8 @@ bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
   // Mesh until min level (2)
   tree.meshAtMinLevel();
 
-  // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_leaf_cells = 1;
-  iterator.toOwnedBegin();
-  while (iterator.ownedNext())
-    ++number_leaf_cells;
+  // Count number of owned leaf cells
+  int number_leaf_cells = A->countOwnedLeaves();
 
   // Compute the number of cells on each process
   int total_cells_min_level = (int)(pow(Cell2D::number_children, min_level));
@@ -129,12 +125,8 @@ bool meshTreeToMinLevelTwoRootsParallel(int rank, int size) {
   // Mesh until min level (2)
   tree.meshAtMinLevel();
 
-  // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_leaf_cells = 1;
-  iterator.toOwnedBegin();
-  while (iterator.ownedNext())
-    ++number_leaf_cells;
+  // Count number of owned leaf cells
+  int number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
 
   // Compute the number of cells on each process
   int total_cells_min_level = tree.getRootCells().size() * (int)(pow(Cell2D::number_children, min_level));
@@ -183,12 +175,8 @@ bool meshTreeToMinLevelOneRootPerProcParallel(int rank, int size) {
   // Mesh until min level (2)
   tree.meshAtMinLevel();
 
-  // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  unsigned number_leaf_cells = 1;
-  iterator.toOwnedBegin();
-  while (iterator.ownedNext())
-    ++number_leaf_cells;
+  // Count number of owned leaf cells
+  int number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
 
   // Compute the number of cells on each process
   unsigned total_cells_min_level = tree.getRootCells().size() * (int)(pow(Cell2D::number_children, min_level));

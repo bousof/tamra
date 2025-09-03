@@ -60,12 +60,8 @@ bool balanceEmptyPartitionsParallel(int rank, int size) {
   // Load balance the tree
   tree.loadBalance();
 
-  // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_leaf_cells = 1;
-  iterator.toOwnedBegin();
-  while (iterator.ownedNext())
-    ++number_leaf_cells;
+  // Count number of owned leaf cells
+  int number_leaf_cells = A->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
@@ -135,11 +131,8 @@ bool balanceEmptyPartitionsDataParallel(int rank, int size) {
   // Load balance the tree
   tree.loadBalance();
 
-  // Count number of leaf cells
-  int number_leaf_cells = 1;
-  iterator.toOwnedBegin();
-  while (iterator.ownedNext())
-    ++number_leaf_cells;
+  // Count number of owned leaf cells
+  int number_leaf_cells = A->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
@@ -234,11 +227,8 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
   // Load balance the tree
   tree.loadBalance();
 
-  // Count number of leaf cells
-  int number_leaf_cells = 1;
-  iterator.toOwnedBegin();
-  while (iterator.ownedNext())
-    ++number_leaf_cells;
+  // Count number of owned leaf cells
+  int number_leaf_cells = A->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
@@ -266,7 +256,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
 // Mesh at min level 2 then split the first child cell until max level 3
 // X show the leaf cells that belong to each process
 // Example for size==3
-//                      rank 0               rank 1               rank 2     
+//                      rank 0               rank 1               rank 2
 //                 _______________      _______________      _______________ 
 //                |       |       |    |   |   |       |    | X | X | X | X |
 //                |       |       |    |___|___|       |    |___|___|___|___|
@@ -277,7 +267,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
 //                |X|X|X|X| X |   |    |       |   | X |    |       |       |
 //                |X|X|X|X|___|___|    |_______|___|___|    |_______|_______|
 // The loads (nb leaf cells) are [17, 5, 6] and after load balancing the partitions become:
-//                      rank 0               rank 1               rank 2     
+//                      rank 0               rank 1               rank 2
 //                 _______________      _______________      _______________ 
 //                |       |       |    |   |   |       |    | X | X | X | X |
 //                |       |       |    |___|___|       |    |___|___|___|___|
@@ -308,17 +298,14 @@ bool balanceSmallOneRootParallel(int rank, int size) {
   // Split first 4 cells in process 0
   if (rank==0)
     for (const auto &child: A->getChildCell(0)->getChildCells())
-      child->split(max_level);
+      if (child->belongToOtherProc())
+        child->split(max_level);
 
   // Load balance the tree
   tree.loadBalance();
 
-  // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_leaf_cells = 1;
-  iterator.toOwnedBegin();
-  while (iterator.ownedNext())
-    ++number_leaf_cells;
+  // Count number of owned leaf cells
+  int number_leaf_cells = A->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
@@ -345,7 +332,7 @@ bool balanceSmallOneRootParallel(int rank, int size) {
 // That's why the test only verify the sum of leafxsize to verify total area
 // Note also that it may lead to extrapolation cells that need to be handled:
 // Example for size==3
-//                      rank 0               rank 1               rank 2     
+//                      rank 0               rank 1               rank 2
 //                 _______________      _______________      _______________ 
 //                |       |       |    |   |   |       |    | X | X | X | X |
 //                |       |       |    |___|___|       |    |___|___|___|___|
@@ -398,10 +385,13 @@ bool balanceBigOneRootParallel(int rank, int size) {
   // Split first 4 cells in process 0
   if (rank==0) {
     for (const auto &child: A->getChildCell(0)->getChildCells())
-      child->split(max_level);
+      if (child->belongToOtherProc())
+        child->split(max_level);
     for (const auto &child: A->getChildCell(0)->getChildCells())
-      for (const auto &gc: child->getChildCells())
-        gc->split(max_level);
+      if (child->belongToOtherProc())
+        for (const auto &gc: child->getChildCells())
+          if (gc->belongToOtherProc())
+            gc->split(max_level);
   }
 
   // Load balance the tree
@@ -467,12 +457,8 @@ bool balanceSmallTwoRootsParallel(int rank, int size) {
   // Load balance the tree
   tree.loadBalance();
 
-  // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  int number_leaf_cells = 1;
-  iterator.toOwnedBegin();
-  while (iterator.ownedNext())
-    ++number_leaf_cells;
+  // Count number of owned leaf cells
+  int number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;

@@ -7,9 +7,13 @@
 // Constructor
 template<typename CellType, typename TreeIteratorType>
 Tree<CellType, TreeIteratorType>::Tree(const int min_level, const int max_level, const int rank, const int size)
-: min_level(min_level), max_level(max_level), rank(rank), size(size),
+: min_level(min_level),
+  max_level(max_level),
+  rank(rank),
+  size(size),
   balanceManager(min_level, max_level, rank, size),
   coarseManager(min_level, max_level, rank, size),
+  ghostManager(min_level, max_level, rank, size),
   minLevelMeshManager(min_level, max_level, rank, size),
   refineManager(min_level, max_level, rank, size) {}
 
@@ -66,6 +70,12 @@ int Tree<CellType, TreeIteratorType>::getMaxLevel() const {
   return max_level;
 }
 
+// Get ghost manager
+template<typename CellType, typename TreeIteratorType>
+typename Tree<CellType, TreeIteratorType>::GhostManagerType Tree<CellType, TreeIteratorType>::getGhostManager() const {
+  return ghostManager;
+}
+
 
 //***********************************************************//
 //  METHODS                                                  //
@@ -87,27 +97,59 @@ void Tree<CellType, TreeIteratorType>::meshAtMinLevel(TreeIteratorType &iterator
 // Split all the leaf cells belonging to this proc that need to
 // be refined  and are not at max level
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::refine() {
+bool Tree<CellType, TreeIteratorType>::refine(ExtrapolationFunctionType extrapolation_function) {
 	// Refining mesh
-	refineManager.refine(root_cells);
+	return refineManager.refine(root_cells, extrapolation_function);
+}
+
+// Creation of ghost cells
+template<typename CellType, typename TreeIteratorType>
+typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, TreeIteratorType>::buildGhostLayer(InterpolationFunctionType interpolation_function) {
+  TreeIteratorType iterator(root_cells, max_level);
+  return ghostManager.buildGhostLayer(root_cells, iterator, interpolation_function);
+}
+
+// Creation of ghost cells
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function) {
+  TreeIteratorType iterator(root_cells, max_level);
+  ghostManager.exchangeGhostValues(task, iterator, interpolation_function);
 }
 
 // Coarse all the cells for which all child are set to be coarsened
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::coarsen() {
+bool Tree<CellType, TreeIteratorType>::coarsen(InterpolationFunctionType interpolation_function) {
 	// Coarsening mesh
-	coarseManager.coarsen(root_cells);
+	return coarseManager.coarsen(root_cells, interpolation_function);
 }
 
 // Redistribute cells among processes to balance computation load
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::loadBalance() {
+void Tree<CellType, TreeIteratorType>::loadBalance(InterpolationFunctionType interpolation_function) {
 	TreeIteratorType iterator(root_cells, max_level);
-	return loadBalance(iterator);
+  return balanceManager.loadBalance(root_cells, iterator, 0.1, interpolation_function);
 }
-// Redistribute cells among processes to balance computation load
+
+// Count the number of owned leaf cells
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::loadBalance(TreeIteratorType &iterator) {
-	// Load balancing mesh
-	return balanceManager.loadBalance(root_cells, iterator, 0.1);
+unsigned Tree<CellType, TreeIteratorType>::countOwnedLeaves() const {
+  unsigned nb_owned_leaves = 0;
+
+  for (const auto &root_cell: root_cells)
+    if (root_cell->belongToThisProc())
+      nb_owned_leaves += root_cell->countOwnedLeaves();
+  return nb_owned_leaves;
+}
+
+// Apply a function to owned leaf cells
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, unsigned)>& f) const {
+  TreeIteratorType iterator(getRootCells(), getMaxLevel());
+
+  unsigned index = 0;
+  if (!iterator.toOwnedBegin())
+    return;
+  do {
+    f(iterator.getCell(), index++);
+  } while (iterator.ownedNext());
 }

@@ -18,8 +18,9 @@
 
 template<typename CellType>
 class TreeIterator {
- private:
+ public:
   using CellIdManagerType = BitStackedCellIdManager<CellType>;
+  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
   //***********************************************************//
   //  DATA                                                     //
   //***********************************************************//
@@ -57,7 +58,7 @@ class TreeIterator {
   //***********************************************************//
  public:
   // Get current cell
-  const std::shared_ptr<CellType>& getCell() const;
+  std::shared_ptr<CellType> getCell() const;
   // Get current cell partition
   const std::pair<int, int>& getPartition() const;
   // Get current index path
@@ -97,15 +98,15 @@ class TreeIterator {
   // Moves the iterator to a leaf cell of the current cell that belong to the process
   void toOwnedLeaf(const int sweep_level = std::numeric_limits<int>::max(), const bool reverse = false);
   // Move iterator to a specific cell ID (can also create it with a flag)
-  void toCellId(const std::vector<unsigned> &cell_id, const bool create = false);
+  void toCellId(const std::vector<unsigned> &cell_id, const bool create = false, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {});
   // Check if a cell ID is greater than
-  bool cellIdGt(std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdGt(current_cell_id, cell_id); }
+  bool cellIdGt(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdGt(current_cell_id, cell_id); }
   // Check if a cell ID is greater than or equal another ID
-  bool cellIdGte(std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdGte(current_cell_id, cell_id); }
+  bool cellIdGte(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdGte(current_cell_id, cell_id); }
   // Check if a cell ID is smaller than
-  bool cellIdLt(std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdLt(current_cell_id, cell_id); }
+  bool cellIdLt(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdLt(current_cell_id, cell_id); }
   // Check if a cell ID is smaller than or equal another ID
-  bool cellIdLte(std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdLte(current_cell_id, cell_id); }
+  bool cellIdLte(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdLte(current_cell_id, cell_id); }
   // Generate an ID from the genealogy of a cell.
   std::vector<unsigned> indexPathToId(const std::vector<unsigned> &index_path) const;
   // Generate an ID from the genealogy of a cell.

@@ -6,11 +6,11 @@
 
 // Constructor
 template<typename CellType>
-Oct<CellType>::Oct() {};
+Oct<CellType>::Oct() {}
 
 // Destructor
 template<typename CellType>
-Oct<CellType>::~Oct() {};
+Oct<CellType>::~Oct() {}
 
 // Oct initializer
 template<typename CellType>

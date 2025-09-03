@@ -14,18 +14,26 @@
 #include "Cell.h"
 #include "manager/BalanceManager.h"
 #include "manager/CoarseManager.h"
+#include "manager/GhostManager.h"
 #include "manager/MinLevelMeshManager.h"
 #include "manager/RefineManager.h"
 #include "RootCellEntry.h"
 #include "TreeIterator.h"
 
-template<typename CellType, typename TreeIteratorType = TreeIterator<CellType>>
+template<typename CellTypeT, typename TreeIteratorTypeT = TreeIterator<CellTypeT>>
 class Tree {
+ public:
+  using CellType = CellTypeT;
   using BalanceManagerType = BalanceManager<CellType>;
   using CoarseManagerType = CoarseManager<CellType>;
+  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
+  using InterpolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
+  using GhostManagerType = GhostManager<CellType>;
+  using GhostManagerTaskType = typename GhostManager<CellType>::GhostManagerTaskType;
   using MinLevelMeshManagerType = MinLevelMeshManager<CellType>;
   using RefineManagerType = RefineManager<CellType>;
   using RootCellEntryType = RootCellEntry<CellType>;
+  using TreeIteratorType = TreeIteratorTypeT;
   //***********************************************************//
   //  DATA                                                     //
   //***********************************************************//
@@ -44,6 +52,8 @@ class Tree {
 	BalanceManagerType balanceManager;
   // Mesh coarsening manager
 	CoarseManagerType coarseManager;
+  // Ghost cell manager
+	GhostManagerType ghostManager;
   // Min level meshing manager
 	MinLevelMeshManagerType minLevelMeshManager;
   // Mesh refinement manager
@@ -73,6 +83,8 @@ class Tree {
   int getMinLevel() const;
   // Get max mesh level
   int getMaxLevel() const;
+  // Get ghost manager
+  GhostManagerType getGhostManager() const;
 
   //***********************************************************//
   //  METHODS                                                  //
@@ -83,24 +95,30 @@ class Tree {
   void meshAtMinLevel(TreeIteratorType& iterator);
 
   // Split all the leaf cells belonging to this proc that need to be refined and are not at max level
-  void refine();
+  bool refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {});
 
-  //--- Ghosts cells ------------------------------------------//
-  void createGhostCells() {};
-  void exchangeGhostValues() {};
-  
+  // Creation of ghost cells
+  GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
+  // Exchange ghost cell values
+  void exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
+
   // Redistribute cells among processes to balance computation load
-  void loadBalance();
-  void loadBalance(TreeIteratorType &iterator);
-  
+  void loadBalance(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
+
   //--- Propagating -------------------------------------------//
   void propagate() {};
-  
+
   //--- Coarsening --------------------------------------------//
-  void coarsen();
-  
+  bool coarsen(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
+
   //--- Computing SFC indices ---------------------------------//
   void boundaryConditions() {};
+
+  // Count the number of owned leaf cells
+  unsigned countOwnedLeaves() const;
+
+  // Apply a function to owned leaf cells
+  void applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, unsigned)>& f) const;
 };
 
 #include "Tree.tpp"

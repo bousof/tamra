@@ -38,7 +38,7 @@ class CellIdManager {
  public:
   // Get the size of cell ID vector
   unsigned getCellIdSize() const { return cell_id_size; }
-  
+
   //***********************************************************//
   //  METHODS                                                  //
   //***********************************************************//
@@ -50,25 +50,33 @@ class CellIdManager {
   // Generate the IDs of the first and last leaf cells of the
   // partitions obatined by splitting into equal parts and taking
   // the n-th one
-  std::vector< std::vector<unsigned> > getEqualPartitions(const int level, const int size);
+  std::vector< std::vector<unsigned> > getEqualPartitions(const int level, const int size) const;
   // Moves the cell ID to child cell
-  void toChild(std::vector<unsigned> &cell_id, const unsigned order);
+  void toChild(std::vector<unsigned> &cell_id, const unsigned order) const;
   // Moves the cell ID to parent cell
-  void toParent(std::vector<unsigned> &cell_id);
+  void toParent(std::vector<unsigned> &cell_id) const;
   // Moves the cell ID to root cell
-  void toRoot(std::vector<unsigned> &cell_id, const unsigned root_number);
+  void toRoot(std::vector<unsigned> &cell_id, const unsigned root_number) const;
   // Reset cell ID
-  void resetCellID(std::vector<unsigned> &cell_id);
+  void resetCellID(std::vector<unsigned> &cell_id) const;
   // Check if a cell ID is greater than
-  bool cellIdGt(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2, bool &sure);
-  bool cellIdGt(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2);
+  // True if 1.start > 2.end
+  bool cellIdGt(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2) const;
+ private:
+  bool cellIdGt(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2, bool &sure) const;
+ public:
   // Check if a cell ID is greater than or equal another ID
-  bool cellIdGte(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2);
+  // True if 1.start >= 2.start
+  bool cellIdGte(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2) const;
   // Check if a cell ID is smaller than
-  bool cellIdLt(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2, bool &sure);
-  bool cellIdLt(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2);
+  // True if 1.end < 2.start
+  bool cellIdLt(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2) const;
+ private:
+  bool cellIdLt(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2, bool &sure) const;
+ public:
   // Check if a cell ID is smaller than or equal another ID
-  bool cellIdLte(std::vector<unsigned> &cell_id_1, std::vector<unsigned> &cell_id_2);
+  // True if 1.end <= 2.end
+  bool cellIdLte(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2) const;
  protected:
   // Extract the cell_id level
   virtual int getIdLevel(const std::vector<unsigned> &cell_id) const;
@@ -84,7 +92,7 @@ class CellIdManager {
   virtual void setIdChild(std::vector<unsigned> &cell_id, const int level, const unsigned child_index) const;
  private:
   // Moves the cell ID to a leaf cell
-  void toLeaf(std::vector<unsigned> &cell_id, const int sweep_level, const bool reverse);
+  void toLeaf(std::vector<unsigned> &cell_id, const int sweep_level, const bool reverse) const;
 };
 
 #include "CellIdManager.tpp"

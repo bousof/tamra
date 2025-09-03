@@ -6,11 +6,12 @@
 #include <iostream>
 #include <parallel/allreduce.h>
 #include <parallel/alltoall.h>
+#include <parallel/alltoallv.h>
 #include <testing/UnitTestRegistry.h>
 #include <vector>
 
-bool testIntAllToAll(int rank, int size);
-bool testVectorIntAllToAll(int rank, int size);
+bool testIntAlltoall(int rank, int size);
+bool testVectorIntAlltoall(int rank, int size);
 bool testVectorDoubleAllToAllFlat(int rank, int size);
 bool testVectorDoubleAllToAllSplit(int rank, int size);
 bool testVectorDataAllToAllFixed(int rank, int size);
@@ -22,8 +23,8 @@ void registerCommunicationsAllToAllTests() {
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   UnitTestRegistry::label = "P_" + std::to_string(rank) + ": ";
-  UnitTestRegistry::registerParallelTest("Int AllToAll", [=]() { return testIntAllToAll(rank, size); }, "communications/alltoall");
-  UnitTestRegistry::registerParallelTest("Vector Int AllToAll", [=]() { return testVectorIntAllToAll(rank, size); }, "communications/alltoall");
+  UnitTestRegistry::registerParallelTest("Int AllToAll", [=]() { return testIntAlltoall(rank, size); }, "communications/alltoall");
+  UnitTestRegistry::registerParallelTest("Vector Int AllToAll", [=]() { return testVectorIntAlltoall(rank, size); }, "communications/alltoall");
   UnitTestRegistry::registerParallelTest("Vector Double AllToAll (flat)", [=]() { return testVectorDoubleAllToAllFlat(rank, size); }, "communications/alltoall");
   UnitTestRegistry::registerParallelTest("Vector Double AllToAll (split)", [=]() { return testVectorDoubleAllToAllSplit(rank, size); }, "communications/alltoall");
   UnitTestRegistry::registerParallelTest("Vector Data AllToAll (fixed size)", [=]() { return testVectorDataAllToAllFixed(rank, size); }, "communications/alltoall");
@@ -31,11 +32,11 @@ void registerCommunicationsAllToAllTests() {
 }
 
 // Int AllToAll
-bool testIntAllToAll(int rank, int size) {
+bool testIntAlltoall(int rank, int size) {
   // Send rank to all others
   std::vector<int> send_buffer(size, rank),
                    recv_buffer(size, 0);
-  intAllToAll(send_buffer, recv_buffer, size);
+  intAlltoall(send_buffer, recv_buffer, size);
 
   // Should receive ranks from all others
   bool passed = true;
@@ -50,14 +51,14 @@ bool testIntAllToAll(int rank, int size) {
 }
 
 // Vector Int AllToAll
-bool testVectorIntAllToAll(int rank, int size) {
+bool testVectorIntAlltoall(int rank, int size) {
   std::vector<std::vector<unsigned>> send_buffers(size);
   for (int p = 0; p < size; ++p) {
     send_buffers.at(p).push_back(rank * 10 + p);
   }
 
   std::vector<unsigned> recv_buffer;
-  vectorUnsignedAllToAll(send_buffers, recv_buffer, size);
+  vectorUnsignedAlltoallv(send_buffers, recv_buffer, size);
 
   bool passed = recv_buffer.size() == size;
   for (int i = 0; i < size && passed; ++i) {
@@ -78,7 +79,7 @@ bool testVectorDoubleAllToAllFlat(int rank, int size) {
   }
 
   std::vector<double> recv_buffer;
-  vectorDoubleAllToAll(send_buffers, recv_buffer, size);
+  vectorDoubleAlltoallv(send_buffers, recv_buffer, size);
 
   bool passed = recv_buffer.size() == size;
   for (int i = 0; i < size && passed; ++i) {
@@ -99,7 +100,7 @@ bool testVectorDoubleAllToAllSplit(int rank, int size) {
   }
 
   std::vector<std::vector<double>> recv_buffers;
-  vectorDoubleAllToAll(send_buffers, recv_buffers, size);
+  vectorDoubleAlltoallv(send_buffers, recv_buffers, size);
 
   bool passed = recv_buffers.size() == size;
   for (int p = 0; p < size && passed; ++p) {
@@ -116,7 +117,7 @@ bool testVectorDoubleAllToAllSplit(int rank, int size) {
 }
 
 // Mock ParallelData class for testing vectorDataAllToAll
-struct MockData : public ParallelData {
+struct MockData: public ParallelData {
   int id = 0;
   double x = 0.0;
   std::vector<double> data;
@@ -152,7 +153,7 @@ bool testVectorDataAllToAllFixed(int rank, int size) {
   }
 
   std::vector<std::unique_ptr<ParallelData>> recv_buffer;
-  vectorDataAllToAll(send_buffers, recv_buffer, size, []() {
+  vectorDataAlltoallv(send_buffers, recv_buffer, size, []() {
     return std::make_unique<MockData>();
   });
 
@@ -181,7 +182,7 @@ bool testVectorDataAllToAllDynamic(int rank, int size) {
   }
 
   std::vector<std::unique_ptr<ParallelData>> recv_buffer;
-  vectorDataAllToAll(send_buffers, recv_buffer, size, []() {
+  vectorDataAlltoallv(send_buffers, recv_buffer, size, []() {
     return std::make_unique<MockData>();
   });
 

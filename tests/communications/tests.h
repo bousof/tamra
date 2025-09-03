@@ -3,7 +3,7 @@
 #ifndef USE_MPI
 
 void registerCommunicationsAllToAllTests() {}
-void registerCommunicationsBCastTests() {}
+void registerCommunicationsBcastTests() {}
 
 #else
 
@@ -14,5 +14,5 @@ void registerCommunicationsBCastTests() {}
 
 void registerCommunicationsTests() {
   registerCommunicationsAllToAllTests();
-  registerCommunicationsBCastTests();
+  registerCommunicationsBcastTests();
 }

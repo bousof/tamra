@@ -1,4 +1,5 @@
 #include "./MinLevelMeshManager.h"
+//#include "../../../display/display_vector.h"
 
 //***********************************************************//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -7,7 +8,10 @@
 // Constructor
 template<typename CellType, typename TreeIteratorType>
 MinLevelMeshManager<CellType, TreeIteratorType>::MinLevelMeshManager(const int min_level, const int max_level, const int rank, const int size)
-: min_level(min_level), max_level(max_level), rank(rank), size(size) {}
+: min_level(min_level),
+  max_level(max_level),
+  rank(rank),
+  size(size) {}
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>
@@ -19,7 +23,7 @@ MinLevelMeshManager<CellType, TreeIteratorType>::~MinLevelMeshManager() {};
 //***********************************************************//
 // Serial meshing at min level
 template<typename CellType, typename TreeIteratorType>
-void MinLevelMeshManager<CellType, TreeIteratorType>::meshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells) {
+void MinLevelMeshManager<CellType, TreeIteratorType>::meshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells) const {
   // Looping on all root cells
   for (const auto &root_cell: root_cells)
     // Recursively mesh cells at min level
@@ -28,7 +32,7 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::meshAtMinLevel(const std::
 
 // Parallel meshing at min level
 template<typename CellType, typename TreeIteratorType>
-void MinLevelMeshManager<CellType, TreeIteratorType>::meshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) {
+void MinLevelMeshManager<CellType, TreeIteratorType>::meshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const {
   if (size>1) {
     // Construct partitions and refine all cells in the process partition at min level
     parallelMeshAtMinLevel(root_cells, iterator);
@@ -37,35 +41,9 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::meshAtMinLevel(const std::
     meshAtMinLevel(root_cells);
 }
 
-// Get the partition (start and end position in the SFC) that belong to this process
-template<typename CellType, typename TreeIteratorType>
-std::pair<int, int> MinLevelMeshManager<CellType, TreeIteratorType>::getParallelPartition(const unsigned number_root_cells) {
-  // We determine the start and the end of the partition
-  int total_cells_min_level = number_root_cells * static_cast<int>(pow(CellType::number_children, min_level));
-  int partition_size_min_level = static_cast<int>(pow(CellType::number_children, max_level - min_level));
-
-  // The number of cells at minimum level must be >= to the number of processes
-  if (size > total_cells_min_level)
-    throw std::runtime_error("To feww cells at nim level in MinLevelMeshManager::meshAtMinLevel()");
-
-  // Define the partitions for each processor
-  int partition_start = 0,
-      partition_end = total_cells_min_level;
-  if (rank != 0)
-    partition_start = ceil( (static_cast<double>(rank)/size) * ((double) total_cells_min_level) );
-  if (rank != (size-1))
-    partition_end = ceil( (static_cast<double>(rank+1)/size) * ((double) total_cells_min_level) );
-  if (partition_end < partition_start)
-    partition_start = partition_end;
-  partition_start = partition_start * partition_size_min_level;
-  partition_end   = partition_end * partition_size_min_level-1;
-
-  return std::make_pair(partition_start, partition_end);
-}
-
 // Recursively mesh cells at min level
 template<typename CellType, typename TreeIteratorType>
-void MinLevelMeshManager<CellType, TreeIteratorType>::serialMeshAtMinLevelRecurs(const std::shared_ptr<CellType>& cell) {
+void MinLevelMeshManager<CellType, TreeIteratorType>::serialMeshAtMinLevelRecurs(const std::shared_ptr<CellType>& cell) const {
   if (cell->getLevel() < min_level) {
     if (cell->isLeaf())
       cell->split(max_level);
@@ -79,7 +57,7 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::serialMeshAtMinLevelRecurs
 
 // Mesh all cells in the process partition at min level
 template<typename CellType, typename TreeIteratorType>
-void MinLevelMeshManager<CellType, TreeIteratorType>::parallelMeshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) {
+void MinLevelMeshManager<CellType, TreeIteratorType>::parallelMeshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const {
   // Set all cells to belong to other process
   for (const auto &root_cell: root_cells)
     root_cell->setToOtherProcRecurs();
@@ -89,8 +67,8 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::parallelMeshAtMinLevel(con
   if (rank==0) {
     partitions = iterator.getCellIdManager().getEqualPartitions(min_level, size);;
   }
-  int rowCount=size, colCount=iterator.getCellIdManager().getCellIdSize();
-  matrixUnsignedBCast(partitions, 0, rank, rowCount, colCount);
+  unsigned rowCount=size, colCount=iterator.getCellIdManager().getCellIdSize();
+  matrixUnsignedBcast(partitions, 0, rank, rowCount, colCount);
 
   // Create the first partition cell
   iterator.toCellId(partitions[rank], true);
@@ -121,7 +99,7 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::parallelMeshAtMinLevel(con
 
 // Set a parent to belong to this proc if any of its child do
 template<typename CellType, typename TreeIteratorType>
-bool MinLevelMeshManager<CellType, TreeIteratorType>::backPropagateToThisProc(const std::shared_ptr<CellType>& cell) {
+bool MinLevelMeshManager<CellType, TreeIteratorType>::backPropagateToThisProc(const std::shared_ptr<CellType>& cell) const {
   if (cell->isLeaf())
     return cell->belongToThisProc();
 

@@ -1,21 +1,21 @@
 #include "../../includes/parallel/bcast.h"
 
-void boolBCast(bool &value, const int root) {
-  scalarBCast(value, root, MPI_C_BOOL);
+void boolBcast(bool &value, const int root) {
+  scalarBcast(value, root, MPI_C_BOOL);
 }
 
-void intBCast(int &value, const int root) {
-  scalarBCast(value, root, MPI_INT);
+void unsignedBcast(unsigned &value, const int root) {
+  scalarBcast(value, root, MPI_UNSIGNED);
 }
 
-void vectorUnsignedBCast(std::vector<unsigned> &buffer, const int root, const int rank, int count) {
-  vectorBCast(buffer, root, rank, MPI_UNSIGNED, count);
+void vectorUnsignedBcast(std::vector<unsigned> &buffer, const int root, const int rank, unsigned count) {
+  vectorBcast(buffer, root, rank, MPI_UNSIGNED, count);
 }
 
-void vectorDoubleBCast(std::vector<double> &buffer, const int root, const int rank, int count) {
-  vectorBCast(buffer, root, rank, MPI_DOUBLE, count);
+void vectorDoubleBcast(std::vector<double> &buffer, const int root, const int rank, unsigned count) {
+  vectorBcast(buffer, root, rank, MPI_DOUBLE, count);
 }
 
-void matrixUnsignedBCast(std::vector< std::vector<unsigned> > &buffer, const int root, const int rank, int rowCount, int colCount) {
-  matrixBCast(buffer, root, rank, MPI_UNSIGNED, rowCount, colCount);
+void matrixUnsignedBcast(std::vector< std::vector<unsigned> > &buffer, const int root, const int rank, unsigned rowCount, unsigned colCount) {
+  matrixBcast(buffer, root, rank, MPI_UNSIGNED, rowCount, colCount);
 }

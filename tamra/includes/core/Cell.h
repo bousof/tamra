@@ -21,6 +21,8 @@ template<int Nx = 2, int Ny = 1, int Nz = 1, typename DataType = CellData>
 class Cell {
  public:
   using CellDataType = DataType;
+  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>&)>;
+  using InterpolationFunctionType = std::function<void(const std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>&)>;
   using OctType = Oct<Cell<Nx, Ny, Nz, DataType>>;
   static constexpr int number_dimensions = (Nx>1) + (Ny>1) + (Nz>1);
   static constexpr int number_children = Nx * Ny * Nz;
@@ -43,14 +45,14 @@ class Cell {
   std::shared_ptr<OctType> child_oct;
   // Cell flags indicator
 	// - 0 : BELONG TO THIS  PROC  &  DOESN'T NEED TO BE CHANGED
-	// - 1 : BELONG TO THIS  PROC  &  NEED TO BE COARSENED
-	// - 2 : BELONG TO THIS  PROC  &  NEED TO BE REFINED
+	// - 1 : BELONG TO THIS  PROC  &  NEED TO BE REFINED
+	// - 2 : BELONG TO THIS  PROC  &  NEED TO BE COARSENED
 	// - 3 : BELONG TO OTHER PROC  &  DOESN'T NEED TO BE CHANGED
-	// - 4 : BELONG TO OTHER PROC  &  NEED TO BE COARSENED
-	// - 5 : BELONG TO OTHER PROC  &  NEED TO BE REFINED
+	// - 4 : BELONG TO OTHER PROC  &  NEED TO BE REFINED
+	// - 5 : BELONG TO OTHER PROC  &  NEED TO BE COARSENED
 	// - 6 : IS BOUNDARY CELL      &  DOESN'T NEED TO BE CHANGED
-	// - 7 : IS BOUNDARY CELL      &  NEED TO BE COARSENED
-	// - 8 : IS BOUNDARY CELL      &  NEED TO BE REFINED
+	// - 7 : IS BOUNDARY CELL      &  NEED TO BE REFINED
+	// - 8 : IS BOUNDARY CELL      &  NEED TO BE COARSENED
   int indicator;
 
   //***********************************************************//
@@ -78,6 +80,8 @@ class Cell {
   std::shared_ptr<Cell> getChildCell(const unsigned neighbor_sibling_number) const;
   // Get child cells
   const std::array< std::shared_ptr<Cell>, number_children >& getChildCells() const;
+  // Get child cells in a specific direction
+  const std::vector< std::shared_ptr<Cell> > getDirChildCells(const int dir) const;
   // Get level of the cell
   unsigned getLevel() const;
   // Get parent oct
@@ -151,12 +155,16 @@ class Cell {
   bool isLeaf() const;
   // True if root cell (no parent oct)
   bool isRoot() const;
+  // Count the number of leaf cells
+  unsigned countLeaves() const;
+  // Count the number of owned leaf cells
+  unsigned countOwnedLeaves() const;
   // Split a root cell (a pointer to the root is needed for back reference in child oct)
-  const std::array< std::shared_ptr<Cell>, number_children >& splitRoot(const int max_level, std::shared_ptr<Cell> root_cell);
+  const std::array< std::shared_ptr<Cell>, number_children >& splitRoot(const int max_level, std::shared_ptr<Cell> root_cell, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell>& cell) {});
   // Split a cell and it's direct neighbors if needed for mesh conformity
-  const std::array< std::shared_ptr<Cell>, number_children >& split(const int max_level);
+  const std::array< std::shared_ptr<Cell>, number_children >& split(const int max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell>& cell) {});
   // Coarsen a cell if neighbors cell allow to preserve consistency else nothing is done
-  bool coarsen(const int min_level);
+  bool coarsen(const int min_level, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<Cell>& cell) {});
   //_________________________________________________________________
   //  Priority  |   Available if   |   Indexes (dir)
   //____________|__________________|_________________________________
@@ -189,11 +197,15 @@ class Cell {
   //____________|__________________|_________________________________
   // Get a pointer to a neighbor cell
   std::shared_ptr<Cell> getNeighborCell(const int dir) const;
+  // Loop on all neighbor cells in a specific direction and apply a function
+  void applyToDirNeighborCells(const unsigned dir, const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f) const;
+  //Apply extrapolation function to all non-leaf descendent cells recursively
+  void extrapolateRecursively(ExtrapolationFunctionType extrapolation_function) const;
  private:
   // Verify if neighbors splitting is needed before cell splitting
   bool verifySplitNeighbors(const int max_level);
   // Split neighbors first if needed before cell splitting
-  void checkSplitNeighbors(const int max_level);
+  void checkSplitNeighbors(const int max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell>& cell) {});
   // Verify if children coarsening is needed before cell coarsening
   bool verifyCoarsenChildren();
   // Verify if neighbors coarsening is needed before cell coarsening
