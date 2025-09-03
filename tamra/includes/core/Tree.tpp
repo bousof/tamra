@@ -70,6 +70,12 @@ int Tree<CellType, TreeIteratorType>::getMaxLevel() const {
   return max_level;
 }
 
+// Get ghost manager
+template<typename CellType, typename TreeIteratorType>
+typename Tree<CellType, TreeIteratorType>::GhostManagerType Tree<CellType, TreeIteratorType>::getGhostManager() const {
+  return ghostManager;
+}
+
 
 //***********************************************************//
 //  METHODS                                                  //
@@ -101,6 +107,13 @@ template<typename CellType, typename TreeIteratorType>
 typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, TreeIteratorType>::buildGhostLayer(InterpolationFunctionType interpolation_function) {
   TreeIteratorType iterator(root_cells, max_level);
   return ghostManager.buildGhostLayer(root_cells, iterator, interpolation_function);
+}
+
+// Creation of ghost cells
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function) {
+  TreeIteratorType iterator(root_cells, max_level);
+  ghostManager.exchangeGhostValues(task, iterator, interpolation_function);
 }
 
 // Coarse all the cells for which all child are set to be coarsened

@@ -59,7 +59,7 @@ class TreeIterator {
   //***********************************************************//
  public:
   // Get current cell
-  const std::shared_ptr<CellType>& getCell() const;
+  std::shared_ptr<CellType> getCell() const;
   // Get current cell partition
   const std::pair<int, int>& getPartition() const;
   // Get current index path

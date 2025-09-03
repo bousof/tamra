@@ -12,22 +12,36 @@ GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType &gho
   is_finished(is_finished) {}
 
 template<typename GhostManagerType>
-GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType &ghost_manager, const bool is_finished, std::vector<std::vector<std::shared_ptr<CellType>>> &&cells_to_send, std::vector<std::shared_ptr<CellType>> &&extrapolate_owned_cells, std::vector<std::shared_ptr<CellType>> &&extrapolate_ghost_cells, std::vector< std::vector<unsigned> > &&partition_begin_ids, std::vector< std::vector<unsigned> > &&partition_end_ids)
+GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType &ghost_manager, const bool is_finished, std::vector<std::vector<std::shared_ptr<CellType>>> &&cells_to_send, std::vector<std::shared_ptr<CellType>> &&cells_to_recv, std::vector<std::shared_ptr<CellType>> &&extrapolate_owned_cells, std::vector<std::shared_ptr<CellType>> &&extrapolate_ghost_cells, std::vector< std::vector<unsigned> > &&partition_begin_ids, std::vector< std::vector<unsigned> > &&partition_end_ids)
 : ghost_manager(ghost_manager),
   is_finished(is_finished),
   cells_to_send(cells_to_send),
+  cells_to_recv(cells_to_recv),
   extrapolate_owned_cells(extrapolate_owned_cells),
   extrapolate_ghost_cells(extrapolate_ghost_cells),
   partition_begin_ids(partition_begin_ids),
-  partition_end_ids(partition_end_ids) {
-  owned_extrapolation_function = [](const std::shared_ptr<CellType>& cell) { return true; };
-  ghost_extrapolation_function = [](const std::shared_ptr<CellType>& cell) { return true; };
-}
+  partition_end_ids(partition_end_ids) {}
 
 // Destructor
 template<typename GhostManagerType>
 GhostManagerTask<GhostManagerType>::~GhostManagerTask() {};
 
+
+//***********************************************************//
+//  ACCESSORS                                                //
+//***********************************************************//
+
+// Get the cells to send
+template<typename GhostManagerType>
+const std::vector<std::vector<std::shared_ptr< typename GhostManagerType::CellType >>>& GhostManagerTask<GhostManagerType>::getCellsToSend() const {
+  return cells_to_send;
+}
+
+// Get the cells to recv
+template<typename GhostManagerType>
+const std::vector<std::shared_ptr< typename GhostManagerType::CellType >>& GhostManagerTask<GhostManagerType>::getCellsToRecv() const {
+  return cells_to_recv;
+}
 
 //***********************************************************//
 //  MUTATORS                                                 //
@@ -47,14 +61,14 @@ void GhostManagerTask<GhostManagerType>::setGhostExtrapolationFunction(Extrapola
 
 // Set the strategies on how to handle conflicts on owned cells.
 template<typename GhostManagerType>
-void GhostManagerTask<GhostManagerType>::setOwnedConflictResolutionStrategy(const std::vector<OwnedConflictResolutionStrategy> &strategies, const bool resend) {
+void GhostManagerTask<GhostManagerType>::setOwnedConflictResolutionStrategy(const std::vector<OwnedConflictResolutionStrategy> strategies, const bool resend) {
   owned_strategies = strategies;
   resend_owned = resend;
 }
 
 // Set the strategies on how to handle conflicts on ghost cells.
 template<typename GhostManagerType>
-void GhostManagerTask<GhostManagerType>::setGhostConflictResolutionStrategy(const std::vector<GhostConflictResolutionStrategy> &strategies) {
+void GhostManagerTask<GhostManagerType>::setGhostConflictResolutionStrategy(const std::vector<GhostConflictResolutionStrategy> strategies) {
   ghost_strategies = strategies;
 }
 

@@ -23,7 +23,7 @@ TreeIterator<CellType>::TreeIterator(const std::vector< std::shared_ptr<CellType
 
 // Get current cell
 template<typename CellType>
-const std::shared_ptr<CellType>& TreeIterator<CellType>::getCell() const {
+std::shared_ptr<CellType> TreeIterator<CellType>::getCell() const {
   return current_cell;
 }
 

@@ -42,7 +42,7 @@ enum class GhostConflictResolutionStrategy {
 template<typename GhostManagerType>
 class GhostManagerTask {
   using CellType = typename GhostManagerType::CellType;
-  using ExtrapolationFunctionType = std::function<bool(const std::shared_ptr<CellType>&)>;
+  using ExtrapolationFunctionType = typename GhostManagerType::TaskExtrapolationFunctionType;
   using TreeIteratorType = typename GhostManagerType::TreeIteratorType;
 
   //***********************************************************//
@@ -56,6 +56,8 @@ class GhostManagerTask {
  private:
   // Cells at partition interfaces to send to other process
   std::vector<std::vector<std::shared_ptr<CellType>>> cells_to_send;
+  // Cells at partition interfaces to recv from other process
+  std::vector<std::shared_ptr<CellType>> cells_to_recv;
   // Owned cells that were split because of ghost layer creation
   std::vector<std::shared_ptr<CellType>> extrapolate_owned_cells;
   // Ghost cells that were found split in this process
@@ -68,9 +70,9 @@ class GhostManagerTask {
   ExtrapolationFunctionType owned_extrapolation_function;
   // Function on how to interpolate ghost cell values to children
   ExtrapolationFunctionType ghost_extrapolation_function;
-  // Function on how to interpolate owned cell values to children
+  // Strategy on how to handle conflicts for owned cells
   std::vector<OwnedConflictResolutionStrategy> owned_strategies;
-  // Function on how to interpolate ghost cell values to children
+  // Strategy on how to handle conflicts for ghost cells
   std::vector<GhostConflictResolutionStrategy> ghost_strategies;
   // Resend owned cells after solving conflicts
   bool resend_owned;
@@ -81,9 +83,16 @@ class GhostManagerTask {
  public :
   // Constructor
   GhostManagerTask(const GhostManagerType &ghost_manager, const bool is_finished);
-  GhostManagerTask(const GhostManagerType &ghost_manager, const bool is_finished, std::vector<std::vector<std::shared_ptr<CellType>>> &&cells_to_send, std::vector<std::shared_ptr<CellType>> &&extrapolate_owned_cells, std::vector<std::shared_ptr<CellType>> &&extrapolate_ghost_cells, std::vector< std::vector<unsigned> > &&partition_begin_ids, std::vector< std::vector<unsigned> > &&partition_end_ids);
+  GhostManagerTask(const GhostManagerType &ghost_manager, const bool is_finished, std::vector<std::vector<std::shared_ptr<CellType>>> &&cells_to_send, std::vector<std::shared_ptr<CellType>> &&cells_to_recv, std::vector<std::shared_ptr<CellType>> &&extrapolate_owned_cells, std::vector<std::shared_ptr<CellType>> &&extrapolate_ghost_cells, std::vector< std::vector<unsigned> > &&partition_begin_ids, std::vector< std::vector<unsigned> > &&partition_end_ids);
   // Destructor
   ~GhostManagerTask();
+
+  //***********************************************************//
+	//  ACCESSORS                                                //
+	//***********************************************************//
+ public:
+  const std::vector<std::vector<std::shared_ptr<CellType>>>& getCellsToSend() const;
+  const std::vector<std::shared_ptr<CellType>>& getCellsToRecv() const;
 
   //***********************************************************//
 	//  MUTATORS                                                 //
@@ -97,15 +106,11 @@ class GhostManagerTask {
   // First parameter `strategies` is the strategies on how to handle conflicts by priority.
   // The second parameter `resend` is if process should resend the cells to the other process.
   // Default is `strategies={IGNORE}`and `resend=false`.
-  void setOwnedConflictResolutionStrategy(const std::vector<OwnedConflictResolutionStrategy> &strategies = {
-    OwnedConflictResolutionStrategy::IGNORE
-  }, const bool resend = false);
+  void setOwnedConflictResolutionStrategy(const std::vector<OwnedConflictResolutionStrategy> strategies, const bool resend = false);
   // Set the strategies on how to handle conflicts on ghost cells.
   // First parameter `strategies` is the strategies on how to handle conflicts by priority.
   // Default is `strategies={IGNORE}`.
-  void setGhostConflictResolutionStrategy(const std::vector<GhostConflictResolutionStrategy> &strategies = {
-    GhostConflictResolutionStrategy::IGNORE
-  });
+  void setGhostConflictResolutionStrategy(const std::vector<GhostConflictResolutionStrategy> strategies);
 
   //***********************************************************//
   //  METHODS                                                  //

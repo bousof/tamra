@@ -63,7 +63,10 @@ bool ghostOneRoot1DParallel(int rank, int size) {
     passed &= A->getChildCell((rank+1)%2)->isLeaf();
 
   // Create ghost cells
-  tree.buildGhostLayer();
+  Tree<Cell1D>::GhostManagerTaskType task = tree.buildGhostLayer();
+
+  // Exchange ghost values
+  tree.exchangeGhostValues(task);
 
   // Ghost parent cell Y should not be leaf anymore
   if (rank==0 || rank==1) {
@@ -150,9 +153,8 @@ bool ghostOneRootExtrapolateConflict1DParallel(int rank, int size) {
   task.setOwnedConflictResolutionStrategy({OwnedConflictResolutionStrategy::EXTRAPOLATE});
   task.setGhostConflictResolutionStrategy({GhostConflictResolutionStrategy::EXTRAPOLATE});
 
-  // Continue ghost manager task
-  TreeIterator<Cell1D> iterator(tree.getRootCells(), tree.getMaxLevel());
-  task.continueTask(iterator);
+  // Exchange ghost values and solve conflicts
+  tree.exchangeGhostValues(task);
 
   // Task should be finished because of conflicts
   passed &= task.is_finished;

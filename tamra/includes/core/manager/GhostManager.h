@@ -24,6 +24,7 @@ class GhostManager {
  public:
   using CellType = CellTypeT;
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
+  using TaskExtrapolationFunctionType = std::function<bool(const std::shared_ptr<CellType>&)>;
   using TreeIteratorType = TreeIteratorTypeT;
   using GhostManagerTaskType = GhostManagerTask<GhostManager<CellTypeT, TreeIteratorType>>;
 
@@ -39,6 +40,16 @@ class GhostManager {
   const int rank;
   // Number of process
   const int size;
+  // Function on how to interpolate owned cell values to children
+  TaskExtrapolationFunctionType default_owned_extrapolation_function;
+  // Function on how to interpolate ghost cell values to children
+  TaskExtrapolationFunctionType default_ghost_extrapolation_function;
+  // Default strategy on how to handle conflicts for owned cells
+  std::vector<OwnedConflictResolutionStrategy> default_owned_strategies;
+  // Default strategy on how to handle conflicts for ghost cells
+  std::vector<GhostConflictResolutionStrategy> default_ghost_strategies;
+  // Resend owned cells after solving conflicts by default
+  bool default_resend_owned;
 
   //***********************************************************//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -50,6 +61,19 @@ class GhostManager {
   ~GhostManager();
 
   //***********************************************************//
+	//  MUTATORS                                                 //
+	//***********************************************************//
+ public:
+  // Set the default extrapolation function for owned cells
+  void setDefaultOwnedExtrapolationFunction(TaskExtrapolationFunctionType default_extrapolation_function);
+  // Set the default extrapolation function for ghost cells
+  void setDefaultGhostExtrapolationFunction(TaskExtrapolationFunctionType default_extrapolation_function);
+  // Set the default strategy on how to handle conflicts for owned cells
+  void setDefaultOwnedConflictResolutionStrategy(const std::vector<OwnedConflictResolutionStrategy> &default_strategies, const bool default_resend = false);
+  // Set the default strategy on how to handle conflicts for ghost cells
+  void setDefaultGhostConflictResolutionStrategy(const std::vector<GhostConflictResolutionStrategy> &default_strategies);
+
+  //***********************************************************//
   //  METHODS                                                  //
   //***********************************************************//
  public:
@@ -57,6 +81,8 @@ class GhostManager {
 	GhostManagerTaskType buildGhostLayer(std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {}) const;
   // Update ghost cells and exchange values for solving conflicts
 	void updateGhostLayer(GhostManagerTaskType &task, TreeIteratorType &iterator) const;
+  // Exchange ghost cell values
+	void exchangeGhostValues(GhostManagerTaskType &task, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {}) const;
  private:
   // Share the partitions start and end cells
   void sharePartitions(std::vector< std::vector<unsigned> > &begin_ids, std::vector< std::vector<unsigned> > &end_ids, TreeIteratorType &iterator) const;

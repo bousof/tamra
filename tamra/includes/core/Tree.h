@@ -83,6 +83,8 @@ class Tree {
   int getMinLevel() const;
   // Get max mesh level
   int getMaxLevel() const;
+  // Get ghost manager
+  GhostManagerType getGhostManager() const;
 
   //***********************************************************//
   //  METHODS                                                  //
@@ -97,7 +99,8 @@ class Tree {
 
   // Creation of ghost cells
   GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
-  void exchangeGhostValues() {};
+  // Exchange ghost cell values
+  void exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
 
   // Redistribute cells among processes to balance computation load
   void loadBalance(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});

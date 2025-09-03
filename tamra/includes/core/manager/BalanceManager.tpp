@@ -56,6 +56,10 @@ std::pair<bool, std::vector<double>> BalanceManager<CellType, TreeIteratorType>:
 // Parallel meshing at min level
 template<typename CellType, typename TreeIteratorType>
 void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, const double max_pct_unbalance, ExtrapolationFunctionType extrapolation_function) const {
+  // If only one process, nothing to do
+  if (size == 1)
+    return;
+
   // Root process that handles decision making
   const int root = 0;
 

@@ -11,11 +11,51 @@ GhostManager<CellType, TreeIteratorType>::GhostManager(const int min_level, cons
 : min_level(min_level),
   max_level(max_level),
   rank(rank),
-  size(size) {}
+  size(size) {
+  default_owned_extrapolation_function = [](const std::shared_ptr<CellType>& cell) { return true; };
+  default_ghost_extrapolation_function = [](const std::shared_ptr<CellType>& cell) { return true; };
+  default_owned_strategies = {
+    OwnedConflictResolutionStrategy::IGNORE
+  };
+  default_resend_owned = false;
+  default_ghost_strategies = {
+    GhostConflictResolutionStrategy::IGNORE
+  };
+}
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>
 GhostManager<CellType, TreeIteratorType>::~GhostManager() {};
+
+
+//***********************************************************//
+//  MUTATORS                                                 //
+//***********************************************************//
+
+// Set the default extrapolation function for owned cells
+template<typename CellType, typename TreeIteratorType>
+void GhostManager<CellType, TreeIteratorType>::setDefaultOwnedExtrapolationFunction(TaskExtrapolationFunctionType default_extrapolation_function) {
+  default_owned_extrapolation_function = default_extrapolation_function;
+}
+
+// Set the default extrapolation function for ghost cells
+template<typename CellType, typename TreeIteratorType>
+void GhostManager<CellType, TreeIteratorType>::setDefaultGhostExtrapolationFunction(TaskExtrapolationFunctionType default_extrapolation_function) {
+  default_ghost_extrapolation_function = default_extrapolation_function;
+}
+
+// Set the strategies on how to handle conflicts on owned cells.
+template<typename CellType, typename TreeIteratorType>
+void GhostManager<CellType, TreeIteratorType>::setDefaultOwnedConflictResolutionStrategy(const std::vector<OwnedConflictResolutionStrategy> &default_strategies, const bool default_resend) {
+  default_owned_strategies = default_strategies;
+  default_resend_owned = default_resend;
+}
+
+// Set the strategies on how to handle conflicts on ghost cells.
+template<typename CellType, typename TreeIteratorType>
+void GhostManager<CellType, TreeIteratorType>::setDefaultGhostConflictResolutionStrategy(const std::vector<GhostConflictResolutionStrategy> &default_strategies) {
+  default_ghost_strategies = default_strategies;
+}
 
 
 //***********************************************************//
@@ -25,6 +65,10 @@ GhostManager<CellType, TreeIteratorType>::~GhostManager() {};
 // Creation of ghost cells and exchange of ghost values
 template<typename CellType, typename TreeIteratorType>
 typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostManager<CellType, TreeIteratorType>::buildGhostLayer(std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
+  // If only one process, nothing to do
+  if (size == 1)
+    return GhostManagerTaskType(*this, true);
+
   // Number of leaf cells before creating ghost.
 	unsigned old_nb_owned_leaves = 0;
   for (const auto &root_cell: root_cells)
@@ -63,44 +107,28 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
   //std::cout << "P_" << rank << ": send cell ids ";
   //displayVector(std::cout, cell_ids_to_send) << std::endl;
 
-  // Gather cell data in a vector for sharing between process
-  std::vector< std::vector< std::unique_ptr<ParallelData> > > all_cell_data(size);
-  {
-    for (unsigned p{0}; p<size; ++p) {
-      all_cell_data[p].reserve(cells_to_send[p].size());
-      for (unsigned i{0}; i<cells_to_send[p].size(); ++i)
-        all_cell_data[p].push_back(std::make_unique<typename CellType::CellDataType>(cells_to_send[p][i]->getCellData()));
-    }
-  }
-
   const unsigned cell_id_size = iterator.getCellIdManager().getCellIdSize();
   std::vector< std::vector<unsigned> > recv_cell_ids;
   matrixUnsignedAlltoallv(cell_ids_to_send, recv_cell_ids, size, cell_id_size);
 
-  // Exchange cell data
-  std::vector< std::unique_ptr<ParallelData> > all_cell_data_recv;
-  vectorDataAlltoallv(all_cell_data, all_cell_data_recv, size, []() {
-    return std::make_unique<typename CellType::CellDataType>();
-  });
-
   //std::cout << "P_" << rank << ": recv cell ids ";
   //displayVector(std::cout, recv_cell_ids) << std::endl;
 
-  std::vector<std::shared_ptr<CellType>> extrapolate_ghost_cells;
+  // Create the cells to receive
+  std::vector<std::shared_ptr<CellType>> cells_to_recv(recv_cell_ids.size());
   for (int i{0}; i<recv_cell_ids.size(); ++i) {
     // Move iterator to cell ID and create it if needed
     iterator.toCellId(recv_cell_ids[i], true, extrapolation_function);
 
-    // Set cell data
-    iterator.getCell()->setCellData(std::unique_ptr<typename CellType::CellDataType>(
-      static_cast<typename CellType::CellDataType*>(all_cell_data_recv[i].release())
-    ));
+    cells_to_recv[i] = iterator.getCell();
+  }
 
-    if (!iterator.getCell()->isLeaf()) {
-      // Call extrapolation function on non-leaf cells
-      iterator.getCell()->extrapolateRecursively(extrapolation_function);
-      // Add cell to list for later processing
-      extrapolate_ghost_cells.push_back(iterator.getCell());
+  // List of ghost cells that need to be extrapolated
+  std::vector<std::shared_ptr<CellType>> extrapolate_ghost_cells;
+  for (int i{0}; i<cells_to_recv.size(); ++i) {
+    if (!cells_to_recv[i]->isLeaf()) {
+      // Add cell to list for later fixing conflict
+      extrapolate_ghost_cells.push_back(cells_to_recv[i]);
     }
   }
 
@@ -121,10 +149,14 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
   bool is_finished = extrapolate_owned_cells.size()==0 && extrapolate_ghost_cells.size()==0;
   boolAndAllReduce(is_finished, is_finished);
 
-  if (is_finished) // Create a finished task (no need to keep a copy of anything)
-    return GhostManagerTaskType(*this, is_finished);
-  else // Create an unfinished task (keep a copy of arrays needed for finishing the task)
-    return GhostManagerTaskType(*this, is_finished, std::move(cells_to_send), std::move(extrapolate_owned_cells), std::move(extrapolate_ghost_cells), std::move(begin_ids), std::move(end_ids));
+  // Create an task (keep a copy of arrays needed for exchanging ghost values)
+  GhostManagerTaskType task = GhostManagerTaskType(*this, is_finished, std::move(cells_to_send), std::move(cells_to_recv), std::move(extrapolate_owned_cells), std::move(extrapolate_ghost_cells), std::move(begin_ids), std::move(end_ids));
+  task.setOwnedExtrapolationFunction(default_owned_extrapolation_function);
+  task.setGhostExtrapolationFunction(default_ghost_extrapolation_function);
+  task.setOwnedConflictResolutionStrategy({default_owned_strategies}, default_resend_owned);
+  task.setGhostConflictResolutionStrategy({default_ghost_strategies});
+
+  return task;
 }
 
 // Update ghost cells and exchange values for solving conflicts
@@ -133,6 +165,47 @@ void GhostManager<CellType, TreeIteratorType>::updateGhostLayer(GhostManagerTask
   // This method handles the resend logic when conflicts are resolved
   // It loops through children of owned cells that were split and checks their neighbors
   // TODO: Implement this
+}
+
+// Update ghost cells and exchange values for solving conflicts
+template<typename CellType, typename TreeIteratorType>
+void GhostManager<CellType, TreeIteratorType>::exchangeGhostValues(GhostManagerTaskType &task, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
+  // If only one process, nothing to do
+  if (size == 1)
+    return;
+
+  // Gather cell data in a vector for sharing between process
+  std::vector< std::vector< std::unique_ptr<ParallelData> > > all_cell_data(size);
+  for (unsigned p{0}; p<size; ++p) {
+    all_cell_data[p].reserve(task.getCellsToSend()[p].size());
+    for (const auto &cell: task.getCellsToSend()[p])
+      all_cell_data[p].push_back(std::make_unique<typename CellType::CellDataType>(cell->getCellData()));
+  }
+
+  // Exchange cell data
+  std::vector< std::unique_ptr<ParallelData> > all_cell_data_recv;
+  vectorDataAlltoallv(all_cell_data, all_cell_data_recv, size, []() {
+    return std::make_unique<typename CellType::CellDataType>();
+  });
+
+  // Set cell data to received cells and call extrapolation function on non-leaf cells
+  const std::vector<std::shared_ptr<CellType>>& cells_to_recv = task.getCellsToRecv();
+  for (int i{0}; i<cells_to_recv.size(); ++i) {
+    // Set cell data
+    cells_to_recv[i]->setCellData(std::unique_ptr<typename CellType::CellDataType>(
+      static_cast<typename CellType::CellDataType*>(all_cell_data_recv[i].release())
+    ));
+
+    if (!cells_to_recv[i]->isLeaf()) {
+      // Call extrapolation function on non-leaf cells
+      cells_to_recv[i]->extrapolateRecursively(extrapolation_function);
+    }
+  }
+
+  // If the task is not finished, continue unfinished task to resolve conflicts
+  if (!task.is_finished) {
+    task.continueTask(iterator);
+  }
 }
 
 // Share the partiion start and end cells
