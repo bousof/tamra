@@ -59,9 +59,9 @@ std::vector<unsigned> CellIdManager<CellType>::idToIndexPath(const std::vector<u
 // partitions obatined by splitting into equal parts and taking
 // the n-th one
 template<typename CellType>
-std::vector< std::vector<unsigned> > CellIdManager<CellType>::getEqualPartitions(const int level, const int size) const {
+std::vector<std::vector<unsigned>> CellIdManager<CellType>::getEqualPartitions(const int level, const int size) const {
   // Compute all partitions start and end positions
-  std::vector< std::vector<unsigned> > partitions(size);
+  std::vector<std::vector<unsigned>> partitions(size);
 
   // Start index path and cell ID
   std::vector<unsigned> index_path(level+1, 0);
@@ -143,7 +143,7 @@ void CellIdManager<CellType>::toLeaf(std::vector<unsigned> &cell_id, const int l
   unsigned old_level = getIdLevel(cell_id);
   setIdLevel(cell_id, level);
 
-  for (unsigned l{old_level+1}; l <= level; ++l)
+  for (unsigned l{old_level+1}; l<=level; ++l)
     if (reverse)
       setIdChild(cell_id, l, CellType::number_children - 1);
     else
@@ -235,9 +235,9 @@ bool CellIdManager<CellType>::cellIdGte(const std::vector<unsigned> &cell_id_1, 
 
   if (level_1 < level_2)
     for (unsigned l{level_1+1}; l<=level_2; ++l)
-      if (getIdChild(cell_id_2, l)!=0)
+      if (getIdChild(cell_id_2, l) != 0)
         return false;
-  if (level_1==level_2)
+  if (level_1 == level_2)
     return getIdChild(cell_id_1, level_1) >= getIdChild(cell_id_2, level_2);
 
   return true;
@@ -288,9 +288,9 @@ bool CellIdManager<CellType>::cellIdLte(const std::vector<unsigned> &cell_id_1, 
 
   if (level_1 > level_2)
     for (unsigned l{level_2+1}; l<=level_1; ++l)
-      if (getIdChild(cell_id_1, l)!=(CellType::number_children - 1))
+      if (getIdChild(cell_id_1, l) != (CellType::number_children - 1))
         return false;
-  if (level_1==level_2)
+  if (level_1 == level_2)
     return getIdChild(cell_id_1, level_1) <= getIdChild(cell_id_2, level_2);
 
   return true;

@@ -40,9 +40,8 @@ bool testIntAlltoall(int rank, int size) {
 
   // Should receive ranks from all others
   bool passed = true;
-  for (int i{0}; i<size; ++i) {
-    passed &= recv_buffer.at(i)==i;
-  }
+  for (int i{0}; i<size; ++i)
+    passed &= recv_buffer.at(i) == i;
 
   // Test should pass on all processes
   bool all_passed;
@@ -53,17 +52,15 @@ bool testIntAlltoall(int rank, int size) {
 // Vector Int AllToAll
 bool testVectorIntAlltoall(int rank, int size) {
   std::vector<std::vector<unsigned>> send_buffers(size);
-  for (int p = 0; p < size; ++p) {
+  for (int p{0}; p<size; ++p)
     send_buffers.at(p).push_back(rank * 10 + p);
-  }
 
   std::vector<unsigned> recv_buffer;
   vectorUnsignedAlltoallv(send_buffers, recv_buffer, size);
 
   bool passed = recv_buffer.size() == size;
-  for (int i = 0; i < size && passed; ++i) {
+  for (int i{0}; i<size && passed; ++i)
     passed &= (recv_buffer.at(i) % 10 == rank);
-  }
 
   // Test should pass on all processes
   bool all_passed;
@@ -74,17 +71,15 @@ bool testVectorIntAlltoall(int rank, int size) {
 // Vector Double AllToAll (flat)
 bool testVectorDoubleAllToAllFlat(int rank, int size) {
   std::vector<std::vector<double>> send_buffers(size);
-  for (int p = 0; p < size; ++p) {
+  for (int p{0}; p<size; ++p)
     send_buffers.at(p).push_back(static_cast<double>(rank + p) + 0.5);
-  }
 
   std::vector<double> recv_buffer;
   vectorDoubleAlltoallv(send_buffers, recv_buffer, size);
 
   bool passed = recv_buffer.size() == size;
-  for (int i = 0; i < size && passed; ++i) {
+  for (int i{0}; i<size && passed; ++i)
     passed &= std::fabs(recv_buffer.at(i) - (i + rank + 0.5)) < 1e-10;
-  }
 
   // Test should pass on all processes
   bool all_passed;
@@ -95,19 +90,17 @@ bool testVectorDoubleAllToAllFlat(int rank, int size) {
 // Vector Double AllToAll (split)
 bool testVectorDoubleAllToAllSplit(int rank, int size) {
   std::vector<std::vector<double>> send_buffers(size);
-  for (int p = 0; p < size; ++p) {
+  for (int p{0}; p<size; ++p)
     send_buffers.at(p).assign(size-1-p, static_cast<double>(rank + p) + 0.5);
-  }
 
   std::vector<std::vector<double>> recv_buffers;
   vectorDoubleAlltoallv(send_buffers, recv_buffers, size);
 
   bool passed = recv_buffers.size() == size;
-  for (int p = 0; p < size && passed; ++p) {
+  for (int p{0}; p<size && passed; ++p) {
     passed &= recv_buffers.at(p).size() == (size-1-rank);
-    if (rank!=(size-1)) {
+    if (rank != size-1)
       passed &= std::fabs(recv_buffers.at(p).at(0) - (p + rank + 0.5)) < 1e-10;
-    }
   }
 
   // Test should pass on all processes
@@ -117,7 +110,7 @@ bool testVectorDoubleAllToAllSplit(int rank, int size) {
 }
 
 // Mock ParallelData class for testing vectorDataAllToAll
-struct MockData: public ParallelData {
+struct MockData : public ParallelData {
   int id = 0;
   double x = 0.0;
   std::vector<double> data;
@@ -145,7 +138,7 @@ struct MockData: public ParallelData {
 // Vector Data AllToAll (fixed size)
 bool testVectorDataAllToAllFixed(int rank, int size) {
   std::vector<std::vector<std::unique_ptr<ParallelData>>> send_buffers(size);
-  for (int p = 0; p < size; ++p) {
+  for (int p{0}; p<size; ++p) {
     auto data = std::make_unique<MockData>();
     data->id = rank;
     data->x = static_cast<double>(p);
@@ -158,7 +151,7 @@ bool testVectorDataAllToAllFixed(int rank, int size) {
   });
 
   bool passed = recv_buffer.size() == size;
-  for (int i = 0; i < size && passed; ++i) {
+  for (int i{0}; i<size && passed; ++i) {
     auto* data = dynamic_cast<MockData*>(recv_buffer.at(i).get());
     passed &= data && (data->id == i);
     passed &= std::fabs(data->x - rank) < 1e-10;
@@ -173,7 +166,7 @@ bool testVectorDataAllToAllFixed(int rank, int size) {
 // Vector Data AllToAll (dynamic size)
 bool testVectorDataAllToAllDynamic(int rank, int size) {
   std::vector<std::vector<std::unique_ptr<ParallelData>>> send_buffers(size);
-  for (int p = 0; p < size; ++p) {
+  for (int p{0}; p<size; ++p) {
     auto data = std::make_unique<MockData>();
     data->id = rank;
     data->x = static_cast<double>(p);
@@ -187,7 +180,7 @@ bool testVectorDataAllToAllDynamic(int rank, int size) {
   });
 
   bool passed = recv_buffer.size() == size;
-  for (int i = 0; i < size && passed; ++i) {
+  for (int i{0}; i<size && passed; ++i) {
     auto* data = dynamic_cast<MockData*>(recv_buffer.at(i).get());
     passed &= data && (data->id == i);
     passed &= std::fabs(data->x - rank) < 1e-10;

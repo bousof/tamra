@@ -23,13 +23,13 @@ BalanceManager<CellType, TreeIteratorType>::~BalanceManager() {};
 //***********************************************************//
 // Determine if load balancing is needed
 template<typename CellType, typename TreeIteratorType>
-std::pair<bool, std::vector<double>> BalanceManager<CellType, TreeIteratorType>::isLoadBalancingNeeded(const std::vector< std::shared_ptr<CellType> >& root_cells, const double max_pct_unbalance) const {
+std::pair<bool, std::vector<double>> BalanceManager<CellType, TreeIteratorType>::isLoadBalancingNeeded(const std::vector<std::shared_ptr<CellType>> &root_cells, const double max_pct_unbalance) const {
   // Root process that handles decision making
   const int root = 0;
 
   // Sum up the loads in every root cell
   double load = 0;
-  for (const auto &root_cell: root_cells)
+  for (const auto &root_cell : root_cells)
     load += computeLoad(root_cell);
 
   // Share load between all processors
@@ -55,7 +55,7 @@ std::pair<bool, std::vector<double>> BalanceManager<CellType, TreeIteratorType>:
 
 // Parallel meshing at min level
 template<typename CellType, typename TreeIteratorType>
-void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, const double max_pct_unbalance, ExtrapolationFunctionType extrapolation_function) const {
+void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const double max_pct_unbalance, ExtrapolationFunctionType extrapolation_function) const {
   // If only one process, nothing to do
   if (size == 1)
     return;
@@ -95,7 +95,7 @@ void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector< 
   //displayVector(std::cout, target_cumulative_loads) << std::endl;
 
   // Determine the cells to send to each process
-  std::vector< std::vector<std::shared_ptr<CellType>> > cells_to_send = cellsToExchange(cumulative_loads, target_cumulative_loads, iterator);
+  std::vector<std::vector<std::shared_ptr<CellType>>> cells_to_send = cellsToExchange(cumulative_loads, target_cumulative_loads, iterator);
 
   //std::cout << "P_" << rank << ": nb of cells to send ";
   //for (int p{0}; p<size; ++p) {
@@ -107,13 +107,13 @@ void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector< 
 	exchangeAndCreateCells(cells_to_send, iterator, extrapolation_function);
 
   // Backpropagate flags from leaf to all cells
-  for (const auto &root_cell: root_cells)
+  for (const auto &root_cell : root_cells)
     backPropagateFlags(root_cell);
 }
 
 // Determine the local load for this process
 template<typename CellType, typename TreeIteratorType>
-double BalanceManager<CellType, TreeIteratorType>::computeLoad(const std::shared_ptr<CellType>& cell) const {
+double BalanceManager<CellType, TreeIteratorType>::computeLoad(const std::shared_ptr<CellType> &cell) const {
   if (!cell->belongToThisProc())
     return 0.;
   if (cell->isLeaf())
@@ -121,7 +121,7 @@ double BalanceManager<CellType, TreeIteratorType>::computeLoad(const std::shared
 
   // Add up the computing loads of the child cells
   double load = 0.;
-  for (const auto &child: cell->getChildCells())
+  for (const auto &child : cell->getChildCells())
     load += computeLoad(child);
 
   return load;
@@ -129,9 +129,9 @@ double BalanceManager<CellType, TreeIteratorType>::computeLoad(const std::shared
 
 // Determine the cells to send to each process
 template<typename CellType, typename TreeIteratorType>
-std::vector< std::vector<std::shared_ptr<CellType>> > BalanceManager<CellType, TreeIteratorType>::cellsToExchange(const std::vector<double> &cumulative_loads, const std::vector<double> &target_cumulative_loads, TreeIteratorType &iterator) const {
+std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, TreeIteratorType>::cellsToExchange(const std::vector<double> &cumulative_loads, const std::vector<double> &target_cumulative_loads, TreeIteratorType &iterator) const {
   // If process has no cells we return empty arrays
-  std::vector< std::vector<std::shared_ptr<CellType>> > cells_to_send(size);
+  std::vector<std::vector<std::shared_ptr<CellType>>> cells_to_send(size);
   if (!iterator.toOwnedBegin())
     return cells_to_send;
 
@@ -172,9 +172,8 @@ std::vector< std::vector<std::shared_ptr<CellType>> > BalanceManager<CellType, T
       if (target_cumulative_loads[target_proc] > (next_load-current_cell_load)) {
         --target_proc;
         continue;
-      } else {
+      } else
         cells_to_send[target_proc].push_back(iterator.getCell());
-      }
 
       // Remove cell load to counter
       next_load -= current_cell_load;
@@ -188,7 +187,7 @@ std::vector< std::vector<std::shared_ptr<CellType>> > BalanceManager<CellType, T
 
   { // Unset sent leaf flags to belong to other proc
     for (int p{0}; p<size; ++p)
-      for (auto & cell: cells_to_send[p])
+      for (auto &cell : cells_to_send[p])
         cell->setToOtherProcRecurs();
   }
 
@@ -197,10 +196,10 @@ std::vector< std::vector<std::shared_ptr<CellType>> > BalanceManager<CellType, T
 
 // Exchange cells structure and data
 template<typename CellType, typename TreeIteratorType>
-void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const std::vector< std::vector<std::shared_ptr<CellType>> > &cells_to_send, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
+void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const std::vector<std::vector<std::shared_ptr<CellType>>> &cells_to_send, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
   // For the first cell we sent the cell ID to be able to locate it.
   // For the lacking ines only the level is set to avoid redundant information.
-  std::vector< std::vector<unsigned> > cells_structure_to_send(size);
+  std::vector<std::vector<unsigned>> cells_structure_to_send(size);
   {
     std::vector<unsigned> first_cell_id, cell_levels;
     for (unsigned p{0}; p<size; ++p)
@@ -217,7 +216,7 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
   }
 
   // Gather cell data in a vector for sharing between process
-  std::vector< std::vector< std::unique_ptr<ParallelData> > > all_cell_data(size);
+  std::vector<std::vector<std::unique_ptr<ParallelData>>> all_cell_data(size);
   {
     for (unsigned p{0}; p<size; ++p) {
       all_cell_data[p].reserve(cells_to_send[p].size());
@@ -230,11 +229,11 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
   //displayVector(std::cout, cells_structure_to_send) << std::endl;
 
   // Exchange tree structure
-  std::vector< std::vector<unsigned> > cells_structure_recv(size);
+  std::vector<std::vector<unsigned>> cells_structure_recv(size);
   vectorUnsignedAlltoallv(cells_structure_to_send, cells_structure_recv, size);
 
   // Exchange cell data
-  std::vector< std::unique_ptr<ParallelData> > all_cell_data_recv;
+  std::vector<std::unique_ptr<ParallelData>> all_cell_data_recv;
   vectorDataAlltoallv(all_cell_data, all_cell_data_recv, size, []() {
     return std::make_unique<typename CellType::CellDataType>();
   });
@@ -261,7 +260,7 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
           // Call extrapolation function on non-leaf cells
           iterator.getCell()->extrapolateRecursively(extrapolation_function);
         // Insert the other cells levels
-        for (const unsigned &cell_level: cell_levels) {
+        for (const unsigned &cell_level : cell_levels) {
           iterator.next(cell_level);
           while (iterator.getCell()->getLevel()<cell_level) {
             if (iterator.getCell()->isLeaf())
@@ -306,12 +305,12 @@ void BalanceManager<CellType, TreeIteratorType>::uncompressCellStructure(const s
 
 // Set a parent to belong to this proc if any of its child do else set to other proc
 template<typename CellType, typename TreeIteratorType>
-bool BalanceManager<CellType, TreeIteratorType>::backPropagateFlags(const std::shared_ptr<CellType>& cell) const {
+bool BalanceManager<CellType, TreeIteratorType>::backPropagateFlags(const std::shared_ptr<CellType> &cell) const {
   if (cell->isLeaf())
     return cell->belongToThisProc();
 
   bool to_this_proc = false;
-  for (const auto &child: cell->getChildCells())
+  for (const auto &child : cell->getChildCells())
     if (backPropagateFlags(child))
       to_this_proc = true;
 

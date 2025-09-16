@@ -42,17 +42,17 @@ class MinLevelMeshManager {
   //***********************************************************//
  public:
   // Serial meshing at min level
-  void meshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells) const;
+  void meshAtMinLevel(const std::vector<std::shared_ptr<CellType>> &root_cells) const;
   // Parallel meshing at min level
-  void meshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const;
+  void meshAtMinLevel(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator) const;
 
  private:
   // Recursively mesh cells at min level
-  void serialMeshAtMinLevelRecurs(const std::shared_ptr<CellType>& cell) const;
+  void serialMeshAtMinLevelRecurs(const std::shared_ptr<CellType> &cell) const;
   // Mesh all cells in the process partition at min level
-  void parallelMeshAtMinLevel(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator) const;
+  void parallelMeshAtMinLevel(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator) const;
   // Set a parent to belong to this proc if any of its child do
-  bool backPropagateToThisProc(const std::shared_ptr<CellType>& cell) const;
+  bool backPropagateToThisProc(const std::shared_ptr<CellType> &cell) const;
 };
 
 #include "./MinLevelMeshManager.tpp"

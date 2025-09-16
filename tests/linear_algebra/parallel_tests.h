@@ -46,9 +46,8 @@ bool testJacobiNoOverlapParallel100(int rank, int size) {
 
   bool passed = true;
   std::vector<double> expected = {-1., 3.};
-  for (int i = 0; i < 2; ++i) {
+  for (int i{0}; i<2; ++i)
     passed &= std::fabs(x_sol[i] - expected[i]) < 1e-10;
-  }
 
   // Test should pass on all processes
   bool all_passed;
@@ -90,9 +89,8 @@ bool testJacobiOverlapParallel100(int rank, int size) {
     -1. + 4*((2*rank)/size),
     -1. + 4*((2*rank+1)/size)
   };
-  for (int i = 0; i < 2; ++i) {
+  for (int i{0}; i<2; ++i)
     passed &= std::fabs(x_sol[i] - expected[i]) < 1e-10;
-  }
 
   // Test should pass on all processes
   bool all_passed;

@@ -43,7 +43,7 @@ void vectorAllgather(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, c
 }
 
 template<typename T>
-void matrixAllgather(const std::vector< std::vector<T> > &send_buffers, std::vector< std::vector<T> > &recv_buffers, const int size, const MPI_Datatype data_type) {
+void matrixAllgather(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const int size, const MPI_Datatype data_type) {
   unsigned rowCount = send_buffers.size(),
            colCount = send_buffers[0].size();
   // Call the merging all to all function
@@ -62,4 +62,4 @@ void matrixAllgather(const std::vector< std::vector<T> > &send_buffers, std::vec
     }
 }
 
-void matrixUnsignedAllgather(const std::vector< std::vector<unsigned> > &send_buffers, std::vector< std::vector<unsigned> > &recv_buffers, const int size);
+void matrixUnsignedAllgather(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers, const int size);

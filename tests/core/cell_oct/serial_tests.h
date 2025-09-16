@@ -36,9 +36,9 @@ bool testCoreTemplateClasses() {
   Cell<2> cell2;
   Cell<2, 2> cell22;
   Cell<2, 2, 2> cell222;
-  Oct< Cell<2> > oct2;
-  Oct< Cell<2, 2> > oct22;
-  Oct< Cell<2, 2, 2> > oct222;
+  Oct<Cell<2>> oct2;
+  Oct<Cell<2, 2>> oct22;
+  Oct<Cell<2, 2, 2>> oct222;
   CellData cellData;
 
   bool passed = true;
@@ -78,7 +78,7 @@ bool testCellAndOctBasicBehavior() {
 
   bool passed = children.size() == CellType::number_children;
   // All child cells should be nullptr by default
-  for (const auto& ptr : children)
+  for (const auto &ptr : children)
     passed &= (ptr == nullptr);
 
   // Clear oct
@@ -98,7 +98,7 @@ bool testCellSplitting() {
 
   bool passed = children.size() == CellType::number_children;
 
-  for (const auto& child : children) {
+  for (const auto &child : children) {
     passed &= child->getLevel() == 1;
     passed &= child->isLeaf();
   }
@@ -115,13 +115,13 @@ bool testRecursiveSplitting() {
   auto children = root->splitRoot(max_level, root);
 
   bool passed = root->isRoot();
-  for (auto& child : children) {
+  for (auto &child : children) {
     child->split(max_level);
     auto grandchildren = child->getChildOct()->getChildCells();
     passed &= child->getLevel() == 1;
     passed &= child->getParentOct() == root->getChildOct();
     passed &= grandchildren.size() == CellType::number_children;
-    for (auto& gc : grandchildren) {
+    for (auto &gc : grandchildren) {
       passed &= gc->getLevel() == 2;
       passed &= gc->getParentOct() == child->getChildOct();
     }
@@ -255,7 +255,7 @@ bool testSplitBeyondMaxLevel() {
   bool exception_thrown = false;
   try {
     root->splitRoot(0, root); // root is already at level 0, shouldn't allow
-  } catch (const std::exception& e) {
+  } catch (const std::exception &e) {
     exception_thrown = true;
   }
   bool passed = exception_thrown;
@@ -265,7 +265,7 @@ bool testSplitBeyondMaxLevel() {
   exception_thrown = false;
   try {
     children[0]->split(1); // child is already at level 1, shouldn't allow
-  } catch (const std::exception& e) {
+  } catch (const std::exception &e) {
     exception_thrown = true;
   }
   passed &= exception_thrown;
@@ -283,7 +283,7 @@ bool testGetSiblingNumber() {
   auto oct = root->getChildOct();
 
   bool passed = true;
-  for (int i = 0; i < children.size(); ++i) {
+  for (int i{0}; i<children.size(); ++i) {
     auto actual_index = oct->getSiblingNumber(children[i].get());
     passed &= (i == actual_index);
   }

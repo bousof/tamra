@@ -50,7 +50,7 @@ class CellIdManager {
   // Generate the IDs of the first and last leaf cells of the
   // partitions obatined by splitting into equal parts and taking
   // the n-th one
-  std::vector< std::vector<unsigned> > getEqualPartitions(const int level, const int size) const;
+  std::vector<std::vector<unsigned>> getEqualPartitions(const int level, const int size) const;
   // Moves the cell ID to child cell
   void toChild(std::vector<unsigned> &cell_id, const unsigned order) const;
   // Moves the cell ID to parent cell

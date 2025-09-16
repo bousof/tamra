@@ -32,7 +32,7 @@ bool refineTreeOneRootSerial() {
 
   // Create root cell entries
   RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries{eA};
+  std::vector<RootCellEntry<Cell2D>> entries{ eA };
 
   // Construction of the tree
   int min_level = 1, max_level = 3;
@@ -50,7 +50,7 @@ bool refineTreeOneRootSerial() {
   int number_leaf_cells = A->countLeaves();
 
   // Verify that number of leaf cells is right
-  bool passed = number_leaf_cells==10;
+  bool passed = number_leaf_cells == 10;
 
   // Set flags for cells to refine
   A->getChildCell(0)->getChildCell(0)->setToRefine();
@@ -63,7 +63,7 @@ bool refineTreeOneRootSerial() {
   number_leaf_cells = A->countLeaves();
 
   // Verify that number of leaf cells is right
-  passed &= number_leaf_cells==19;
+  passed &= number_leaf_cells == 19;
   return passed;
 }
 
@@ -89,7 +89,7 @@ bool refineTreeTwoRootsSerial() {
   RootCellEntry<Cell2D> eA{A}, eB{B};
   eA.setNeighbor(1, B);          // A +x -> B
   eB.setNeighbor(0, A);          // B -x -> A
-  std::vector< RootCellEntry<Cell2D> > entries { eA, eB };
+  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
   int min_level = 1, max_level = 3;
@@ -110,6 +110,6 @@ bool refineTreeTwoRootsSerial() {
   int number_leaf_cells = A->countLeaves() + B->countLeaves();
 
   // Verify that number of leaf cells is right
-  bool passed = number_leaf_cells==23;
+  bool passed = number_leaf_cells == 23;
   return passed;
 }

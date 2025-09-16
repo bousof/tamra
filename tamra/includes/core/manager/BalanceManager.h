@@ -49,22 +49,22 @@ class BalanceManager {
   //***********************************************************//
  public:
   // Determine if load balancing is needed
-  std::pair<bool, std::vector<double>> isLoadBalancingNeeded(const std::vector< std::shared_ptr<CellType> >& root_cells, const double max_pct_unbalance) const;
+  std::pair<bool, std::vector<double>> isLoadBalancingNeeded(const std::vector<std::shared_ptr<CellType>> &root_cells, const double max_pct_unbalance) const;
   // Performs load balancing between processes
-	void loadBalance(const std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, const double max_pct_unbalance = 0., ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {}) const;
+	void loadBalance(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const double max_pct_unbalance = 0., ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) {}) const;
  private:
   // Determine the local load for this process
-  double computeLoad(const std::shared_ptr<CellType>& cell) const;
+  double computeLoad(const std::shared_ptr<CellType> &cell) const;
   // Determine the cells to send to each process
-  std::vector< std::vector<std::shared_ptr<CellType>> > cellsToExchange(const std::vector<double> &cumulative_loads, const std::vector<double> &target_cumulative_loads, TreeIteratorType &iterator) const;
+  std::vector<std::vector<std::shared_ptr<CellType>>> cellsToExchange(const std::vector<double> &cumulative_loads, const std::vector<double> &target_cumulative_loads, TreeIteratorType &iterator) const;
   // Exchange cells structure and data
-  void exchangeAndCreateCells(const std::vector< std::vector<std::shared_ptr<CellType>> > &cells_to_send, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const;
+  void exchangeAndCreateCells(const std::vector<std::vector<std::shared_ptr<CellType>>> &cells_to_send, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const;
   // Compress the structure of cells (1 cell ID + other cell levels)
   void compressCellStructure(const std::vector<unsigned> &cell_id, const std::vector<unsigned> &cell_levels, std::vector<unsigned> &cell_structure) const;
   // Uncompress the structure of cells (1 cell ID + other cell levels)
   void uncompressCellStructure(const std::vector<unsigned> &cell_structure, std::vector<unsigned> &first_cell_id, std::vector<unsigned> &cell_levels, const unsigned cell_id_size) const;
   // Set a parent to belong to this proc if any of its child do else set to other proc
-  bool backPropagateFlags(const std::shared_ptr<CellType>& cell) const;
+  bool backPropagateFlags(const std::shared_ptr<CellType> &cell) const;
 };
 
 #include "./BalanceManager.tpp"

@@ -39,7 +39,7 @@ bool balanceEmptyPartitionsParallel(int rank, int size) {
 
   // Create root cell entries
   RootCellEntry<Cell2D> eA{A};
-  std::vector< RootCellEntry<Cell2D> > entries { eA };
+  std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
   int min_level = 2, max_level = 3;
@@ -47,11 +47,11 @@ bool balanceEmptyPartitionsParallel(int rank, int size) {
   tree.createRootCells(entries);
 
   // Split to level 3 in process 0
-  if (rank==1) {
-    for (const auto &child: A->getChildCells())
+  if (rank == 1) {
+    for (const auto &child : A->getChildCells())
       child->split(max_level);
-    for (const auto &child: A->getChildCells())
-      for (const auto &gc: child->getChildCells())
+    for (const auto &child : A->getChildCells())
+      for (const auto &gc : child->getChildCells())
         gc->split(max_level);
     A->setToThisProcRecurs();
   } else
@@ -99,7 +99,7 @@ bool balanceEmptyPartitionsDataParallel(int rank, int size) {
 
   // Create root cell entries
   RootCellEntry<Cell2D> eA{A};
-  std::vector< RootCellEntry<Cell2D> > entries { eA };
+  std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
   int min_level = 2, max_level = 3;
@@ -107,15 +107,15 @@ bool balanceEmptyPartitionsDataParallel(int rank, int size) {
   tree.createRootCells(entries);
 
   // Split to level 3 in process 0
-  if (rank==1) {
+  if (rank == 1) {
     unsigned counter = 0;
-    for (const auto &child: A->getChildCells())
-      if (++counter%2==0)
+    for (const auto &child : A->getChildCells())
+      if (++counter%2 == 0)
         child->split(max_level);
-    for (const auto &child: A->getChildCells())
-      if (++counter%2==0)
-        for (const auto &gc: child->getChildCells())
-          if (++counter%2==0)
+    for (const auto &child : A->getChildCells())
+      if (++counter%2 == 0)
+        for (const auto &gc : child->getChildCells())
+          if (++counter%2 == 0)
             gc->split(max_level);
     A->setToThisProcRecurs();
   } else
@@ -154,12 +154,12 @@ bool balanceEmptyPartitionsDataParallel(int rank, int size) {
   return all_passed;
 }
 
-class TestCellData: public AbstractCellData {
+class TestCellData : public AbstractCellData {
  private:
   unsigned u_value;
   double d_value;
  public:
-  TestCellData(): u_value(0), d_value(1.) {};
+  TestCellData() : u_value(0), d_value(1.) {};
   ~TestCellData() = default;
  public:
   unsigned getUnsigned() { return u_value; }
@@ -177,7 +177,7 @@ class TestCellData: public AbstractCellData {
   std::vector<double> toVectorOfData() const override {
     double u_value_as_d;
     std::memcpy(&u_value_as_d, &u_value, sizeof(double));
-    return {u_value_as_d, d_value};
+    return { u_value_as_d, d_value };
   }
   unsigned getDataSize() const override {
     return 2;
@@ -193,7 +193,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
 
   // Create root cell entries
   RootCellEntry<Cell2D> eA{A};
-  std::vector< RootCellEntry<Cell2D> > entries { eA };
+  std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
   int min_level = 2, max_level = 3;
@@ -201,15 +201,15 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
   tree.createRootCells(entries);
 
   // Split to level 3 in process 0
-  if (rank==1) {
+  if (rank == 1) {
     unsigned counter = 0;
-    for (const auto &child: A->getChildCells())
-      if (++counter%2==0)
+    for (const auto &child : A->getChildCells())
+      if (++counter%2 == 0)
         child->split(max_level);
-    for (const auto &child: A->getChildCells())
-      if (++counter%2==0)
-        for (const auto &gc: child->getChildCells())
-          if (++counter%2==0)
+    for (const auto &child : A->getChildCells())
+      if (++counter%2 == 0)
+        for (const auto &gc : child->getChildCells())
+          if (++counter%2 == 0)
             gc->split(max_level);
     A->setToThisProcRecurs();
   } else
@@ -219,7 +219,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
   TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
   if (iterator.toOwnedBegin())
     do {
-      TestCellData & cellData = iterator.getCell()->getCellData();
+      TestCellData &cellData = iterator.getCell()->getCellData();
       cellData.setUnsigned(iterator.getCell()->getLevel());
       cellData.setDouble(2.*iterator.getCell()->getLevel());
     } while (iterator.ownedNext());
@@ -241,7 +241,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
   // Check if cell data is valid (value==level)
   if (iterator.toOwnedBegin())
     do {
-      TestCellData & cellData = iterator.getCell()->getCellData();
+      TestCellData &cellData = iterator.getCell()->getCellData();
       passed &= (cellData.getUnsigned() == iterator.getCell()->getLevel());
       passed &= (cellData.getDouble() == 2.*iterator.getCell()->getLevel());
     } while (iterator.ownedNext());
@@ -285,7 +285,7 @@ bool balanceSmallOneRootParallel(int rank, int size) {
 
   // Create root cell entries
   RootCellEntry<Cell2D> eA{A};
-  std::vector< RootCellEntry<Cell2D> > entries { eA };
+  std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
   int min_level = 2, max_level = 3;
@@ -296,8 +296,8 @@ bool balanceSmallOneRootParallel(int rank, int size) {
   tree.meshAtMinLevel();
 
   // Split first 4 cells in process 0
-  if (rank==0)
-    for (const auto &child: A->getChildCell(0)->getChildCells())
+  if (rank == 0)
+    for (const auto &child : A->getChildCell(0)->getChildCells())
       if (child->belongToOtherProc())
         child->split(max_level);
 
@@ -372,7 +372,7 @@ bool balanceBigOneRootParallel(int rank, int size) {
 
   // Create root cell entries
   RootCellEntry<Cell2D> eA{A};
-  std::vector< RootCellEntry<Cell2D> > entries { eA };
+  std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
   int min_level = 2, max_level = 4;
@@ -383,13 +383,13 @@ bool balanceBigOneRootParallel(int rank, int size) {
   tree.meshAtMinLevel();
 
   // Split first 4 cells in process 0
-  if (rank==0) {
-    for (const auto &child: A->getChildCell(0)->getChildCells())
+  if (rank == 0) {
+    for (const auto &child : A->getChildCell(0)->getChildCells())
       if (child->belongToOtherProc())
         child->split(max_level);
-    for (const auto &child: A->getChildCell(0)->getChildCells())
+    for (const auto &child : A->getChildCell(0)->getChildCells())
       if (child->belongToOtherProc())
-        for (const auto &gc: child->getChildCells())
+        for (const auto &gc : child->getChildCells())
           if (gc->belongToOtherProc())
             gc->split(max_level);
   }
@@ -437,7 +437,7 @@ bool balanceSmallTwoRootsParallel(int rank, int size) {
   RootCellEntry<Cell2D> eA{A}, eB{B};
   eA.setNeighbor(1, B);          // A +x -> B
   eB.setNeighbor(0, A);          // B -x -> A
-  std::vector< RootCellEntry<Cell2D> > entries { eA, eB };
+  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
   int min_level = 2, max_level = 3;
@@ -448,9 +448,9 @@ bool balanceSmallTwoRootsParallel(int rank, int size) {
   tree.meshAtMinLevel();
 
   // Split first 4 cells in process 0
-  for (const auto &child: A->getChildCells())
+  for (const auto &child : A->getChildCells())
     if (child->belongToThisProc())
-      for (const auto &gc: child->getChildCells())
+      for (const auto &gc : child->getChildCells())
         if (gc->belongToThisProc())
           gc->split(max_level);
 

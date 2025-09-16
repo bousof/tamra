@@ -26,7 +26,7 @@ RootCellEntry<CellType>::~RootCellEntry() {
 // Get a neighbor cell
 template<typename CellType>
 std::shared_ptr<CellType> RootCellEntry<CellType>::getNeighbor(const int dir) const {
-  if (dir < 0 || dir > CellType::number_neighbors)
+  if (dir<0 || dir>CellType::number_neighbors)
     throw std::runtime_error("Invalid neighbor index in RootCellEntry::getNeighbor()");
   return neighbor_cells[dir];
 }
@@ -39,7 +39,7 @@ std::shared_ptr<CellType> RootCellEntry<CellType>::getNeighbor(const int dir) co
 // Set a neighbor cell
 template<typename CellType>
 void RootCellEntry<CellType>::setNeighbor(int dir, std::shared_ptr<CellType> cell) {
-  if (dir < 0 || dir > CellType::number_neighbors)
+  if (dir<0 || dir>CellType::number_neighbors)
     throw std::runtime_error("Invalid neighbor index in RootCellEntry::setNeighbor()");
   neighbor_cells[dir] = cell;
 }

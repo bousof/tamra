@@ -47,7 +47,7 @@ class Tree {
   // Number of process
   const int size;
   // Root cells
-  std::vector< std::shared_ptr<CellType> > root_cells;
+  std::vector<std::shared_ptr<CellType>> root_cells;
   // Load balancing manager
 	BalanceManagerType balanceManager;
   // Mesh coarsening manager
@@ -68,17 +68,17 @@ class Tree {
   // Destructor
   ~Tree();
   // Create root cell
-  void createRootCells(const std::vector< RootCellEntryType > &root_cell_entries);
+  void createRootCells(const std::vector<RootCellEntryType> &root_cell_entries);
  private:
   // Create root cell
-  std::vector< std::shared_ptr<CellType> > createBoundaryCells();
+  std::vector<std::shared_ptr<CellType>> createBoundaryCells();
 
   //***********************************************************//
   //  ACCESSORS                                                //
   //***********************************************************//
  public:
   // Get root cells
-  const std::vector< std::shared_ptr<CellType> >& getRootCells() const;
+  const std::vector<std::shared_ptr<CellType>>& getRootCells() const;
   // Get min mesh level
   int getMinLevel() const;
   // Get max mesh level
@@ -92,24 +92,24 @@ class Tree {
  public:
   // Recusively mesh the tree to ensure every cell is at least at min level
   void meshAtMinLevel();
-  void meshAtMinLevel(TreeIteratorType& iterator);
+  void meshAtMinLevel(TreeIteratorType &iterator);
 
   // Split all the leaf cells belonging to this proc that need to be refined and are not at max level
-  bool refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {});
+  bool refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) {});
 
   // Creation of ghost cells
-  GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
+  GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {});
   // Exchange ghost cell values
-  void exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
+  void exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {});
 
   // Redistribute cells among processes to balance computation load
-  void loadBalance(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
+  void loadBalance(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {});
 
   //--- Propagating -------------------------------------------//
   void propagate() {};
 
   //--- Coarsening --------------------------------------------//
-  bool coarsen(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {});
+  bool coarsen(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {});
 
   //--- Computing SFC indices ---------------------------------//
   void boundaryConditions() {};
@@ -118,7 +118,7 @@ class Tree {
   unsigned countOwnedLeaves() const;
 
   // Apply a function to owned leaf cells
-  void applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, unsigned)>& f) const;
+  void applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, unsigned)> &f) const;
 };
 
 #include "Tree.tpp"

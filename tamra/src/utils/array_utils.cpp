@@ -3,7 +3,7 @@
 std::vector<double> linspace(const double min, const double max, const unsigned count) {
   std::vector<double> result(count);
   result[0] = min;
-  for (unsigned i = 1; i < count-1; ++i)
+  for (unsigned i{1}; i<count-1; ++i)
     result[i] = min + (i*(max-min))/(count-1);
 
   if (count > 1)

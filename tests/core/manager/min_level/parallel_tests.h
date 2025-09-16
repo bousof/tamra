@@ -43,7 +43,7 @@ bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
 
   // Create root cell entries
   RootCellEntry<Cell2D> eA{A};
-  std::vector< RootCellEntry<Cell2D> > entries { eA };
+  std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
   int min_level = 2, max_level = 3;
@@ -62,7 +62,7 @@ bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
   unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
-  bool passed = total_leaf_cells==total_cells_min_level;
+  bool passed = total_leaf_cells == total_cells_min_level;
 
   // Also the number of cells should be equally distributed
   passed &= number_leaf_cells >= total_cells_min_level/size;
@@ -115,7 +115,7 @@ bool meshTreeToMinLevelTwoRootsParallel(int rank, int size) {
   RootCellEntry<Cell2D> eA{A}, eB{B};
   eA.setNeighbor(1, B);          // A +x -> B
   eB.setNeighbor(0, A);          // B -x -> A
-  std::vector< RootCellEntry<Cell2D> > entries { eA, eB };
+  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
   int min_level = 2, max_level = 3;
@@ -134,7 +134,7 @@ bool meshTreeToMinLevelTwoRootsParallel(int rank, int size) {
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
   unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
-  bool passed = total_leaf_cells==total_cells_min_level;
+  bool passed = total_leaf_cells == total_cells_min_level;
 
   // Also the number of cells should be equally distributed
   passed &= number_leaf_cells >= total_cells_min_level/size;
@@ -165,7 +165,7 @@ bool meshTreeToMinLevelOneRootPerProcParallel(int rank, int size) {
   RootCellEntry<Cell2D> eA{A}, eB{B};
   eA.setNeighbor(1, B);          // A +x -> B
   eB.setNeighbor(0, A);          // B -x -> A
-  std::vector< RootCellEntry<Cell2D> > entries { eA, eB };
+  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
   int min_level = 2, max_level = 3;
@@ -184,7 +184,7 @@ bool meshTreeToMinLevelOneRootPerProcParallel(int rank, int size) {
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
   unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
-  bool passed = total_leaf_cells==total_cells_min_level;
+  bool passed = total_leaf_cells == total_cells_min_level;
 
   // Also the number of cells should be equally distributed
   passed &= number_leaf_cells >= total_cells_min_level/size;

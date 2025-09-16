@@ -43,11 +43,11 @@ class CoarseManager {
   //***********************************************************//
  public:
   // Go through all the parent cells and coarse them one time if needed
-	bool coarsen(const std::vector< std::shared_ptr<CellType> >& root_cells, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType>& cell) {}) const;
+	bool coarsen(const std::vector<std::shared_ptr<CellType>> &root_cells, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {}) const;
 
  private:
   // Recursively coarse cells at a specific level
-  bool coarsenToLevelRecurs(const std::shared_ptr<CellType>& cell, const int &coarse_level, InterpolationFunctionType interpolation_function) const;
+  bool coarsenToLevelRecurs(const std::shared_ptr<CellType> &cell, const int &coarse_level, InterpolationFunctionType interpolation_function) const;
 };
 
 #include "./CoarseManager.tpp"

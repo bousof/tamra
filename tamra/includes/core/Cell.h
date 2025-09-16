@@ -9,6 +9,7 @@
 #pragma once
 
 #include <array>
+#include <functional>
 #include <memory>
 #include <tuple>
 
@@ -79,9 +80,9 @@ class Cell {
   // Get a specific child cell
   std::shared_ptr<Cell> getChildCell(const unsigned neighbor_sibling_number) const;
   // Get child cells
-  const std::array< std::shared_ptr<Cell>, number_children >& getChildCells() const;
+  const std::array<std::shared_ptr<Cell>, number_children>& getChildCells() const;
   // Get child cells in a specific direction
-  const std::vector< std::shared_ptr<Cell> > getDirChildCells(const int dir) const;
+  const std::vector<std::shared_ptr<Cell>> getDirChildCells(const int dir) const;
   // Get level of the cell
   unsigned getLevel() const;
   // Get parent oct
@@ -107,7 +108,7 @@ class Cell {
 	//***********************************************************//
  public:
   // Set cell data
-  void setCellData(std::unique_ptr<DataType>&& new_data) { data = std::move(new_data); };
+  void setCellData(std::unique_ptr<DataType> &&new_data) { data = std::move(new_data); };
   // Flags mutators
   void setToThisProc()  { indicator = indicator%3; }
   void setToOtherProc() { indicator = 3 + indicator%3; }
@@ -117,31 +118,31 @@ class Cell {
   void setToThisProcRecurs() {
     setToThisProc();
     if (!isLeaf())
-      for (const auto &child: getChildCells())
+      for (const auto &child : getChildCells())
         child->setToThisProcRecurs();
   }
   void setToOtherProcRecurs() {
     setToOtherProc();
     if (!isLeaf())
-      for (const auto &child: getChildCells())
+      for (const auto &child : getChildCells())
         child->setToOtherProcRecurs();
   }
   void setToUnchangeRecurs() {
     setToUnchange();
     if (!isLeaf())
-      for (const auto &child: getChildCells())
+      for (const auto &child : getChildCells())
         child->setToUnchangeRecurs();
   }
   void setToRefineRecurs() {
     setToRefine();
     if (!isLeaf())
-      for (const auto &child: getChildCells())
+      for (const auto &child : getChildCells())
         child->setToRefineRecurs();
   }
   void setToCoarseRecurs() {
     setToCoarse();
     if (!isLeaf())
-      for (const auto &child: getChildCells())
+      for (const auto &child : getChildCells())
         child->setToCoarseRecurs();
   }
  private:
@@ -160,11 +161,11 @@ class Cell {
   // Count the number of owned leaf cells
   unsigned countOwnedLeaves() const;
   // Split a root cell (a pointer to the root is needed for back reference in child oct)
-  const std::array< std::shared_ptr<Cell>, number_children >& splitRoot(const int max_level, std::shared_ptr<Cell> root_cell, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell>& cell) {});
+  const std::array<std::shared_ptr<Cell>, number_children>& splitRoot(const int max_level, std::shared_ptr<Cell> root_cell, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) {});
   // Split a cell and it's direct neighbors if needed for mesh conformity
-  const std::array< std::shared_ptr<Cell>, number_children >& split(const int max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell>& cell) {});
+  const std::array<std::shared_ptr<Cell>, number_children>& split(const int max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) {});
   // Coarsen a cell if neighbors cell allow to preserve consistency else nothing is done
-  bool coarsen(const int min_level, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<Cell>& cell) {});
+  bool coarsen(const int min_level, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<Cell> &cell) {});
   //_________________________________________________________________
   //  Priority  |   Available if   |   Indexes (dir)
   //____________|__________________|_________________________________
@@ -205,7 +206,7 @@ class Cell {
   // Verify if neighbors splitting is needed before cell splitting
   bool verifySplitNeighbors(const int max_level);
   // Split neighbors first if needed before cell splitting
-  void checkSplitNeighbors(const int max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell>& cell) {});
+  void checkSplitNeighbors(const int max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) {});
   // Verify if children coarsening is needed before cell coarsening
   bool verifyCoarsenChildren();
   // Verify if neighbors coarsening is needed before cell coarsening
@@ -223,7 +224,7 @@ class Cell {
   // Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)
   std::shared_ptr<Cell> getVolumeNeighborCell(const int sibling_number, const int dir1, const int dir2, const int dir3) const;
   // Flags propagation from parent to children
-  void setIndicatorFromParent(const Cell& parent_cell);
+  void setIndicatorFromParent(const Cell &parent_cell);
 };
 
 #include "Cell.tpp"

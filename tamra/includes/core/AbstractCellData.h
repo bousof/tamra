@@ -10,7 +10,7 @@
 
 #include "../parallel/ParallelData.h"
 
-class AbstractCellData: public ParallelData {
+class AbstractCellData : public ParallelData {
   //***********************************************************//
 	//  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
 	//***********************************************************//

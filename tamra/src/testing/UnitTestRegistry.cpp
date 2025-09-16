@@ -19,12 +19,12 @@ std::string UnitTestRegistry::label = "";
 //***********************************************************//
 
 // Register a serial test
-void UnitTestRegistry::registerSerialTest(const std::string& name, FuncType func, const std::string& group) {
+void UnitTestRegistry::registerSerialTest(const std::string &name, FuncType func, const std::string &group) {
   serialTests.emplace_back(name, group, func); // LEAD TO ERROR
 }
 
 // Register a parallel test
-void UnitTestRegistry::registerParallelTest(const std::string& name, FuncType func, const std::string& group) {
+void UnitTestRegistry::registerParallelTest(const std::string &name, FuncType func, const std::string &group) {
   parallelTests.emplace_back(name, group, func); // LEAD TO ERROR
 }
 
@@ -48,11 +48,10 @@ void UnitTestRegistry::runTests(std::vector<UnitTest> &tests, const bool display
 std::map<std::string, std::vector<const UnitTest*>> grouped_tests;
   int passed = 0, failed = 0;
 
-  for (const auto& test : tests) {
+  for (const auto &test : tests)
     grouped_tests[test.getGroup()].push_back(&test);
-  }
 
-  for (const auto& [group, tests] : grouped_tests) {
+  for (const auto &[group, tests] : grouped_tests) {
     if (display)
       std::cout << label << ">> Group: " << group << " (" << tests.size() << " tests)\n";
     int group_passed = 0, group_failed = 0;
@@ -61,7 +60,7 @@ std::map<std::string, std::vector<const UnitTest*>> grouped_tests;
       bool result = false;
       try {
         result = test->run();
-      } catch (const std::exception& e) {
+      } catch (const std::exception &e) {
         std::cerr << label << "❌ EXCEPTION in test " << test->getName() << ": " << e.what() << '\n';
       } catch (...) {
         std::cerr << label << "❌ UNKNOWN ERROR in test " << test->getName() << '\n';

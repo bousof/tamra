@@ -23,4 +23,4 @@ void scalarAlltoall(const std::vector<int> &send_buffer, std::vector<T> &recv_bu
   MPI_Alltoall(send_buffer.data(), 1, data_type, recv_buffer.data(), 1, data_type, MPI_COMM_WORLD);
 }
 
-void intAlltoall(const std::vector<int>& send_buffer, std::vector<int>& recv_buffer, const int size);
+void intAlltoall(const std::vector<int> &send_buffer, std::vector<int> &recv_buffer, const int size);

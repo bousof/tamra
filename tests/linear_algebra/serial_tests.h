@@ -30,9 +30,8 @@ bool testJacobi2x2Serial1() {
 
   bool passed = true;
   std::vector<double> expected = {0.5, 2.0};
-  for (int i = 0; i < 2; ++i) {
+  for (int i{0}; i<2; ++i)
     passed &= std::fabs(x_next[i] - expected[i]) < 1e-10;
-  }
   return passed;
 }
 
@@ -56,8 +55,7 @@ bool testJacobi2x2Serial100() {
 
   bool passed = true;
   std::vector<double> expected = {-1., 3.};
-  for (int i = 0; i < 2; ++i) {
+  for (int i{0}; i<2; ++i)
     passed &= std::fabs(x_sol[i] - expected[i]) < 1e-10;
-  }
   return passed;
 }

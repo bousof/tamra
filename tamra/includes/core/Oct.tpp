@@ -24,7 +24,7 @@ void Oct<CellType>::init(std::shared_ptr<CellType> parent_cell, int level) {
 // Clear oct
 template<typename CellType>
 void Oct<CellType>::clear() {
-  for (auto &child: child_cells)
+  for (auto &child : child_cells)
     if (child)
       child->clear();
   reset();
@@ -46,19 +46,19 @@ void Oct<CellType>::reset() {
 
 // Get parent cell
 template<typename CellType>
-std::shared_ptr<CellType> Oct<CellType>::getParentCell() const {return parent_cell;};
+std::shared_ptr<CellType> Oct<CellType>::getParentCell() const { return parent_cell; };
 
 // Get level of the oct
 template<typename CellType>
-int Oct<CellType>::getLevel() const {return level;};
+int Oct<CellType>::getLevel() const { return level; };
 
 // Get neighbor cells
 template<typename CellType>
-const std::array< std::shared_ptr<CellType>, Oct<CellType>::number_neighbors >& Oct<CellType>::getNeighborCells() const {return neighbor_cells;};
+const std::array<std::shared_ptr<CellType>, Oct<CellType>::number_neighbors>& Oct<CellType>::getNeighborCells() const { return neighbor_cells; };
 
 // Get child cells
 template<typename CellType>
-const std::array< std::shared_ptr<CellType>, Oct<CellType>::number_children >& Oct<CellType>::getChildCells() const {return child_cells;};
+const std::array<std::shared_ptr<CellType>, Oct<CellType>::number_children>& Oct<CellType>::getChildCells() const { return child_cells; };
 
 // Get a specific child cell
 template<typename CellType>

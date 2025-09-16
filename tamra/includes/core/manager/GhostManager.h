@@ -78,16 +78,16 @@ class GhostManager {
   //***********************************************************//
  public:
   // Creation of ghost cells and exchange of ghost values
-	GhostManagerTaskType buildGhostLayer(std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {}) const;
+	GhostManagerTaskType buildGhostLayer(std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) {}) const;
   // Update ghost cells and exchange values for solving conflicts
 	void updateGhostLayer(GhostManagerTaskType &task, TreeIteratorType &iterator) const;
   // Exchange ghost cell values
-	void exchangeGhostValues(GhostManagerTaskType &task, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {}) const;
+	void exchangeGhostValues(GhostManagerTaskType &task, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) {}) const;
  private:
   // Share the partitions start and end cells
-  void sharePartitions(std::vector< std::vector<unsigned> > &begin_ids, std::vector< std::vector<unsigned> > &end_ids, TreeIteratorType &iterator) const;
+  void sharePartitions(std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids, TreeIteratorType &iterator) const;
   // Loop on owned cells and check if neighbors belong to another process
-  void findCellsToSend(const std::vector< std::shared_ptr<CellType> > &root_cells, const std::vector< std::vector<unsigned> > &begin_ids, const std::vector< std::vector<unsigned> > &end_ids, std::vector< std::vector<std::shared_ptr<CellType>> > &cells_to_send, TreeIteratorType &iterator) const;
+  void findCellsToSend(const std::vector<std::shared_ptr<CellType>> &root_cells, const std::vector<std::vector<unsigned>> &begin_ids, const std::vector<std::vector<unsigned>> &end_ids, std::vector<std::vector<std::shared_ptr<CellType>>> &cells_to_send, TreeIteratorType &iterator) const;
   // Set all ghost cells to coarse
   void setGhostToCoarseRecurs(const std::shared_ptr<CellType> &cell) const;
 };

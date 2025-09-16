@@ -60,7 +60,7 @@ bool testTree1D() {
   eB.setNeighbor(0, A);   // B(‑x) = A
 
   // Create root cell entry vector and tree
-  std::vector< RootCellEntry<Cell1D> > entries { eA, eB };
+  std::vector<RootCellEntry<Cell1D>> entries { eA, eB };
   Tree<Cell1D> tree;
 
   // Roots should be leaf at this point
@@ -105,7 +105,7 @@ bool testTree2D() {
   eC.setNeighbor(2, A);          // C -y -> A
   eD.setNeighbor(0, C);          // D -x -> C
   eD.setNeighbor(2, B);          // D -y -> B
-  std::vector< RootCellEntry<Cell2D> > entries { eA, eB, eC, eD };
+  std::vector<RootCellEntry<Cell2D>> entries { eA, eB, eC, eD };
 
   Tree<Cell2D> tree;
   tree.createRootCells(entries);

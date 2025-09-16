@@ -27,7 +27,7 @@ class TreeIterator {
   //***********************************************************//
  private:
   // Root cells
-  const std::vector< std::shared_ptr<CellType> > root_cells;
+  const std::vector<std::shared_ptr<CellType>> root_cells;
   // Tree max level
   const int max_level;
   // Vector of sibling numbers
@@ -50,7 +50,7 @@ class TreeIterator {
   //***********************************************************//
  public:
   // Constructor
-  TreeIterator(const std::vector< std::shared_ptr<CellType> > &root_cells, const int max_level);
+  TreeIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level);
   // Destructor
   ~TreeIterator() = default;
 
@@ -69,10 +69,10 @@ class TreeIterator {
   // Get cell ID manager
   CellIdManagerType getCellIdManager() const;
   // Construct cell index path
-  std::vector<unsigned> getCellId(const std::shared_ptr<CellType>& cell) const;
+  std::vector<unsigned> getCellId(const std::shared_ptr<CellType> &cell) const;
  private:
   // Construct cell index path
-  std::vector<unsigned> getCellIndexPath(const std::shared_ptr<CellType>& cell) const;
+  std::vector<unsigned> getCellIndexPath(const std::shared_ptr<CellType> &cell) const;
 
   //***********************************************************//
   //  METHODS                                                  //
@@ -99,7 +99,7 @@ class TreeIterator {
   // Moves the iterator to a leaf cell of the current cell that belong to the process
   void toOwnedLeaf(const int sweep_level = std::numeric_limits<int>::max(), const bool reverse = false);
   // Move iterator to a specific cell ID (can also create it with a flag)
-  void toCellId(const std::vector<unsigned> &cell_id, const bool create = false, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType>& cell) {});
+  void toCellId(const std::vector<unsigned> &cell_id, const bool create = false, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) {});
   // Check if a cell ID is greater than
   bool cellIdGt(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdGt(current_cell_id, cell_id); }
   // Check if a cell ID is greater than or equal another ID

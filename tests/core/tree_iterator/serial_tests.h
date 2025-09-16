@@ -32,7 +32,7 @@ bool countLeafOneRoot() {
 
   // Create root cell entries
   RootCellEntry<Cell2D> eA{A};
-  std::vector< RootCellEntry<Cell2D> > entries { eA };
+  std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
   int min_level = 1, max_level = 2;
@@ -46,7 +46,7 @@ bool countLeafOneRoot() {
   // Count number of leaf cells
   int number_leaf_cells = A->countLeaves();
 
-  bool passed = number_leaf_cells==10;
+  bool passed = number_leaf_cells == 10;
   return passed;
 }
 
@@ -72,7 +72,7 @@ bool countLeafTwoRoots() {
   RootCellEntry<Cell2D> eA{A}, eB{B};
   eA.setNeighbor(1, B);          // A +x -> B
   eB.setNeighbor(0, A);          // B -x -> A
-  std::vector< RootCellEntry<Cell2D> > entries { eA, eB };
+  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
   int min_level = 1, max_level = 2;
@@ -86,6 +86,6 @@ bool countLeafTwoRoots() {
   // Count number of leaf cells
   int number_leaf_cells = A->countLeaves() + B->countLeaves();
 
-  bool passed = number_leaf_cells==14;
+  bool passed = number_leaf_cells == 14;
   return passed;
 }

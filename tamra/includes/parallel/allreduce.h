@@ -23,7 +23,7 @@ void scalarAllReduce(const T value, T &reduction, const MPI_Datatype data_type, 
   MPI_Allreduce(&value, &reduction, 1, data_type, op_type, MPI_COMM_WORLD);
 }
 
-void boolAndAllReduce(const bool value, bool& reduction);
+void boolAndAllReduce(const bool value, bool &reduction);
 
 void unsignedSumAllReduce(const unsigned value, unsigned &reduction);
 

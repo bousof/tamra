@@ -12,7 +12,7 @@ GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType &gho
   is_finished(is_finished) {}
 
 template<typename GhostManagerType>
-GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType &ghost_manager, const bool is_finished, std::vector<std::vector<std::shared_ptr<CellType>>> &&cells_to_send, std::vector<std::shared_ptr<CellType>> &&cells_to_recv, std::vector<std::shared_ptr<CellType>> &&extrapolate_owned_cells, std::vector<std::shared_ptr<CellType>> &&extrapolate_ghost_cells, std::vector< std::vector<unsigned> > &&partition_begin_ids, std::vector< std::vector<unsigned> > &&partition_end_ids)
+GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType &ghost_manager, const bool is_finished, std::vector<std::vector<std::shared_ptr<CellType>>> &&cells_to_send, std::vector<std::shared_ptr<CellType>> &&cells_to_recv, std::vector<std::shared_ptr<CellType>> &&extrapolate_owned_cells, std::vector<std::shared_ptr<CellType>> &&extrapolate_ghost_cells, std::vector<std::vector<unsigned>> &&partition_begin_ids, std::vector<std::vector<unsigned>> &&partition_end_ids)
 : ghost_manager(ghost_manager),
   is_finished(is_finished),
   cells_to_send(cells_to_send),
@@ -33,13 +33,13 @@ GhostManagerTask<GhostManagerType>::~GhostManagerTask() {};
 
 // Get the cells to send
 template<typename GhostManagerType>
-const std::vector<std::vector<std::shared_ptr< typename GhostManagerType::CellType >>>& GhostManagerTask<GhostManagerType>::getCellsToSend() const {
+const std::vector<std::vector<std::shared_ptr<typename GhostManagerType::CellType>>>& GhostManagerTask<GhostManagerType>::getCellsToSend() const {
   return cells_to_send;
 }
 
 // Get the cells to recv
 template<typename GhostManagerType>
-const std::vector<std::shared_ptr< typename GhostManagerType::CellType >>& GhostManagerTask<GhostManagerType>::getCellsToRecv() const {
+const std::vector<std::shared_ptr<typename GhostManagerType::CellType>>& GhostManagerTask<GhostManagerType>::getCellsToRecv() const {
   return cells_to_recv;
 }
 
@@ -113,7 +113,7 @@ void GhostManagerTask<GhostManagerType>::cancelTask() {
 template<typename GhostManagerType>
 std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskOwned(TreeIteratorType &iterator) {
   std::vector<bool> resolution_flags(extrapolate_owned_cells.size(), false);
-  for (const auto strategy: owned_strategies)
+  for (const auto strategy : owned_strategies)
     if (!all(resolution_flags))
       switch (strategy) {
         case OwnedConflictResolutionStrategy::EXTRAPOLATE:
@@ -136,14 +136,14 @@ template<typename GhostManagerType>
 std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskGhost(TreeIteratorType &iterator) {
   // SEND ERROR and terminate MPI if SPLIT_IN_OWNER or TRY_COARSEN is used
   if (std::any_of(ghost_strategies.begin(), ghost_strategies.end(), [](const GhostConflictResolutionStrategy &strategy) {
-    return strategy == GhostConflictResolutionStrategy::SPLIT_IN_OWNER || strategy == GhostConflictResolutionStrategy::TRY_COARSEN;
+    return strategy == GhostConflictResolutionStrategy::SPLIT_IN_OWNER || (strategy==GhostConflictResolutionStrategy::TRY_COARSEN);
   })) {
     mpi_finalize();
     throw std::runtime_error("Strategy SPLIT_IN_OWNER and TRY_COARSEN not implemented in GhostManagerTask::continueTaskGhost()");
   }
 
   std::vector<bool> resolution_flags(extrapolate_ghost_cells.size(), false);
-  for (const auto strategy: ghost_strategies)
+  for (const auto strategy : ghost_strategies)
     if (!all(resolution_flags))
       switch (strategy) {
         case GhostConflictResolutionStrategy::EXTRAPOLATE:
@@ -171,7 +171,7 @@ std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskGhost(TreeIter
 template<typename GhostManagerType>
 bool GhostManagerTask<GhostManagerType>::applyExtrapolationFunctionRecurs(const std::shared_ptr<CellType> &cell, const ExtrapolationFunctionType &extrapolation_function) {
   bool success = extrapolation_function(cell);
-  for (auto &child: cell->getChildCells())
+  for (auto &child : cell->getChildCells())
     if (!child->isLeaf())
       success &= applyExtrapolationFunctionRecurs(child, extrapolation_function);
   return success;

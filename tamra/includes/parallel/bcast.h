@@ -39,10 +39,9 @@ void vectorBcast(std::vector<T> &buffer, const int root, const int rank, const M
   );
 
 	// Number of elements to broadcast to all processes
-  if (count==0) {
-    if (root==rank) {
+  if (count == 0) {
+    if (root == rank)
       count = buffer.size();
-    }
     unsignedBcast(count, root);
   }
 
@@ -52,9 +51,9 @@ void vectorBcast(std::vector<T> &buffer, const int root, const int rank, const M
 }
 
 template<typename T>
-void matrixBcast(std::vector< std::vector<T> > &buffer, const int root, const int rank, const MPI_Datatype data_type, unsigned rowCount = 0, unsigned colCount = 0) {
+void matrixBcast(std::vector<std::vector<T>> &buffer, const int root, const int rank, const MPI_Datatype data_type, unsigned rowCount = 0, unsigned colCount = 0) {
 	// Number of elements to broadcast to all processes
-  if (colCount==0) {
+  if (colCount == 0) {
     if (rank == root)
       colCount = buffer[0].size();
     unsignedBcast(colCount, root);
@@ -86,4 +85,4 @@ void vectorUnsignedBcast(std::vector<unsigned> &buffer, const int root, const in
 
 void vectorDoubleBcast(std::vector<double> &buffer, const int root, const int rank, unsigned count = 0);
 
-void matrixUnsignedBcast(std::vector< std::vector<unsigned> > &buffer, const int root, const int rank, unsigned rowCount = 0, unsigned colCount = 0);
+void matrixUnsignedBcast(std::vector<std::vector<unsigned>> &buffer, const int root, const int rank, unsigned rowCount = 0, unsigned colCount = 0);

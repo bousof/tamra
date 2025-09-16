@@ -32,9 +32,9 @@ class Oct {
   // Oct level
   int level;
   // Neighbor cells
-  std::array< std::shared_ptr<CellType>, number_neighbors > neighbor_cells;
+  std::array<std::shared_ptr<CellType>, number_neighbors> neighbor_cells;
   // Child cells
-  std::array< std::shared_ptr<CellType>, number_children > child_cells;
+  std::array<std::shared_ptr<CellType>, number_children> child_cells;
 
 	//***********************************************************//
 	//  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -60,9 +60,9 @@ class Oct {
   // Get level of the oct
   int getLevel() const;
   // Get neighbor cells
-  const std::array< std::shared_ptr<CellType>, number_neighbors >& getNeighborCells() const;
+  const std::array<std::shared_ptr<CellType>, number_neighbors>& getNeighborCells() const;
   // Get child cells
-  const std::array< std::shared_ptr<CellType>, number_children >& getChildCells() const;
+  const std::array<std::shared_ptr<CellType>, number_children>& getChildCells() const;
   // Get a specific child cell
   std::shared_ptr<CellType> getChildCell(const int sibling_number) const;
 

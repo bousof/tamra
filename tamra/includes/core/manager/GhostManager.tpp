@@ -12,8 +12,8 @@ GhostManager<CellType, TreeIteratorType>::GhostManager(const int min_level, cons
   max_level(max_level),
   rank(rank),
   size(size) {
-  default_owned_extrapolation_function = [](const std::shared_ptr<CellType>& cell) { return true; };
-  default_ghost_extrapolation_function = [](const std::shared_ptr<CellType>& cell) { return true; };
+  default_owned_extrapolation_function = [](const std::shared_ptr<CellType> &cell) { return true; };
+  default_ghost_extrapolation_function = [](const std::shared_ptr<CellType> &cell) { return true; };
   default_owned_strategies = {
     OwnedConflictResolutionStrategy::IGNORE
   };
@@ -64,27 +64,27 @@ void GhostManager<CellType, TreeIteratorType>::setDefaultGhostConflictResolution
 
 // Creation of ghost cells and exchange of ghost values
 template<typename CellType, typename TreeIteratorType>
-typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostManager<CellType, TreeIteratorType>::buildGhostLayer(std::vector< std::shared_ptr<CellType> >& root_cells, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
+typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostManager<CellType, TreeIteratorType>::buildGhostLayer(std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
   // If only one process, nothing to do
   if (size == 1)
     return GhostManagerTaskType(*this, true);
 
   // Number of leaf cells before creating ghost.
 	unsigned old_nb_owned_leaves = 0;
-  for (const auto &root_cell: root_cells)
+  for (const auto &root_cell : root_cells)
     old_nb_owned_leaves += root_cell->countOwnedLeaves();
 	// If the creation of ghost cells leads to the splitting of cells inside the partition of
 	// the proc, then it will be necessary to reapply the ghost cell creation process in
 	// order to be sure about the correctness of the tree after having those new cell values.
 
   // Set all ghost cells to coarse
-  for (const auto &root_cell: root_cells)
+  for (const auto &root_cell : root_cells)
     setGhostToCoarseRecurs(root_cell);
 
   //std::cout << "P_" << rank << ": nb owned leaves " << old_nb_owned_leaves << std::endl;
 
   // Share the partitions start and end IDs to be able to determine what cell belongs to what process
-  std::vector< std::vector<unsigned> > begin_ids, end_ids;
+  std::vector<std::vector<unsigned>> begin_ids, end_ids;
   sharePartitions(begin_ids, end_ids, iterator);
 
   //std::cout << "P_" << rank << ": start ids";
@@ -93,14 +93,14 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
   //displayVector(std::cout, end_ids) << std::endl;
 
   // Loop on owned cells and check if neighbors belong to another process
-  std::vector< std::vector<std::shared_ptr<CellType>> > cells_to_send;
+  std::vector<std::vector<std::shared_ptr<CellType>>> cells_to_send;
   findCellsToSend(root_cells, begin_ids, end_ids, cells_to_send, iterator);
 
   // Share cell IDs of the cells to create on other process
-  std::vector< std::vector<std::vector<unsigned>> > cell_ids_to_send(size);
+  std::vector<std::vector<std::vector<unsigned>>> cell_ids_to_send(size);
   for (int p{0}; p<size; ++p) {
     cell_ids_to_send[p].reserve(cells_to_send[p].size());
-    for (const std::shared_ptr<CellType> &cell: cells_to_send[p])
+    for (const std::shared_ptr<CellType> &cell : cells_to_send[p])
       cell_ids_to_send[p].push_back(iterator.getCellId(cell));
   }
 
@@ -108,7 +108,7 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
   //displayVector(std::cout, cell_ids_to_send) << std::endl;
 
   const unsigned cell_id_size = iterator.getCellIdManager().getCellIdSize();
-  std::vector< std::vector<unsigned> > recv_cell_ids;
+  std::vector<std::vector<unsigned>> recv_cell_ids;
   matrixUnsignedAlltoallv(cell_ids_to_send, recv_cell_ids, size, cell_id_size);
 
   //std::cout << "P_" << rank << ": recv cell ids ";
@@ -134,14 +134,14 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
 
   // Number of leaf cells befor creating ghost.
 	unsigned nb_owned_leaves = 0;
-  for (const auto &root_cell: root_cells)
+  for (const auto &root_cell : root_cells)
     nb_owned_leaves += root_cell->countOwnedLeaves();
 
   // If number of owned cells has increased. Find cells that need to be extrapolated::
   std::vector<std::shared_ptr<CellType>> extrapolate_owned_cells;
   if (nb_owned_leaves > old_nb_owned_leaves)
     for (int p{0}; p<size; ++p)
-      for (const std::shared_ptr<CellType> &cell: cells_to_send[p])
+      for (const std::shared_ptr<CellType> &cell : cells_to_send[p])
         if (!cell->isLeaf())
           extrapolate_owned_cells.push_back(cell);
 
@@ -153,8 +153,8 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
   GhostManagerTaskType task = GhostManagerTaskType(*this, is_finished, std::move(cells_to_send), std::move(cells_to_recv), std::move(extrapolate_owned_cells), std::move(extrapolate_ghost_cells), std::move(begin_ids), std::move(end_ids));
   task.setOwnedExtrapolationFunction(default_owned_extrapolation_function);
   task.setGhostExtrapolationFunction(default_ghost_extrapolation_function);
-  task.setOwnedConflictResolutionStrategy({default_owned_strategies}, default_resend_owned);
-  task.setGhostConflictResolutionStrategy({default_ghost_strategies});
+  task.setOwnedConflictResolutionStrategy({ default_owned_strategies }, default_resend_owned);
+  task.setGhostConflictResolutionStrategy({ default_ghost_strategies });
 
   return task;
 }
@@ -175,42 +175,40 @@ void GhostManager<CellType, TreeIteratorType>::exchangeGhostValues(GhostManagerT
     return;
 
   // Gather cell data in a vector for sharing between process
-  std::vector< std::vector< std::unique_ptr<ParallelData> > > all_cell_data(size);
+  std::vector<std::vector<std::unique_ptr<ParallelData>>> all_cell_data(size);
   for (unsigned p{0}; p<size; ++p) {
     all_cell_data[p].reserve(task.getCellsToSend()[p].size());
-    for (const auto &cell: task.getCellsToSend()[p])
+    for (const auto &cell : task.getCellsToSend()[p])
       all_cell_data[p].push_back(std::make_unique<typename CellType::CellDataType>(cell->getCellData()));
   }
 
   // Exchange cell data
-  std::vector< std::unique_ptr<ParallelData> > all_cell_data_recv;
+  std::vector<std::unique_ptr<ParallelData>> all_cell_data_recv;
   vectorDataAlltoallv(all_cell_data, all_cell_data_recv, size, []() {
     return std::make_unique<typename CellType::CellDataType>();
   });
 
   // Set cell data to received cells and call extrapolation function on non-leaf cells
-  const std::vector<std::shared_ptr<CellType>>& cells_to_recv = task.getCellsToRecv();
+  const std::vector<std::shared_ptr<CellType>> &cells_to_recv = task.getCellsToRecv();
   for (int i{0}; i<cells_to_recv.size(); ++i) {
     // Set cell data
     cells_to_recv[i]->setCellData(std::unique_ptr<typename CellType::CellDataType>(
       static_cast<typename CellType::CellDataType*>(all_cell_data_recv[i].release())
     ));
 
-    if (!cells_to_recv[i]->isLeaf()) {
+    if (!cells_to_recv[i]->isLeaf())
       // Call extrapolation function on non-leaf cells
       cells_to_recv[i]->extrapolateRecursively(extrapolation_function);
-    }
   }
 
   // If the task is not finished, continue unfinished task to resolve conflicts
-  if (!task.is_finished) {
+  if (!task.is_finished)
     task.continueTask(iterator);
-  }
 }
 
 // Share the partiion start and end cells
 template<typename CellType, typename TreeIteratorType>
-void GhostManager<CellType, TreeIteratorType>::sharePartitions(std::vector< std::vector<unsigned> > &begin_ids, std::vector< std::vector<unsigned> > &end_ids, TreeIteratorType &iterator) const {
+void GhostManager<CellType, TreeIteratorType>::sharePartitions(std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids, TreeIteratorType &iterator) const {
   std::shared_ptr<CellType> begin_cell, end_cell;
   std::vector<unsigned> begin_id, end_id;
   if (iterator.toOwnedBegin()) { // Partition is not empty
@@ -229,7 +227,7 @@ void GhostManager<CellType, TreeIteratorType>::sharePartitions(std::vector< std:
   }
 
   // All gather the start and end of each process partition
-  std::vector< std::vector<unsigned> > send_partition_ids= { begin_id, end_id }, all_partition_ids;
+  std::vector<std::vector<unsigned>> send_partition_ids= { begin_id, end_id }, all_partition_ids;
   matrixUnsignedAllgather(send_partition_ids, all_partition_ids, size);
 
   // Format outputs
@@ -243,7 +241,7 @@ void GhostManager<CellType, TreeIteratorType>::sharePartitions(std::vector< std:
 
 // Loop on owned cells and check if neighbors belong to another process
 template<typename CellType, typename TreeIteratorType>
-void GhostManager<CellType, TreeIteratorType>::findCellsToSend(const std::vector< std::shared_ptr<CellType> > &root_cells, const std::vector< std::vector<unsigned> > &begin_ids, const std::vector< std::vector<unsigned> > &end_ids, std::vector< std::vector<std::shared_ptr<CellType>> > &cells_to_send, TreeIteratorType &iterator) const {
+void GhostManager<CellType, TreeIteratorType>::findCellsToSend(const std::vector<std::shared_ptr<CellType>> &root_cells, const std::vector<std::vector<unsigned>> &begin_ids, const std::vector<std::vector<unsigned>> &end_ids, std::vector<std::vector<std::shared_ptr<CellType>>> &cells_to_send, TreeIteratorType &iterator) const {
   // Cell ID manager
   typename TreeIteratorType::CellIdManagerType cell_id_manager = iterator.getCellIdManager();
 
@@ -261,7 +259,7 @@ void GhostManager<CellType, TreeIteratorType>::findCellsToSend(const std::vector
   std::vector<int> non_void_proc;
   non_void_proc.reserve(size);
   for (int p{0}; p<size; ++p)
-    if (p!=rank && cell_id_manager.cellIdLte(begin_ids[p], end_ids[p]))
+    if ((p!=rank) && cell_id_manager.cellIdLte(begin_ids[p], end_ids[p]))
       non_void_proc.push_back(p);
 
   //for (const int p: non_void_proc)
@@ -278,10 +276,10 @@ void GhostManager<CellType, TreeIteratorType>::findCellsToSend(const std::vector
     // Connect the neighbors in the root's child_oct
     std::fill(found.begin(), found.end(), false);
     bool allTrue;
-    for (int dir = 0; dir < CellType::number_neighbors; ++dir) {
+    for (int dir{0}; dir<CellType::number_neighbors; ++dir) {
       // If cell already shared with all proc no need to add it again
       allTrue = true;
-      for (const int p: non_void_proc)
+      for (const int p : non_void_proc)
         allTrue &= found[p];
       if (allTrue)
         break;
@@ -296,7 +294,7 @@ void GhostManager<CellType, TreeIteratorType>::findCellsToSend(const std::vector
       //displayVector(std::cout, neighbor_id) << std::endl;
 
       // Check if the neighbor cell cross other process partitions
-      for (const int p: non_void_proc)
+      for (const int p : non_void_proc)
         if (!found[p] &&
             !cell_id_manager.cellIdGt(begin_ids[p], neighbor_id) &&
             !cell_id_manager.cellIdGt(neighbor_id, end_ids[p])) {
@@ -316,6 +314,6 @@ void GhostManager<CellType, TreeIteratorType>::setGhostToCoarseRecurs(const std:
   if (!cell->belongToThisProc())
     cell->setToCoarseRecurs();
   else if (!cell->isLeaf())
-    for (const auto &child: cell->getChildCells())
+    for (const auto &child : cell->getChildCells())
       setGhostToCoarseRecurs(child);
 }

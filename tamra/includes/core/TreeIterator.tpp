@@ -6,7 +6,7 @@
 
 // Constructor
 template<typename CellType>
-TreeIterator<CellType>::TreeIterator(const std::vector< std::shared_ptr<CellType> > &root_cells, const int max_level)
+TreeIterator<CellType>::TreeIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level)
 : root_cells(root_cells),
   max_level(max_level),
   cell_id_manager(root_cells.size(), max_level) {
@@ -53,13 +53,13 @@ typename TreeIterator<CellType>::CellIdManagerType TreeIterator<CellType>::getCe
 
 // Construct cell id
 template<typename CellType>
-std::vector<unsigned> TreeIterator<CellType>::getCellId(const std::shared_ptr<CellType>& cell) const {
+std::vector<unsigned> TreeIterator<CellType>::getCellId(const std::shared_ptr<CellType> &cell) const {
   return indexPathToId(getCellIndexPath((cell)));
 }
 
 // Construct cell index path
 template<typename CellType>
-std::vector<unsigned> TreeIterator<CellType>::getCellIndexPath(const std::shared_ptr<CellType>& cell) const {
+std::vector<unsigned> TreeIterator<CellType>::getCellIndexPath(const std::shared_ptr<CellType> &cell) const {
   std::vector<unsigned> cell_index_path(cell->getLevel()+1);
   // Browse parents until root  to extract index path
   std::shared_ptr<CellType> parent = cell;
@@ -89,7 +89,7 @@ bool TreeIterator<CellType>::next(const int sweep_level) {
     toLeaf(sweep_level, false);
     return true;
   }
-  if (order_path.size()>1) { // Mother cell is not a root cell
+  if (order_path.size() > 1) { // Mother cell is not a root cell
     toParent();
     return next(sweep_level);
   }
@@ -115,7 +115,7 @@ bool TreeIterator<CellType>::prev(const int sweep_level) {
     toLeaf(sweep_level, true);
     return true;
   }
-  if (order_path.size()>1) { // Mother cell is not a root cell
+  if (order_path.size() > 1) { // Mother cell is not a root cell
     toParent();
     return prev(sweep_level);
   }
@@ -296,7 +296,7 @@ void TreeIterator<CellType>::toParent() {
 template<typename CellType>
 void TreeIterator<CellType>::toRoot(const unsigned root_number) {
   order_path = std::stack<unsigned>();
-  index_path = std::vector<unsigned>{root_number};
+  index_path = std::vector<unsigned>{ root_number };
   index_path[0] = root_number;
   current_cell = root_cells[root_number];
   cell_id_manager.toRoot(current_cell_id, root_number);

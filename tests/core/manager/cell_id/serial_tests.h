@@ -39,7 +39,7 @@ bool cellIDInversion2x2() {
   A->getChildCell(2)->split(max_level);
 
   // Initialize iterator
-  std::vector< std::shared_ptr<Cell2D> > roots = {A};
+  std::vector<std::shared_ptr<Cell2D>> roots = { A };
   TreeIterator<Cell2D> iterator(roots, max_level);
 
   // Go to target cell
@@ -78,7 +78,7 @@ bool cellIDInversion3x2() {
     child_cells = child_cells[0]->split(max_level);
 
   // Initialize iterator
-  std::vector< std::shared_ptr<Cell2D> > roots = {A};
+  std::vector<std::shared_ptr<Cell2D>> roots = { A };
   TreeIterator<Cell2D> iterator(roots, max_level);
 
   // Go to target cell

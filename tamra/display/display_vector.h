@@ -19,18 +19,17 @@ std::ostream& displayVector(std::ostream &os, const std::vector<T> &c) {
   //);
 
   os << "[ ";
-  for (const auto &x: c) {
+  for (const auto &x : c)
     os << x << ", ";
-  }
   os << "]";
   return os;
 }
 
 // Display a vector of vectores
 template<typename T>
-std::ostream& displayVector(std::ostream &os, const std::vector< std::vector<T> > &c, const bool lineBreaks = false) {
+std::ostream& displayVector(std::ostream &os, const std::vector<std::vector<T>> &c, const bool lineBreaks = false) {
   os << (lineBreaks ? "[\n" : "[ ");
-  for (const auto &x: c) {
+  for (const auto &x : c) {
     os << (lineBreaks ? "  " : "");
     displayVector(os, x) << (lineBreaks ? ",\n" : ", ");
   }
@@ -40,9 +39,9 @@ std::ostream& displayVector(std::ostream &os, const std::vector< std::vector<T> 
 
 // Display a vector of vectores
 template<typename T>
-std::ostream& displayVector(std::ostream &os, const std::vector< std::vector<std::vector<T>> > &c, const bool rowBreaks = true, const bool colBreaks = false) {
+std::ostream& displayVector(std::ostream &os, const std::vector<std::vector<std::vector<T>>> &c, const bool rowBreaks = true, const bool colBreaks = false) {
   os << (rowBreaks ? "[\n" : "[ ");
-  for (const auto &x: c) {
+  for (const auto &x : c) {
     os << (rowBreaks ? "  " : "");
     displayVector(os, x, colBreaks) << (rowBreaks ? ",\n" : ", ");
   }

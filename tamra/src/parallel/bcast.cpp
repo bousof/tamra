@@ -16,6 +16,6 @@ void vectorDoubleBcast(std::vector<double> &buffer, const int root, const int ra
   vectorBcast(buffer, root, rank, MPI_DOUBLE, count);
 }
 
-void matrixUnsignedBcast(std::vector< std::vector<unsigned> > &buffer, const int root, const int rank, unsigned rowCount, unsigned colCount) {
+void matrixUnsignedBcast(std::vector<std::vector<unsigned>> &buffer, const int root, const int rank, unsigned rowCount, unsigned colCount) {
   matrixBcast(buffer, root, rank, MPI_UNSIGNED, rowCount, colCount);
 }

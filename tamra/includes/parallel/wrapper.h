@@ -36,14 +36,14 @@ int mpi_finalize() {
 #else
 
 // MPI initialization
-int mpi_init(int *argc, char ***argv) {return 0;}
+int mpi_init(int *argc, char ***argv) { return 0; }
 // MPI rank
-int mpi_rank() {return 0;}
+int mpi_rank() { return 0; }
 // MPI size
-int mpi_size() {return 1;}
+int mpi_size() { return 1; }
 // MPI barrier
-int mpi_barrier() {return 0;}
+int mpi_barrier() { return 0; }
 // MPI finalization
-int mpi_finalize() {return 0;}
+int mpi_finalize() { return 0; }
 
 #endif

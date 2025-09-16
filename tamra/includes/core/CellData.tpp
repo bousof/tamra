@@ -45,7 +45,7 @@ void CellData::fromVectorOfData(const std::vector<double> &buffer) {
 
 // Return cell data as a vector of double
 std::vector<double> CellData::toVectorOfData() const {
-  return {value};
+  return { value };
 }
 
 // Return cell data size

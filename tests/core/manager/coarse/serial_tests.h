@@ -40,7 +40,7 @@ bool coarsenTreeOneRootSerial() {
 
   // Create root cell entries
   RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries{eA};
+  std::vector<RootCellEntry<Cell2D>> entries{ eA };
 
   // Construction of the tree
   int min_level = 1, max_level = 3;
@@ -64,7 +64,7 @@ bool coarsenTreeOneRootSerial() {
   int number_leaf_cells = A->countOwnedLeaves();
 
   // Verify that number of leaf cells is right
-  bool passed = number_leaf_cells==10;
+  bool passed = number_leaf_cells == 10;
   return passed;
 }
 
@@ -118,7 +118,7 @@ bool coarsenTreeTwoRootsSerial() {
   RootCellEntry<Cell2D> eA{A}, eB{B};
   eA.setNeighbor(1, B);          // A +x -> B
   eB.setNeighbor(0, A);          // B -x -> A
-  std::vector< RootCellEntry<Cell2D> > entries { eA, eB };
+  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
   int min_level = 1, max_level = 3;
@@ -143,6 +143,6 @@ bool coarsenTreeTwoRootsSerial() {
   int number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
 
   // Verify that number of leaf cells is right
-  bool passed = number_leaf_cells==11;
+  bool passed = number_leaf_cells == 11;
   return passed;
 }

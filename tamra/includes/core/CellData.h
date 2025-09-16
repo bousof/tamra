@@ -10,7 +10,7 @@
 
 #include "AbstractCellData.h"
 
-class CellData: public AbstractCellData {
+class CellData : public AbstractCellData {
 	//***********************************************************//
   //  VARIABLES                                                //
   //***********************************************************//

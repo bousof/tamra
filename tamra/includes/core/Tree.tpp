@@ -20,7 +20,7 @@ Tree<CellType, TreeIteratorType>::Tree(const int min_level, const int max_level,
 // Destructor
 template<typename CellType, typename TreeIteratorType>
 Tree<CellType, TreeIteratorType>::~Tree() {
-  for (auto &root_cell: root_cells)
+  for (auto &root_cell : root_cells)
     if (root_cell)
       root_cell.reset();
   root_cells.clear();
@@ -28,9 +28,9 @@ Tree<CellType, TreeIteratorType>::~Tree() {
 
 // Create root cell
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::createRootCells(const std::vector< RootCellEntryType > &root_cell_entries) {
+void Tree<CellType, TreeIteratorType>::createRootCells(const std::vector<RootCellEntryType> &root_cell_entries) {
   root_cells.clear();
-  for (const auto& entry : root_cell_entries) {
+  for (const auto &entry : root_cell_entries) {
     auto cell = entry.cell;
     root_cells.push_back(cell);
 
@@ -39,8 +39,8 @@ void Tree<CellType, TreeIteratorType>::createRootCells(const std::vector< RootCe
       cell->splitRoot(max_level, cell);
 
     // Connect the neighbors in the root's child_oct
-    for (int dir = 0; dir < CellType::number_neighbors; ++dir) {
-      const auto& neighbor = entry.neighbor_cells[dir];
+    for (int dir{0}; dir<CellType::number_neighbors; ++dir) {
+      const auto &neighbor = entry.neighbor_cells[dir];
       if (neighbor)
         cell->getChildOct()->setNeighborCell(dir, neighbor);
     }
@@ -54,7 +54,7 @@ void Tree<CellType, TreeIteratorType>::createRootCells(const std::vector< RootCe
 
 // Get root cells
 template<typename CellType, typename TreeIteratorType>
-const std::vector< std::shared_ptr<CellType> >& Tree<CellType, TreeIteratorType>::getRootCells() const {
+const std::vector<std::shared_ptr<CellType>>& Tree<CellType, TreeIteratorType>::getRootCells() const {
   return root_cells;
 }
 
@@ -135,7 +135,7 @@ template<typename CellType, typename TreeIteratorType>
 unsigned Tree<CellType, TreeIteratorType>::countOwnedLeaves() const {
   unsigned nb_owned_leaves = 0;
 
-  for (const auto &root_cell: root_cells)
+  for (const auto &root_cell : root_cells)
     if (root_cell->belongToThisProc())
       nb_owned_leaves += root_cell->countOwnedLeaves();
   return nb_owned_leaves;
@@ -143,10 +143,10 @@ unsigned Tree<CellType, TreeIteratorType>::countOwnedLeaves() const {
 
 // Apply a function to owned leaf cells
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, unsigned)>& f) const {
+void Tree<CellType, TreeIteratorType>::applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, unsigned)> &f) const {
   TreeIteratorType iterator(getRootCells(), getMaxLevel());
 
-  unsigned index = 0;
+  unsigned index{0};
   if (!iterator.toOwnedBegin())
     return;
   do {

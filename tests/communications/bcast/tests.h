@@ -64,7 +64,7 @@ bool testVectorUnsignedBcastNoCount(int rank, int size) {
 bool testMatrixUnsignedBcastCount(int rank, int size) {
   int root = 0, rowCount = 4, colCount = 3;
 
-  std::vector< std::vector<unsigned> > buffer;
+  std::vector<std::vector<unsigned>> buffer;
   if (rank == root)
     buffer = { {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12} };
   matrixUnsignedBcast(buffer, root, rank, rowCount, colCount);
@@ -84,7 +84,7 @@ bool testMatrixUnsignedBcastCount(int rank, int size) {
 bool testMatrixUnsignedBcastNoCount(int rank, int size) {
   int root = 0;
 
-  std::vector< std::vector<unsigned> > buffer;
+  std::vector<std::vector<unsigned>> buffer;
   if (rank == root)
     buffer = { {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12} };
   matrixUnsignedBcast(buffer, root, rank);
