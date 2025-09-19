@@ -15,18 +15,7 @@
 ### Prerequisites
 
 - C++17 compatible compiler
-- CMake 3.10 or higher
 - eigen-3.4.0
-
-### Build Instructions
-
-```bash
-git clone https://github.com/yourusername/tamra.git
-cd tamra
-mkdir build && cd build
-cmake ..
-make
-```
 
 ## Usage
 
