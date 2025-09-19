@@ -83,6 +83,9 @@ class Cell {
   const std::array<std::shared_ptr<Cell>, number_children>& getChildCells() const;
   // Get child cells in a specific direction
   const std::vector<std::shared_ptr<Cell>> getDirChildCells(const int dir) const;
+  const std::vector<std::shared_ptr<Cell>> getDirFaceChildCells(const int dir) const;
+  const std::vector<std::shared_ptr<Cell>> getDirEdgeChildCells(const int dir) const;
+  const std::vector<std::shared_ptr<Cell>> getDirCornerChildCells(const int dir) const;
   // Get level of the cell
   unsigned getLevel() const;
   // Get parent oct
