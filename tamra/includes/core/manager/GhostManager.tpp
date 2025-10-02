@@ -109,7 +109,7 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
 
   const unsigned cell_id_size = iterator.getCellIdManager().getCellIdSize();
   std::vector<std::vector<unsigned>> recv_cell_ids;
-  matrixUnsignedAlltoallv(cell_ids_to_send, recv_cell_ids, size, cell_id_size);
+  matrixUnsignedAlltoallv(cell_ids_to_send, recv_cell_ids, cell_id_size);
 
   //std::cout << "P_" << rank << ": recv cell ids ";
   //displayVector(std::cout, recv_cell_ids) << std::endl;
@@ -184,7 +184,7 @@ void GhostManager<CellType, TreeIteratorType>::exchangeGhostValues(GhostManagerT
 
   // Exchange cell data
   std::vector<std::unique_ptr<ParallelData>> all_cell_data_recv;
-  vectorDataAlltoallv(all_cell_data, all_cell_data_recv, size, []() {
+  vectorDataAlltoallv(all_cell_data, all_cell_data_recv, []() {
     return std::make_unique<typename CellType::CellDataType>();
   });
 

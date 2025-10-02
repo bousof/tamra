@@ -1,38 +1,40 @@
 #include "../../includes/parallel/alltoallv.h"
 
-std::vector<int> vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<unsigned> &recv_buffer, const int size) {
-	return vectorAlltoallv(send_buffers, recv_buffer, size, MPI_UNSIGNED);
+std::vector<int> vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<unsigned> &recv_buffer) {
+	return vectorAlltoallv(send_buffers, recv_buffer, MPI_UNSIGNED);
 }
 
-std::vector<int> vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<int> &recv_buffer, const int size) {
-	return vectorAlltoallv(send_buffers, recv_buffer, size, MPI_INT);
+std::vector<int> vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<int> &recv_buffer) {
+	return vectorAlltoallv(send_buffers, recv_buffer, MPI_INT);
 }
 
-std::vector<int> vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<double> &recv_buffer, const int size) {
-	return vectorAlltoallv(send_buffers, recv_buffer, size, MPI_DOUBLE);
+std::vector<int> vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<double> &recv_buffer) {
+	return vectorAlltoallv(send_buffers, recv_buffer, MPI_DOUBLE);
 }
 
-void vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers, const int size) {
-	vectorAlltoallv(send_buffers, recv_buffers, size, MPI_UNSIGNED);
+void vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers) {
+	vectorAlltoallv(send_buffers, recv_buffers, MPI_UNSIGNED);
 }
 
-void vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<std::vector<int>> &recv_buffers, const int size) {
-	vectorAlltoallv(send_buffers, recv_buffers, size, MPI_INT);
+void vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<std::vector<int>> &recv_buffers) {
+	vectorAlltoallv(send_buffers, recv_buffers, MPI_INT);
 }
 
-void vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<std::vector<double>> &recv_buffers, const int size) {
-	vectorAlltoallv(send_buffers, recv_buffers, size, MPI_DOUBLE);
+void vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<std::vector<double>> &recv_buffers) {
+	vectorAlltoallv(send_buffers, recv_buffers, MPI_DOUBLE);
 }
 
-void matrixUnsignedAlltoallv(const std::vector<std::vector<std::vector<unsigned>>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers, const int size, const unsigned colCount) {
-  matrixAlltoallv(send_buffers, recv_buffers, size, MPI_UNSIGNED, colCount);
+void matrixUnsignedAlltoallv(const std::vector<std::vector<std::vector<unsigned>>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers, const unsigned colCount) {
+  matrixAlltoallv(send_buffers, recv_buffers, MPI_UNSIGNED, colCount);
 }
 
-void matrixUnsignedAlltoallv(const std::vector<std::vector<std::vector<unsigned>>> &send_buffers, std::vector<std::vector<std::vector<unsigned>>> &recv_buffers, const int size, const unsigned colCount) {
-  matrixAlltoallv(send_buffers, recv_buffers, size, MPI_UNSIGNED, colCount);
+void matrixUnsignedAlltoallv(const std::vector<std::vector<std::vector<unsigned>>> &send_buffers, std::vector<std::vector<std::vector<unsigned>>> &recv_buffers, const unsigned colCount) {
+  matrixAlltoallv(send_buffers, recv_buffers, MPI_UNSIGNED, colCount);
 }
 
-void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelData>>> &send_buffers, std::vector<std::unique_ptr<ParallelData>> &recv_buffer, const int size, const ParallelDataFactory createData) {
+void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelData>>> &send_buffers, std::vector<std::unique_ptr<ParallelData>> &recv_buffer, const ParallelDataFactory createData) {
+  int size = send_buffers.size();
+
   // Prepare data sizes for sharing between processors
 	std::vector<std::vector<unsigned>> send_counts(size);
 	for (int p{0}; p<size; ++p) {
@@ -43,7 +45,7 @@ void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelD
 
 	// Communication of data sizes between all processors
 	std::vector<unsigned> recv_counts;
-	vectorUnsignedAlltoallv(send_counts, recv_counts, size);
+	vectorUnsignedAlltoallv(send_counts, recv_counts);
 
 	// Sending buffer, data must be put to a vector of vector of doubles
 	std::vector<std::vector<double>> send_data_buffers(size);
@@ -59,7 +61,7 @@ void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelD
 
 	// Communication of cells data between all processors
 	std::vector<double> recv_data_buffer;
-	vectorDoubleAlltoallv(send_data_buffers, recv_data_buffer, size);
+	vectorDoubleAlltoallv(send_data_buffers, recv_data_buffer);
 
 	// Sending buffer, data come as a vector of doubles and must be transformed to a vector of ParallelData
 	recv_buffer.resize(recv_counts.size());

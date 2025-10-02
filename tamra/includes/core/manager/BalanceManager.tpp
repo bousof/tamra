@@ -230,11 +230,11 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
 
   // Exchange tree structure
   std::vector<std::vector<unsigned>> cells_structure_recv(size);
-  vectorUnsignedAlltoallv(cells_structure_to_send, cells_structure_recv, size);
+  vectorUnsignedAlltoallv(cells_structure_to_send, cells_structure_recv);
 
   // Exchange cell data
   std::vector<std::unique_ptr<ParallelData>> all_cell_data_recv;
-  vectorDataAlltoallv(all_cell_data, all_cell_data_recv, size, []() {
+  vectorDataAlltoallv(all_cell_data, all_cell_data_recv, []() {
     return std::make_unique<typename CellType::CellDataType>();
   });
 

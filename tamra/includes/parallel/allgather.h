@@ -17,21 +17,24 @@
 #include"ParallelData.h"
 
 template<typename T>
-void scalarAllgather(T &value, std::vector<T> &recv_buffer, const MPI_Datatype data_type) {
+void scalarAllgather(const T &value, std::vector<T> &recv_buffer, const int size, const MPI_Datatype data_type) {
   static_assert(
-    std::is_same<T, bool>::value || std::is_same<T, unsigned>::value,
-    "scalarAllgather only supports T = unsigned"
+    std::is_same<T, int>::value,
+    "scalarAllgather only supports T = int"
   );
 
 	// Communication of between all processors
-	MPI_Allgather(&value, 1, data_type, recv_buffer, 1, data_type, MPI_COMM_WORLD);
+  recv_buffer.resize(size);
+	MPI_Allgather(&value, 1, data_type, recv_buffer.data(), 1, data_type, MPI_COMM_WORLD);
 }
+
+void intAllgather(const int &value, std::vector<int> &recv_buffer, const int size);
 
 template<typename T>
 void vectorAllgather(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const int size, const MPI_Datatype data_type) {
   static_assert(
-    std::is_same<T, bool>::value || std::is_same<T, unsigned>::value,
-    "vectorAllgather only supports T = unsigned"
+    std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, unsigned>::value,
+    "vectorAllgather only supports T = bool, double, or unsigned"
   );
 
   // Number of elements to gather to all processes

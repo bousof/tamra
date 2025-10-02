@@ -36,7 +36,7 @@ bool testIntAlltoall(int rank, int size) {
   // Send rank to all others
   std::vector<int> send_buffer(size, rank),
                    recv_buffer(size, 0);
-  intAlltoall(send_buffer, recv_buffer, size);
+  intAlltoall(send_buffer, recv_buffer);
 
   // Should receive ranks from all others
   bool passed = true;
@@ -56,7 +56,7 @@ bool testVectorIntAlltoall(int rank, int size) {
     send_buffers.at(p).push_back(rank * 10 + p);
 
   std::vector<unsigned> recv_buffer;
-  vectorUnsignedAlltoallv(send_buffers, recv_buffer, size);
+  vectorUnsignedAlltoallv(send_buffers, recv_buffer);
 
   bool passed = recv_buffer.size() == size;
   for (int i{0}; i<size && passed; ++i)
@@ -75,7 +75,7 @@ bool testVectorDoubleAllToAllFlat(int rank, int size) {
     send_buffers.at(p).push_back(static_cast<double>(rank + p) + 0.5);
 
   std::vector<double> recv_buffer;
-  vectorDoubleAlltoallv(send_buffers, recv_buffer, size);
+  vectorDoubleAlltoallv(send_buffers, recv_buffer);
 
   bool passed = recv_buffer.size() == size;
   for (int i{0}; i<size && passed; ++i)
@@ -94,7 +94,7 @@ bool testVectorDoubleAllToAllSplit(int rank, int size) {
     send_buffers.at(p).assign(size-1-p, static_cast<double>(rank + p) + 0.5);
 
   std::vector<std::vector<double>> recv_buffers;
-  vectorDoubleAlltoallv(send_buffers, recv_buffers, size);
+  vectorDoubleAlltoallv(send_buffers, recv_buffers);
 
   bool passed = recv_buffers.size() == size;
   for (int p{0}; p<size && passed; ++p) {
@@ -146,7 +146,7 @@ bool testVectorDataAllToAllFixed(int rank, int size) {
   }
 
   std::vector<std::unique_ptr<ParallelData>> recv_buffer;
-  vectorDataAlltoallv(send_buffers, recv_buffer, size, []() {
+  vectorDataAlltoallv(send_buffers, recv_buffer, []() {
     return std::make_unique<MockData>();
   });
 
@@ -175,7 +175,7 @@ bool testVectorDataAllToAllDynamic(int rank, int size) {
   }
 
   std::vector<std::unique_ptr<ParallelData>> recv_buffer;
-  vectorDataAlltoallv(send_buffers, recv_buffer, size, []() {
+  vectorDataAlltoallv(send_buffers, recv_buffer, []() {
     return std::make_unique<MockData>();
   });
 
