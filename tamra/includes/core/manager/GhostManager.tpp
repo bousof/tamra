@@ -64,7 +64,7 @@ void GhostManager<CellType, TreeIteratorType>::setDefaultGhostConflictResolution
 
 // Creation of ghost cells and exchange of ghost values
 template<typename CellType, typename TreeIteratorType>
-typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostManager<CellType, TreeIteratorType>::buildGhostLayer(std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
+typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostManager<CellType, TreeIteratorType>::buildGhostLayer(std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const std::vector<int> &directions, ExtrapolationFunctionType extrapolation_function) const {
   // If only one process, nothing to do
   if (size == 1)
     return GhostManagerTaskType(*this, true);
@@ -94,7 +94,7 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
 
   // Loop on owned cells and check if neighbors belong to another process
   std::vector<std::vector<std::shared_ptr<CellType>>> cells_to_send;
-  findCellsToSend(root_cells, begin_ids, end_ids, cells_to_send, iterator);
+  findCellsToSend(root_cells, begin_ids, end_ids, cells_to_send, iterator, directions);
 
   // Share cell IDs of the cells to create on other process
   std::vector<std::vector<std::vector<unsigned>>> cell_ids_to_send(size);
@@ -241,7 +241,7 @@ void GhostManager<CellType, TreeIteratorType>::sharePartitions(std::vector<std::
 
 // Loop on owned cells and check if neighbors belong to another process
 template<typename CellType, typename TreeIteratorType>
-void GhostManager<CellType, TreeIteratorType>::findCellsToSend(const std::vector<std::shared_ptr<CellType>> &root_cells, const std::vector<std::vector<unsigned>> &begin_ids, const std::vector<std::vector<unsigned>> &end_ids, std::vector<std::vector<std::shared_ptr<CellType>>> &cells_to_send, TreeIteratorType &iterator) const {
+void GhostManager<CellType, TreeIteratorType>::findCellsToSend(const std::vector<std::shared_ptr<CellType>> &root_cells, const std::vector<std::vector<unsigned>> &begin_ids, const std::vector<std::vector<unsigned>> &end_ids, std::vector<std::vector<std::shared_ptr<CellType>>> &cells_to_send, TreeIteratorType &iterator, const std::vector<int> &directions) const {
   // Cell ID manager
   typename TreeIteratorType::CellIdManagerType cell_id_manager = iterator.getCellIdManager();
 
@@ -276,7 +276,7 @@ void GhostManager<CellType, TreeIteratorType>::findCellsToSend(const std::vector
     // Connect the neighbors in the root's child_oct
     std::fill(found.begin(), found.end(), false);
     bool allTrue;
-    for (int dir{0}; dir<CellType::number_neighbors; ++dir) {
+    for (const auto dir : directions) {
       // If cell already shared with all proc no need to add it again
       allTrue = true;
       for (const int p : non_void_proc)

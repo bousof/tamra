@@ -104,9 +104,9 @@ bool Tree<CellType, TreeIteratorType>::refine(ExtrapolationFunctionType extrapol
 
 // Creation of ghost cells
 template<typename CellType, typename TreeIteratorType>
-typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, TreeIteratorType>::buildGhostLayer(InterpolationFunctionType interpolation_function) {
+typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, TreeIteratorType>::buildGhostLayer(InterpolationFunctionType interpolation_function, const std::vector<int> &directions) {
   TreeIteratorType iterator(root_cells, max_level);
-  return ghostManager.buildGhostLayer(root_cells, iterator, interpolation_function);
+  return ghostManager.buildGhostLayer(root_cells, iterator, directions, interpolation_function);
 }
 
 // Creation of ghost cells

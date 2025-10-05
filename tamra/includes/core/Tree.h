@@ -85,6 +85,15 @@ class Tree {
   int getMaxLevel() const;
   // Get ghost manager
   GhostManagerType getGhostManager() const;
+  // Default directions
+  static const std::vector<int>& defaultDirections() {
+    static const std::vector<int> dirs = [] {
+        std::vector<int> v(CellType::number_neighbors); // 4 connexity
+        std::iota(v.begin(), v.end(), 0);
+        return v;
+    }();
+    return dirs;
+  }
 
   //***********************************************************//
   //  METHODS                                                  //
@@ -98,7 +107,7 @@ class Tree {
   bool refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) {});
 
   // Creation of ghost cells
-  GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {});
+  GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {}, const std::vector<int> &directions = defaultDirections());
   // Exchange ghost cell values
   void exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {});
 
