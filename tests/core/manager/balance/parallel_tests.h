@@ -187,7 +187,7 @@ class TestCellData : public AbstractCellData {
 // Load balancing (empty partitions) with custom cell data
 // Same as previous test with custom CellData (TestCellData)
 bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
-  using Cell2D = Cell<2, 2, 1, TestCellData>;
+  using Cell2D = Cell<2, 2, 0, TestCellData>;
   // Create root cell
   auto A = std::make_shared<Cell2D>(nullptr);
 

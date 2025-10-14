@@ -18,21 +18,21 @@ template<int Nx, int Ny, int Nz, typename DataType> class Cell;
 #include "CellData.h"
 #include "Oct.h"
 
-template<int Nx = 2, int Ny = 1, int Nz = 1, typename DataType = CellData>
+template<int Nx = 2, int Ny = 0, int Nz = 0, typename DataType = CellData>
 class Cell {
  public:
   using CellDataType = DataType;
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>&)>;
   using InterpolationFunctionType = std::function<void(const std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>&)>;
   using OctType = Oct<Cell<Nx, Ny, Nz, DataType>>;
-  static constexpr int number_dimensions = (Nx>1) + (Ny>1) + (Nz>1);
-  static constexpr int number_children = Nx * Ny * Nz;
+  static constexpr int number_dimensions = (Nx>0) + (Ny>0) + (Nz>0);
   static constexpr int number_neighbors = 2 * number_dimensions;
   static constexpr int number_plane_neighbors = number_dimensions==3 ? 18 : number_dimensions==2 ? 8 : 2;
   static constexpr int number_volume_neighbors = number_dimensions==3 ? 26 : number_dimensions==2 ? 8 : 2;
-  static constexpr int N1 = Nx>1 ? Nx : Ny>1 ? Ny : Nz;
-  static constexpr int N2 = (Nx>1 && Ny>1) ? Ny : number_dimensions>1 ? Nz : 1;
+  static constexpr int N1 = Nx>0 ? Nx : Ny>0 ? Ny : Nz;
+  static constexpr int N2 = (Nx>0 && Ny>0) ? Ny : number_dimensions>1 ? Nz : 1;
   static constexpr int N3 = number_dimensions==3 ? Nz : 1;
+  static constexpr int number_children = N1 * N2 * N3;
   static constexpr int N12 = N1 * N2;
   static constexpr int N13 = N1 * N3;
   static constexpr int N23 = N2 * N3;
