@@ -69,9 +69,6 @@ class Tree {
   ~Tree();
   // Create root cell
   void createRootCells(const std::vector<RootCellEntryType> &root_cell_entries);
- private:
-  // Create root cell
-  std::vector<std::shared_ptr<CellType>> createBoundaryCells();
 
   //***********************************************************//
   //  ACCESSORS                                                //
@@ -112,7 +109,7 @@ class Tree {
   void exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {});
 
   // Redistribute cells among processes to balance computation load
-  void loadBalance(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {});
+  void loadBalance(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {}, const double max_pct_unbalance = 0.1);
 
   //--- Propagating -------------------------------------------//
   void propagate() {};

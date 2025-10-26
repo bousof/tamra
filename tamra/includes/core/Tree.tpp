@@ -125,9 +125,9 @@ bool Tree<CellType, TreeIteratorType>::coarsen(InterpolationFunctionType interpo
 
 // Redistribute cells among processes to balance computation load
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::loadBalance(InterpolationFunctionType interpolation_function) {
+void Tree<CellType, TreeIteratorType>::loadBalance(InterpolationFunctionType interpolation_function, const double max_pct_unbalance) {
 	TreeIteratorType iterator(root_cells, max_level);
-  return balanceManager.loadBalance(root_cells, iterator, 0.1, interpolation_function);
+  return balanceManager.loadBalance(root_cells, iterator, max_pct_unbalance, interpolation_function);
 }
 
 // Count the number of owned leaf cells

@@ -305,32 +305,32 @@ bool Cell<Nx, Ny, Nz, DataType>::coarsen(const int min_level, InterpolationFunct
 //_________________________________________________________________
 //  Priority  |   Available if   |   Indexes (dir)
 //____________|__________________|_________________________________
-//  -X        |  Nx>1            |
-//  +X        |  Nx>1            |
-//     -Y     |       Ny>1       |  MIN: 0
-//     +Y     |       Ny>1       |  MAX: number_neighbors-1
-//        -Z  |            Nz>1  |
-//        +Z  |            Nz>1  |_________________________________
-//  -X -Y     |  Nx>1 Ny>1       |
-//  +X -Y     |  Nx>1 Ny>1       |
-//  -X +Y     |  Nx>1 Ny>1       |
-//  +X +Y     |  Nx>1 Ny>1       |
-//  -X    -Z  |  Nx>1      Nz>1  |
-//  +X    -Z  |  Nx>1      Nz>1  |  MIN: number_neighbors
-//  -X    +Z  |  Nx>1      Nz>1  |  MAX: number_plane_neighbors-1
-//  +X    +Z  |  Nx>1      Nz>1  |
-//     -Y -Z  |       Ny>1 Nz>1  |
-//     +Y -Z  |       Ny>1 Nz>1  |
-//     -Y +Z  |       Ny>1 Nz>1  |
-//     +Y +Z  |       Ny>1 Nz>1  |_________________________________
-//  -X -Y -Z  |  Nx>1 Ny>1 Nz>1  |
-//  +X -Y -Z  |  Nx>1 Ny>1 Nz>1  |
-//  -X +Y -Z  |  Nx>1 Ny>1 Nz>1  |
-//  +X +Y -Z  |  Nx>1 Ny>1 Nz>1  |  MIN: number_plane_neighbors
-//  -X -Y +Z  |  Nx>1 Ny>1 Nz>1  |  MAX: number_volume_neighbors-1
-//  +X -Y +Z  |  Nx>1 Ny>1 Nz>1  |
-//  -X +Y +Z  |  Nx>1 Ny>1 Nz>1  |
-//  +X +Y +Z  |  Nx>1 Ny>1 Nz>1  |
+//  -X        |  Nx>0            |
+//  +X        |  Nx>0            |
+//     -Y     |       Ny>0       |  MIN: 0
+//     +Y     |       Ny>0       |  MAX: number_neighbors-1
+//        -Z  |            Nz>0  |
+//        +Z  |            Nz>0  |_________________________________
+//  -X -Y     |  Nx>0 Ny>0       |
+//  +X -Y     |  Nx>0 Ny>0       |
+//  -X +Y     |  Nx>0 Ny>0       |
+//  +X +Y     |  Nx>0 Ny>0       |
+//  -X    -Z  |  Nx>0      Nz>0  |
+//  +X    -Z  |  Nx>0      Nz>0  |  MIN: number_neighbors
+//  -X    +Z  |  Nx>0      Nz>0  |  MAX: number_plane_neighbors-1
+//  +X    +Z  |  Nx>0      Nz>0  |
+//     -Y -Z  |       Ny>0 Nz>0  |
+//     +Y -Z  |       Ny>0 Nz>0  |
+//     -Y +Z  |       Ny>0 Nz>0  |
+//     +Y +Z  |       Ny>0 Nz>0  |_________________________________
+//  -X -Y -Z  |  Nx>0 Ny>0 Nz>0  |
+//  +X -Y -Z  |  Nx>0 Ny>0 Nz>0  |
+//  -X +Y -Z  |  Nx>0 Ny>0 Nz>0  |
+//  +X +Y -Z  |  Nx>0 Ny>0 Nz>0  |  MIN: number_plane_neighbors
+//  -X -Y +Z  |  Nx>0 Ny>0 Nz>0  |  MAX: number_volume_neighbors-1
+//  +X -Y +Z  |  Nx>0 Ny>0 Nz>0  |
+//  -X +Y +Z  |  Nx>0 Ny>0 Nz>0  |
+//  +X +Y +Z  |  Nx>0 Ny>0 Nz>0  |
 //____________|__________________|_________________________________
 // Get a pointer to a neighbor cell
 template<int Nx, int Ny, int Nz, typename DataType>
