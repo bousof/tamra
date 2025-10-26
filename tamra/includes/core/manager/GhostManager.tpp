@@ -67,7 +67,7 @@ template<typename CellType, typename TreeIteratorType>
 typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostManager<CellType, TreeIteratorType>::buildGhostLayer(std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const std::vector<int> &directions, ExtrapolationFunctionType extrapolation_function) const {
   // If only one process, nothing to do
   if (size == 1)
-    return GhostManagerTaskType(*this, true);
+    return GhostManagerTaskType(this, true);
 
   // Number of leaf cells before creating ghost.
 	unsigned old_nb_owned_leaves = 0;
@@ -150,7 +150,7 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
   boolAndAllReduce(is_finished, is_finished);
 
   // Create an task (keep a copy of arrays needed for exchanging ghost values)
-  GhostManagerTaskType task = GhostManagerTaskType(*this, is_finished, std::move(cells_to_send), std::move(cells_to_recv), std::move(extrapolate_owned_cells), std::move(extrapolate_ghost_cells), std::move(begin_ids), std::move(end_ids));
+  GhostManagerTaskType task = GhostManagerTaskType(this, is_finished, std::move(cells_to_send), std::move(cells_to_recv), std::move(extrapolate_owned_cells), std::move(extrapolate_ghost_cells), std::move(begin_ids), std::move(end_ids));
   task.setOwnedExtrapolationFunction(default_owned_extrapolation_function);
   task.setGhostExtrapolationFunction(default_ghost_extrapolation_function);
   task.setOwnedConflictResolutionStrategy({ default_owned_strategies }, default_resend_owned);

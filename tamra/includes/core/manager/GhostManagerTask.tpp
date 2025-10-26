@@ -7,12 +7,17 @@
 
 // Constructor
 template<typename GhostManagerType>
-GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType &ghost_manager, const bool is_finished)
+GhostManagerTask<GhostManagerType>::GhostManagerTask()
+: ghost_manager(nullptr),
+  is_finished(true) {}
+
+template<typename GhostManagerType>
+GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType *ghost_manager, const bool is_finished)
 : ghost_manager(ghost_manager),
   is_finished(is_finished) {}
 
 template<typename GhostManagerType>
-GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType &ghost_manager, const bool is_finished, std::vector<std::vector<std::shared_ptr<CellType>>> &&cells_to_send, std::vector<std::shared_ptr<CellType>> &&cells_to_recv, std::vector<std::shared_ptr<CellType>> &&extrapolate_owned_cells, std::vector<std::shared_ptr<CellType>> &&extrapolate_ghost_cells, std::vector<std::vector<unsigned>> &&partition_begin_ids, std::vector<std::vector<unsigned>> &&partition_end_ids)
+GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType *ghost_manager, const bool is_finished, std::vector<std::vector<std::shared_ptr<CellType>>> &&cells_to_send, std::vector<std::shared_ptr<CellType>> &&cells_to_recv, std::vector<std::shared_ptr<CellType>> &&extrapolate_owned_cells, std::vector<std::shared_ptr<CellType>> &&extrapolate_ghost_cells, std::vector<std::vector<unsigned>> &&partition_begin_ids, std::vector<std::vector<unsigned>> &&partition_end_ids)
 : ghost_manager(ghost_manager),
   is_finished(is_finished),
   cells_to_send(cells_to_send),
@@ -92,7 +97,7 @@ void GhostManagerTask<GhostManagerType>::continueTask(TreeIteratorType &iterator
     mpi_finalize();
 
     // Call updateGhostLayer to handle the resend logic
-    ghost_manager.updateGhostLayer(*this, iterator);
+    ghost_manager->updateGhostLayer(*this, iterator);
   }
 }
 
