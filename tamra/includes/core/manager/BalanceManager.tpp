@@ -136,7 +136,8 @@ std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, Tre
     return cells_to_send;
 
   // Determining the cell ids located at transitions
-  if (rank > 0) {
+  if (rank > 0
+   && target_cumulative_loads[rank] > cumulative_loads[rank]) { // Prevent zero-load exchanges at balanced boundaries
     // Main loop for determination of transition cell ids
     bool loop = true;
     double previous_load = cumulative_loads[rank], current_cell_load;
@@ -158,7 +159,8 @@ std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, Tre
       loop = iterator.ownedNext();
     } while ((target_proc<rank) && loop);
   }
-  if (rank < size-1) {
+  if (rank < size-1
+   && target_cumulative_loads[rank+1] < cumulative_loads[rank+1]) { // Prevent zero-load exchanges at balanced boundaries
     // Main loop for determination of cell ids
     iterator.toOwnedEnd();
     bool loop = true;
