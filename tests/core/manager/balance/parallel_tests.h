@@ -1,6 +1,7 @@
 #include <mpi.h>
 
 #include <core/Cell.h>
+#include <core/iterator/MortonIterator.h>
 #include <core/RootCellEntry.h>
 #include <core/Tree.h>
 #include <memory>
@@ -122,7 +123,7 @@ bool balanceEmptyPartitionsDataParallel(int rank, int size) {
     A->setToOtherProcRecurs();
 
   // Set cell values
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
+  MortonIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
   if (iterator.toOwnedBegin())
     do {
       iterator.getCell()->getCellData().setValue(iterator.getCell()->getLevel());
@@ -216,7 +217,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
     A->setToOtherProcRecurs();
 
   // Set cell values
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
+  MortonIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
   if (iterator.toOwnedBegin())
     do {
       TestCellData &cellData = iterator.getCell()->getCellData();
@@ -398,7 +399,7 @@ bool balanceBigOneRootParallel(int rank, int size) {
   tree.loadBalance();
 
   // Count number of leaf cells
-  TreeIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
+  MortonIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
   unsigned area = 0, level;
   if (iterator.toOwnedBegin())
     do {

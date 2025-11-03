@@ -1,4 +1,4 @@
-#include "TreeIterator.h"
+#include "MortonIterator.h"
 
 //***********************************************************//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -6,7 +6,7 @@
 
 // Constructor
 template<typename CellType>
-TreeIterator<CellType>::TreeIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level)
+MortonIterator<CellType>::MortonIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level)
 : root_cells(root_cells),
   max_level(max_level),
   cell_id_manager(root_cells.size(), max_level) {
@@ -23,43 +23,43 @@ TreeIterator<CellType>::TreeIterator(const std::vector<std::shared_ptr<CellType>
 
 // Get current cell
 template<typename CellType>
-std::shared_ptr<CellType> TreeIterator<CellType>::getCell() const {
+std::shared_ptr<CellType> MortonIterator<CellType>::getCell() const {
   return current_cell;
 }
 
 // Get current cell partition
 template<typename CellType>
-const std::pair<int, int>& TreeIterator<CellType>::getPartition() const {
+const std::pair<int, int>& MortonIterator<CellType>::getPartition() const {
   return current_cell_partition;
 }
 
 // Get current index path
 template<typename CellType>
-const std::vector<unsigned>& TreeIterator<CellType>::getIndexPath() const {
+const std::vector<unsigned>& MortonIterator<CellType>::getIndexPath() const {
   return index_path;
 };
 
 // Get current cell ID
 template<typename CellType>
-std::vector<unsigned> TreeIterator<CellType>::getCellId() const {
+std::vector<unsigned> MortonIterator<CellType>::getCellId() const {
   return current_cell_id;
 }
 
 // Get cell ID manager
 template<typename CellType>
-typename TreeIterator<CellType>::CellIdManagerType TreeIterator<CellType>::getCellIdManager() const {
+typename MortonIterator<CellType>::CellIdManagerType MortonIterator<CellType>::getCellIdManager() const {
   return cell_id_manager;
 };
 
 // Construct cell id
 template<typename CellType>
-std::vector<unsigned> TreeIterator<CellType>::getCellId(const std::shared_ptr<CellType> &cell) const {
+std::vector<unsigned> MortonIterator<CellType>::getCellId(const std::shared_ptr<CellType> &cell) const {
   return indexPathToId(getCellIndexPath((cell)));
 }
 
 // Construct cell index path
 template<typename CellType>
-std::vector<unsigned> TreeIterator<CellType>::getCellIndexPath(const std::shared_ptr<CellType> &cell) const {
+std::vector<unsigned> MortonIterator<CellType>::getCellIndexPath(const std::shared_ptr<CellType> &cell) const {
   std::vector<unsigned> cell_index_path(cell->getLevel()+1);
   // Browse parents until root  to extract index path
   std::shared_ptr<CellType> parent = cell;
@@ -81,7 +81,7 @@ std::vector<unsigned> TreeIterator<CellType>::getCellIndexPath(const std::shared
 
 // Go to the next leaf cell
 template<typename CellType>
-bool TreeIterator<CellType>::next(const int sweep_level) {
+bool MortonIterator<CellType>::next(const int sweep_level) {
   unsigned current_order = order_path.top();
   if (current_order < (CellType::number_children-1)) { // Going to the next sibling
     toParent();
@@ -100,14 +100,14 @@ bool TreeIterator<CellType>::next(const int sweep_level) {
 }
 // Go to the next leaf cell belonging to this proc
 template<typename CellType>
-bool TreeIterator<CellType>::ownedNext(const int sweep_level) {
+bool MortonIterator<CellType>::ownedNext(const int sweep_level) {
   bool notLoop = next(sweep_level);
   return notLoop && current_cell->belongToThisProc();
 }
 
 // Go to the previous leaf cell
 template<typename CellType>
-bool TreeIterator<CellType>::prev(const int sweep_level) {
+bool MortonIterator<CellType>::prev(const int sweep_level) {
   unsigned current_order = order_path.top();
   if (current_order > 0) { // Going to the next sibling
     toParent();
@@ -126,21 +126,21 @@ bool TreeIterator<CellType>::prev(const int sweep_level) {
 }
 // Go to the previous leaf cell belonging to this proc
 template<typename CellType>
-bool TreeIterator<CellType>::ownedPrev(const int sweep_level) {
+bool MortonIterator<CellType>::ownedPrev(const int sweep_level) {
   bool notLoop = prev(sweep_level);
   return notLoop && current_cell->belongToThisProc();
 }
 
 // Go to the first leaf cell of first root
 template<typename CellType>
-void TreeIterator<CellType>::toBegin(const int sweep_level) {
+void MortonIterator<CellType>::toBegin(const int sweep_level) {
   // Go to first root
   toRoot(0);
   toLeaf(sweep_level, false);
 }
 // Go to the first leaf cell of first root belonging to this process
 template<typename CellType>
-bool TreeIterator<CellType>::toOwnedBegin(const int sweep_level) {
+bool MortonIterator<CellType>::toOwnedBegin(const int sweep_level) {
   // Find first owned root
   unsigned i;
   bool found = false;
@@ -161,14 +161,14 @@ bool TreeIterator<CellType>::toOwnedBegin(const int sweep_level) {
 
 // Go to the last leaf cell of last root
 template<typename CellType>
-void TreeIterator<CellType>::toEnd(const int sweep_level) {
+void MortonIterator<CellType>::toEnd(const int sweep_level) {
   // Go last root
   toRoot(root_cells.size()-1);
   toLeaf(sweep_level, true);
 }
 // Go to the last leaf cell of last root belonging to this process
 template<typename CellType>
-bool TreeIterator<CellType>::toOwnedEnd(const int sweep_level) {
+bool MortonIterator<CellType>::toOwnedEnd(const int sweep_level) {
   // Find last owned root
   unsigned i;
   bool found = false;
@@ -189,7 +189,7 @@ bool TreeIterator<CellType>::toOwnedEnd(const int sweep_level) {
 
 // Moves the iterator to a leaf cell of the current cell
 template<typename CellType>
-void TreeIterator<CellType>::toLeaf(const int sweep_level, const bool reverse) {
+void MortonIterator<CellType>::toLeaf(const int sweep_level, const bool reverse) {
   while (!current_cell->isLeaf() && order_path.size()<sweep_level)
     // Update current to child
     if (reverse)
@@ -199,7 +199,7 @@ void TreeIterator<CellType>::toLeaf(const int sweep_level, const bool reverse) {
 }
 // Moves the iterator to a leaf cell of the current cell that belong to the process
 template<typename CellType>
-void TreeIterator<CellType>::toOwnedLeaf(const int sweep_level, const bool reverse) {
+void MortonIterator<CellType>::toOwnedLeaf(const int sweep_level, const bool reverse) {
   while (!current_cell->isLeaf() && order_path.size()<sweep_level) {
     unsigned order;
     if (reverse)
@@ -219,7 +219,7 @@ void TreeIterator<CellType>::toOwnedLeaf(const int sweep_level, const bool rever
 
 // Move iterator to a specific cell ID (can also create it with a flag)
 template<typename CellType>
-void TreeIterator<CellType>::toCellId(const std::vector<unsigned> &cell_id, const bool create, ExtrapolationFunctionType extrapolation_function) {
+void MortonIterator<CellType>::toCellId(const std::vector<unsigned> &cell_id, const bool create, ExtrapolationFunctionType extrapolation_function) {
   std::vector<unsigned> index_path = idToIndexPath(cell_id);
 
   // Go to right cell
@@ -230,39 +230,39 @@ void TreeIterator<CellType>::toCellId(const std::vector<unsigned> &cell_id, cons
     if (!current_cell->isLeaf())
       toChild(index_path[i]);
     else
-      throw std::runtime_error("Cannot reach cell in TreeIterator::toCellId()");
+      throw std::runtime_error("Cannot reach cell in MortonIterator::toCellId()");
   }
 }
 
 // Generate an ID from the genealogy of a cell.
 template<typename CellType>
-std::vector<unsigned> TreeIterator<CellType>::indexPathToId(const std::vector<unsigned> &index_path) const {
+std::vector<unsigned> MortonIterator<CellType>::indexPathToId(const std::vector<unsigned> &index_path) const {
   return cell_id_manager.indexPathToId(index_path);
 }
 
 // Generate an ID from the genealogy of a cell.
 template<typename CellType>
-std::vector<unsigned> TreeIterator<CellType>::idToIndexPath(const std::vector<unsigned> &cell_id) const {
+std::vector<unsigned> MortonIterator<CellType>::idToIndexPath(const std::vector<unsigned> &cell_id) const {
   return cell_id_manager.idToIndexPath(cell_id);
 }
 
 // Return the sibling number from the order (number along
 // the curve) with respect to the mother orientation.
 template<typename CellType>
-unsigned TreeIterator<CellType>::orderToSiblingNumber(unsigned order, unsigned mother_orientation) {
+unsigned MortonIterator<CellType>::orderToSiblingNumber(unsigned order, unsigned mother_orientation) {
   return order;
 }
 
 // Return the order (number along the curve) from the sibling
 // number with respect to the mother orientation.
 template<typename CellType>
-unsigned TreeIterator<CellType>::siblingNumberToOrder(unsigned sibling_number, unsigned mother_orientation) {
+unsigned MortonIterator<CellType>::siblingNumberToOrder(unsigned sibling_number, unsigned mother_orientation) {
   return sibling_number;
 }
 
 // Put iterator to child cell
 template<typename CellType>
-void TreeIterator<CellType>::toChild(const unsigned order) {
+void MortonIterator<CellType>::toChild(const unsigned order) {
   order_path.push(order);
   index_path.push_back(orderToSiblingNumber(order));
   current_cell = getChildCellFromOrder(current_cell, order);
@@ -278,7 +278,7 @@ void TreeIterator<CellType>::toChild(const unsigned order) {
 
 // Put iterator to parent cell
 template<typename CellType>
-void TreeIterator<CellType>::toParent() {
+void MortonIterator<CellType>::toParent() {
   order_path.pop();
   index_path.pop_back();
   current_cell = current_cell->getParentOct()->getParentCell();
@@ -294,7 +294,7 @@ void TreeIterator<CellType>::toParent() {
 
 // Put iterator to root cell
 template<typename CellType>
-void TreeIterator<CellType>::toRoot(const unsigned root_number) {
+void MortonIterator<CellType>::toRoot(const unsigned root_number) {
   order_path = std::stack<unsigned>();
   index_path = std::vector<unsigned>{ root_number };
   index_path[0] = root_number;
@@ -310,6 +310,6 @@ void TreeIterator<CellType>::toRoot(const unsigned root_number) {
 
 // Return the child cell from order and mother cell orientation (obtained by following the curve)
 template<typename CellType>
-std::shared_ptr<CellType> TreeIterator<CellType>::getChildCellFromOrder(std::shared_ptr<CellType> cell, unsigned order, unsigned mother_orientation) {
+std::shared_ptr<CellType> MortonIterator<CellType>::getChildCellFromOrder(std::shared_ptr<CellType> cell, unsigned order, unsigned mother_orientation) {
   return cell->getChildCell(orderToSiblingNumber(order, mother_orientation));
 }

@@ -12,25 +12,25 @@
 #include <vector>
 
 #include "Cell.h"
+#include "iterator/MortonIterator.h"
 #include "manager/BalanceManager.h"
 #include "manager/CoarseManager.h"
 #include "manager/GhostManager.h"
 #include "manager/MinLevelMeshManager.h"
 #include "manager/RefineManager.h"
 #include "RootCellEntry.h"
-#include "TreeIterator.h"
 
-template<typename CellTypeT, typename TreeIteratorTypeT = TreeIterator<CellTypeT>>
+template<typename CellTypeT, typename TreeIteratorTypeT = MortonIterator<CellTypeT>>
 class Tree {
  public:
   using CellType = CellTypeT;
-  using BalanceManagerType = BalanceManager<CellType>;
+  using BalanceManagerType = BalanceManager<CellType, TreeIteratorTypeT>;
   using CoarseManagerType = CoarseManager<CellType>;
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
   using InterpolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
-  using GhostManagerType = GhostManager<CellType>;
-  using GhostManagerTaskType = typename GhostManager<CellType>::GhostManagerTaskType;
-  using MinLevelMeshManagerType = MinLevelMeshManager<CellType>;
+  using GhostManagerType = GhostManager<CellType, TreeIteratorTypeT>;
+  using GhostManagerTaskType = typename GhostManager<CellType, TreeIteratorTypeT>::GhostManagerTaskType;
+  using MinLevelMeshManagerType = MinLevelMeshManager<CellType, TreeIteratorTypeT>;
   using RefineManagerType = RefineManager<CellType>;
   using RootCellEntryType = RootCellEntry<CellType>;
   using TreeIteratorType = TreeIteratorTypeT;

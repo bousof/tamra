@@ -11,8 +11,6 @@
 #include <cmath>
 #include <memory>
 
-#include "../TreeIterator.h"
-
 template<typename CellType>
 class RefineManager {
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;

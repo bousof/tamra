@@ -11,8 +11,6 @@
 #include <memory>
 #include <vector>
 
-#include "../TreeIterator.h"
-
 template<typename CellType>
 class CoarseManager {
   using InterpolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;

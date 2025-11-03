@@ -13,13 +13,12 @@
 
 #include "../../parallel/allgather.h"
 #include "../../parallel/alltoallv.h"
-#include "../TreeIterator.h"
 
 template<typename CellTypeT, typename TreeIteratorType> class GhostManager;
 
 #include "./GhostManagerTask.h"
 
-template<typename CellTypeT, typename TreeIteratorTypeT = TreeIterator<CellTypeT>>
+template<typename CellTypeT, typename TreeIteratorTypeT>
 class GhostManager {
  public:
   using CellType = CellTypeT;

@@ -11,7 +11,6 @@
 #include <parallel/allreduce.h>
 #include <parallel/wrapper.h>
 #include "../../utils/array_utils.h"
-#include "./GhostManager.h"
 
 // Enumeration for strategies on how to handle conflicts for owned cells.
 // Possible values are:

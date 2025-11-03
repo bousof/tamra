@@ -3,7 +3,7 @@
  *  Copyright (c) 2025 Sofiane BOUSABAA
  *  Licensed under the MIT License (see LICENSE file in project root)
  *
- *  Description: Class for iterating through tree cells.
+ *  Description: Class for iterating through tree cells based on Morton space-filling curves.
  */
 
 #pragma once
@@ -14,10 +14,10 @@
 #include <utility>
 #include <vector>
 
-#include "manager/CellIdManager.h"
+#include "../manager/CellIdManager.h"
 
 template<typename CellType>
-class TreeIterator {
+class MortonIterator {
  public:
   using CellIdManagerType = CellIdManager<CellType>;
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
@@ -50,9 +50,9 @@ class TreeIterator {
   //***********************************************************//
  public:
   // Constructor
-  TreeIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level);
+  MortonIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level);
   // Destructor
-  ~TreeIterator() = default;
+  ~MortonIterator() = default;
 
   //***********************************************************//
   //  ACCESSORS                                                //
@@ -129,4 +129,4 @@ class TreeIterator {
   std::shared_ptr<CellType> getChildCellFromOrder(std::shared_ptr<CellType> cell, unsigned order, unsigned mother_orientation = 0);
 };
 
-#include "TreeIterator.tpp"
+#include "MortonIterator.tpp"

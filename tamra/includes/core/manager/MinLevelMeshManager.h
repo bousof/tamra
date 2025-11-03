@@ -12,9 +12,8 @@
 #include <memory>
 
 #include "../../parallel/bcast.h"
-#include "../TreeIterator.h"
 
-template<typename CellType, typename TreeIteratorType = TreeIterator<CellType>>
+template<typename CellType, typename TreeIteratorType>
 class MinLevelMeshManager {
   //***********************************************************//
   //  VARIABLES                                                //
