@@ -13,19 +13,23 @@
 #include <memory>
 #include <tuple>
 
-template<int Nx, int Ny, int Nz, typename DataType> class Cell;
+template<int NX, int NY, int NZ, typename DataType> class Cell;
 
 #include "CellData.h"
 #include "Oct.h"
 
-template<int Nx = 2, int Ny = 0, int Nz = 0, typename DataType = CellData>
+template<int NX = 2, int NY = 0, int NZ = 0, typename DataType = CellData>
 class Cell {
  public:
   using CellDataType = DataType;
-  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>&)>;
-  using InterpolationFunctionType = std::function<void(const std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>&)>;
-  using OctType = Oct<Cell<Nx, Ny, Nz, DataType>>;
+  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<Cell<NX, NY, NZ, DataType>>&)>;
+  using InterpolationFunctionType = std::function<void(const std::shared_ptr<Cell<NX, NY, NZ, DataType>>&)>;
+  using OctType = Oct<Cell<NX, NY, NZ, DataType>>;
+  static constexpr int Nx = NX;
+  static constexpr int Ny = NY;
+  static constexpr int Nz = NZ;
   static constexpr int number_dimensions = (Nx>0) + (Ny>0) + (Nz>0);
+  static constexpr int number_split_dimensions = (Nx>1) + (Ny>1) + (Nz>1);
   static constexpr int number_neighbors = 2 * number_dimensions;
   static constexpr int number_plane_neighbors = number_dimensions==3 ? 18 : number_dimensions==2 ? 8 : 2;
   static constexpr int number_volume_neighbors = number_dimensions==3 ? 26 : number_dimensions==2 ? 8 : 2;
@@ -215,7 +219,7 @@ class Cell {
   // Verify if neighbors coarsening is needed before cell coarsening
   bool verifyCoarsenNeighbors();
   // Transform sibling number to (i,j,k) coordinates
-  inline std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const int sibling_number) const;
+  static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const int sibling_number);
   // Transform (i,j,k) coordinates to sibling number
   inline int coordsToSiblingNumber(const unsigned sibling_coord_1, const unsigned sibling_coord_2, const unsigned sibling_coord_3) const;
   // For a given sibling number, determine if the neighbor cell in a given direction:

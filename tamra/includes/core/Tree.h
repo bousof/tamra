@@ -34,6 +34,7 @@ class Tree {
   using RefineManagerType = RefineManager<CellType>;
   using RootCellEntryType = RootCellEntry<CellType>;
   using TreeIteratorType = TreeIteratorTypeT;
+
   //***********************************************************//
   //  DATA                                                     //
   //***********************************************************//

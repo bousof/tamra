@@ -473,7 +473,7 @@ bool Cell<Nx, Ny, Nz, DataType>::verifyCoarsenNeighbors() {
 
 // Transform sibling number to (i,j,k) coordinates
 template<int Nx, int Ny, int Nz, typename DataType>
-inline std::tuple<unsigned, unsigned, unsigned> Cell<Nx, Ny, Nz, DataType>::siblingNumberToCoords(const int sibling_number) const {
+std::tuple<unsigned, unsigned, unsigned> Cell<Nx, Ny, Nz, DataType>::siblingNumberToCoords(const int sibling_number) {
   unsigned sibling_coord_1 = sibling_number % N1,
            sibling_coord_2 = (sibling_number / N1) % N2,
            sibling_coord_3 = (sibling_number / (N12)) % N3;
