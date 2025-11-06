@@ -377,7 +377,7 @@ bool balanceBigOneRootParallel(int rank, int size) {
 
   // Construction of the tree
   int min_level = 2, max_level = 4;
-  Tree<Cell2D> tree(min_level, max_level, rank, size);
+  Tree<Cell2D, MortonIterator<Cell2D, 123>> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
   // Mesh until min level (2)
@@ -399,7 +399,7 @@ bool balanceBigOneRootParallel(int rank, int size) {
   tree.loadBalance();
 
   // Count number of leaf cells
-  MortonIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
+  MortonIterator<Cell2D, 123> iterator(tree.getRootCells(), tree.getMaxLevel());
   unsigned area = 0, level;
   if (iterator.toOwnedBegin())
     do {

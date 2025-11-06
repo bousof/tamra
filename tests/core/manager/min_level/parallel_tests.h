@@ -47,7 +47,7 @@ bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
 
   // Construction of the tree
   int min_level = 2, max_level = 3;
-  Tree<Cell2D> tree(min_level, max_level, rank, size);
+  Tree<Cell2D, MortonIterator<Cell2D, 213>> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
   // Mesh until min level (2)

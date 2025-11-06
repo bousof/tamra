@@ -19,40 +19,40 @@ CellIdManager<CellType>::CellIdManager(const int number_root_cells, const int ma
 
 // Generate an ID from the genealogy of a cell.
 template<typename CellType>
-std::vector<unsigned> CellIdManager<CellType>::indexPathToId(const std::vector<unsigned> &index_path) const {
+std::vector<unsigned> CellIdManager<CellType>::orderPathToId(const std::vector<unsigned> &order_path) const {
   std::vector<unsigned> cell_id(cell_id_size, 0);
 
-  // Encode the level (size of index_path - 1)
-  setIdLevel(cell_id, index_path.size()-1);
+  // Encode the level (size of order_path - 1)
+  setIdLevel(cell_id, order_path.size()-1);
 
-  // Encode root index in low bits of cell_id[0]
-  setIdRoot(cell_id, index_path[0]);
+  // Encode root order in low bits of cell_id[0]
+  setIdRoot(cell_id, order_path[0]);
 
-  // Encode the rest of the index_path
-  for (unsigned l{1}; l<index_path.size(); ++l)
+  // Encode the rest of the order_path
+  for (unsigned l{1}; l<order_path.size(); ++l)
     // Use bitwuise OR to inject into cell id
-    setIdChild(cell_id, l, index_path[l]);
+    setIdChild(cell_id, l, order_path[l]);
 
   return cell_id;
 }
 
 // Generate an ID from the genealogy of a cell.
 template<typename CellType>
-std::vector<unsigned> CellIdManager<CellType>::idToIndexPath(const std::vector<unsigned> &cell_id) const {
-  // Extract level (number of entries in index path - 1)
+std::vector<unsigned> CellIdManager<CellType>::idToOrderPath(const std::vector<unsigned> &cell_id) const {
+  // Extract level (number of entries in order path - 1)
   unsigned level = getIdLevel(cell_id);
 
-  std::vector<unsigned> index_path(level+1, 0);
+  std::vector<unsigned> order_path(level+1, 0);
 
-  // Extract root index
-  index_path[0] = getIdRoot(cell_id);;
+  // Extract root order
+  order_path[0] = getIdRoot(cell_id);;
 
-  // Decode the rest of the index_path
-  for (unsigned l{1}; l<index_path.size(); ++l)
+  // Decode the rest of the order_path
+  for (unsigned l{1}; l<order_path.size(); ++l)
     // Use masking & to extract from id
-    index_path[l] = getIdChild(cell_id, l);
+    order_path[l] = getIdChild(cell_id, l);
 
-  return index_path;
+  return order_path;
 }
 
 // Generate the IDs of the first and last leaf cells of the
@@ -63,23 +63,23 @@ std::vector<std::vector<unsigned>> CellIdManager<CellType>::getEqualPartitions(c
   // Compute all partitions start and end positions
   std::vector<std::vector<unsigned>> partitions(size);
 
-  // Start index path and cell ID
-  std::vector<unsigned> index_path(level+1, 0);
-  // End index path and cell ID
-  partitions[0] = indexPathToId(index_path);
+  // Start order path and cell ID
+  std::vector<unsigned> order_path(level+1, 0);
+  // End order path and cell ID
+  partitions[0] = orderPathToId(order_path);
 
   // Define the partitions for each processor
   for (int rank{1}; rank<size; ++rank) {
     double reminder = static_cast<double>(rank * number_root_cells) / size;
     for (int i{0}; i<=level; ++i) {
       reminder = (reminder < 0) ? 0 : reminder;
-      index_path[i] = std::ceil(static_cast<unsigned>(reminder));
-      index_path[i] = (index_path[i] > (CellType::number_children-1)) ? (CellType::number_children-1) : index_path[i];
-      reminder = CellType::number_children * (reminder - index_path[i]);
+      order_path[i] = std::ceil(static_cast<unsigned>(reminder));
+      order_path[i] = (order_path[i] > (CellType::number_children-1)) ? (CellType::number_children-1) : order_path[i];
+      reminder = CellType::number_children * (reminder - order_path[i]);
     }
 
     // Compute cell Id of cell between partitions rank and rank+1
-    partitions[rank] = indexPathToId(index_path);
+    partitions[rank] = orderPathToId(order_path);
   }
 
   return partitions;

@@ -26,20 +26,22 @@ class MortonIterator : public AbstractTreeIterator<CellType> {
  public:
   using CellIdManagerType = typename AbstractTreeIterator<CellType>::CellIdManagerType;
   using ExtrapolationFunctionType = typename AbstractTreeIterator<CellType>::ExtrapolationFunctionType;
-  inline static constexpr auto order_to_sibling_number = make_orderings<CellType, MORTON_ORIENTATION>();
 
   //***********************************************************//
   //  DATA                                                     //
   //***********************************************************//
  private:
+  // Map order to sibling number for each mother orientation
+  const std::array<unsigned, CellType::number_children> order_to_sibling_number;
+  // Map sibling number to order for each mother orientation
+  const std::array<unsigned, CellType::number_children> sibling_number_to_order;
 
   //***********************************************************//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
   //***********************************************************//
  public:
   // Constructor
-  MortonIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level)
-  : AbstractTreeIterator<CellType>(root_cells, max_level) {};
+  MortonIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level);
 
   //***********************************************************//
   //  ACCESSORS                                                //
@@ -52,9 +54,11 @@ class MortonIterator : public AbstractTreeIterator<CellType> {
   //***********************************************************//
  public:
  protected:
+  // Converts the genealogy of a cell
+  std::vector<unsigned> indexToOrderPath(const std::vector<unsigned> &index_path) const override;
   // Return the sibling number from the order (number along
   // the curve) with respect to the mother orientation.
-  unsigned orderToSiblingNumber(unsigned order, const bool compute_orientation=false) override;
+  unsigned orderToSiblingNumber(unsigned order, const bool compute_orientation=false) const override;
 };
 
 #include "MortonIterator.tpp"

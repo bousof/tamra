@@ -33,7 +33,7 @@ class AbstractTreeIterator {
   // Vector of sibling numbers
   std::vector<unsigned> index_path;
   // Vector of orders
-  std::stack<unsigned> order_path;
+  std::vector<unsigned> order_path;
   // Current cell pointed by iterator
   std::shared_ptr<CellType> current_cell;
   // Size of partition for each level
@@ -64,6 +64,8 @@ class AbstractTreeIterator {
   const std::pair<int, int>& getPartition() const;
   // Get current index path
   const std::vector<unsigned>& getIndexPath() const;
+  // Get current order path
+  const std::vector<unsigned>& getOrderPath() const;
   // Get current cell ID
   std::vector<unsigned> getCellId() const;
   // Get cell ID manager
@@ -108,14 +110,18 @@ class AbstractTreeIterator {
   bool cellIdLt(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdLt(current_cell_id, cell_id); }
   // Check if a cell ID is smaller than or equal another ID
   bool cellIdLte(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdLte(current_cell_id, cell_id); }
-  // Generate an ID from the genealogy of a cell.
+  // Generate an ID from the genealogy of a cell
   std::vector<unsigned> indexPathToId(const std::vector<unsigned> &index_path) const;
-  // Generate an ID from the genealogy of a cell.
-  std::vector<unsigned> idToIndexPath(const std::vector<unsigned> &cell_id) const;
+  // Generate an ID from the genealogy of a cell
+  std::vector<unsigned> orderPathToId(const std::vector<unsigned> &order_path) const;
+  // Generate an ID from the genealogy of a cell
+  std::vector<unsigned> idToOrderPath(const std::vector<unsigned> &cell_id) const;
  protected:
+  // Converts the genealogy of a cell
+  virtual std::vector<unsigned> indexToOrderPath(const std::vector<unsigned> &index_path) const = 0;
   // Return the sibling number from the order (number along
   // the curve) with respect to the mother orientation.
-  virtual unsigned orderToSiblingNumber(unsigned order, const bool compute_orientation=false) = 0;
+  virtual unsigned orderToSiblingNumber(unsigned order, const bool compute_orientation=false) const = 0;
   // Go to child cell
   virtual void toChild(const unsigned order);
   // Go to parent cell

@@ -44,9 +44,9 @@ class CellIdManager {
   //***********************************************************//
  public:
   // Generate an ID from the genealogy of a cell.
-  std::vector<unsigned> indexPathToId(const std::vector<unsigned> &index_path) const;
+  std::vector<unsigned> orderPathToId(const std::vector<unsigned> &order_path) const;
   // Generate an ID from the genealogy of a cell.
-  std::vector<unsigned> idToIndexPath(const std::vector<unsigned> &cell_id) const;
+  std::vector<unsigned> idToOrderPath(const std::vector<unsigned> &cell_id) const;
   // Generate the IDs of the first and last leaf cells of the
   // partitions obatined by splitting into equal parts and taking
   // the n-th one

@@ -40,7 +40,7 @@ bool cellIDInversion2x2() {
 
   // Initialize iterator
   std::vector<std::shared_ptr<Cell2D>> roots = { A };
-  MortonIterator<Cell2D> iterator(roots, max_level);
+  MortonIterator<Cell2D, 123> iterator(roots, max_level);
 
   // Go to target cell
   iterator.toBegin(max_level);
@@ -51,7 +51,7 @@ bool cellIDInversion2x2() {
 
   bool passed = iterator.getIndexPath() == index_path_value;
   passed &= iterator.getCellId() == iterator.indexPathToId(index_path_value);
-  passed &= iterator.idToIndexPath(iterator.getCellId()) == index_path_value;
+  passed &= iterator.idToOrderPath(iterator.getCellId()) == iterator.getOrderPath();
   return passed;
 }
 
@@ -79,13 +79,13 @@ bool cellIDInversion3x2() {
 
   // Initialize iterator
   std::vector<std::shared_ptr<Cell2D>> roots = { A };
-  MortonIterator<Cell2D> iterator(roots, max_level);
+  MortonIterator<Cell2D, 123> iterator(roots, max_level);
 
   // Go to target cell
   iterator.toBegin(max_level);
-  bool passed = iterator.getIndexPath() == iterator.idToIndexPath(iterator.getCellId());
+  bool passed = iterator.getIndexPath() == iterator.idToOrderPath(iterator.getCellId());
   while (iterator.next())
-    passed = iterator.getIndexPath() == iterator.idToIndexPath(iterator.getCellId());
+    passed = iterator.getIndexPath() == iterator.idToOrderPath(iterator.getCellId());
   return passed;
 }
 
