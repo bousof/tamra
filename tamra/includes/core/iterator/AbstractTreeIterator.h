@@ -30,8 +30,10 @@ class AbstractTreeIterator {
   const std::vector<std::shared_ptr<CellType>> root_cells;
   // Tree max level
   const int max_level;
+ protected:
   // Vector of sibling numbers
   std::vector<unsigned> index_path;
+ private:
   // Vector of orders
   std::vector<unsigned> order_path;
   // Current cell pointed by iterator
