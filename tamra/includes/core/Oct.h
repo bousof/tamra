@@ -85,11 +85,6 @@ class Oct {
   unsigned getSiblingNumber(const CellType* ptr_child_cell) const;
   // Get a pointer to a neighbor cell
   std::shared_ptr<CellType> getNeighborCell(const int dir) const;
- private:
-  // Get a pointer to a neighbor cell accessible by 2 consecutive othogonal direction (corners in 2D)
-  std::shared_ptr<CellType> getPlaneNeighborCell(const int dir1, const int dir2) const;
-  // Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)
-  std::shared_ptr<CellType> getVolumeNeighborCell(const int dir1, const int dir2, const int dir3) const;
 };
 
 #include "Oct.tpp"

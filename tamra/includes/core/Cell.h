@@ -82,7 +82,7 @@ class Cell {
   // Get child oct
   std::shared_ptr<OctType> getChildOct() const;
   // Get a specific child cell
-  std::shared_ptr<Cell> getChildCell(const unsigned neighbor_sibling_number) const;
+  std::shared_ptr<Cell> getChildCell(const unsigned sibling_number) const;
   // Get child cells
   const std::array<std::shared_ptr<Cell>, number_children>& getChildCells() const;
   // Get child cells in a specific direction
@@ -218,18 +218,22 @@ class Cell {
   bool verifyCoarsenChildren();
   // Verify if neighbors coarsening is needed before cell coarsening
   bool verifyCoarsenNeighbors();
+ public:
   // Transform sibling number to (i,j,k) coordinates
   static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const int sibling_number);
   // Transform (i,j,k) coordinates to sibling number
   inline int coordsToSiblingNumber(const unsigned sibling_coord_1, const unsigned sibling_coord_2, const unsigned sibling_coord_3) const;
+ private:
   // For a given sibling number, determine if the neighbor cell in a given direction:
   // - shares the same parent cell (true) or belongs to another cell (false)
   // - it's sibling number
   std::pair<bool, unsigned> getDirectNeighborCellInfos(const int sibling_number, const int dir) const;
   // Get a pointer to a neighbor cell accessible by 2 consecutive othogonal direction (corners in 2D)
-  std::shared_ptr<Cell> getPlaneNeighborCell(const int sibling_number, const int dir1, const int dir2) const;
+  std::shared_ptr<Cell> getPlaneNeighborCell(const int sibling_number, const int dir) const;
+  // convert two direct neighbor directions to a plane direction
+  int directToPlaneDir(const int dir1, const int dir2) const;
   // Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)
-  std::shared_ptr<Cell> getVolumeNeighborCell(const int sibling_number, const int dir1, const int dir2, const int dir3) const;
+  std::shared_ptr<Cell> getVolumeNeighborCell(const int sibling_number, const int dir) const;
   // Flags propagation from parent to children
   void setIndicatorFromParent(const Cell &parent_cell);
 };

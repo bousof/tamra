@@ -112,35 +112,8 @@ unsigned Oct<CellType>::getSiblingNumber(const CellType* ptr_child_cell) const {
 // Get a pointer to a neighbor cell
 template<typename CellType>
 std::shared_ptr<CellType> Oct<CellType>::getNeighborCell(const int dir) const {
-  if (dir<0 || dir>=number_volume_neighbors)
+  if (dir<0 || dir>=number_neighbors)
     throw std::runtime_error("Invalid neighbor direction in Oct::getNeighborCell()");
 
-  if (dir < number_neighbors)
-    return neighbor_cells[dir];
-  else if (dir < number_plane_neighbors) {
-    const int dir1 = (dir-number_neighbors)   % 2 ? 0 : 1,
-              dir2 = (dir-number_neighbors)/2 % 2 ? 2 : 3;
-    return getPlaneNeighborCell(dir1, dir2);
-  } else {
-    const int dir1 = (dir-number_plane_neighbors)   % 2 ? 0 : 1,
-              dir2 = (dir-number_plane_neighbors)/2 % 2 ? 2 : 3,
-              dir3 = (dir-number_plane_neighbors)/4 % 2 ? 4 : 5;
-    return getVolumeNeighborCell(dir1, dir2, dir3);
-  }
-}
-
-// Get a pointer to a neighbor cell accessible by 2 consecutive othogonal direction (corners in 2D)
-template<typename CellType>
-std::shared_ptr<CellType> Oct<CellType>::getPlaneNeighborCell(const int dir1, const int dir2) const {
-  if (getNeighborCell(dir1))
-    return getNeighborCell(dir1)->getNeighborCell(dir2);
-  else if (getNeighborCell(dir2))
-    return getNeighborCell(dir2)->getNeighborCell(dir1);
-  return nullptr;
-}
-
-// Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)
-template<typename CellType>
-std::shared_ptr<CellType> Oct<CellType>::getVolumeNeighborCell(const int dir1, const int dir2, const int dir3) const {
-  throw std::runtime_error("3D volume neighbor not implemented yet in Oct::getVolumeNeighborCell()");
+  return neighbor_cells[dir];
 }
