@@ -18,6 +18,7 @@
 
 #include "../manager/CellIdManager.h"
 #include "AbstractTreeIterator.h"
+#include "HilbertTables.h"
 
 template<typename CellType>
 class HilbertIterator : public AbstractTreeIterator<CellType> {
@@ -33,10 +34,6 @@ class HilbertIterator : public AbstractTreeIterator<CellType> {
  protected:
   using AbstractTreeIterator<CellType>::index_path;
  private:
-  // Orderings tuple
-  const std::tuple<std::vector<unsigned>,
-                   std::array<std::array<unsigned, number_of_corners>, number_of_orientations>,
-                   std::array<std::array<unsigned, number_of_corners>, number_of_orientations>> orderings_tuple;
   // Possible leaf orientations
   const std::vector<unsigned> &possible_leaf_orientations;
   // Map order to sibling number for each mother orientation
@@ -44,7 +41,7 @@ class HilbertIterator : public AbstractTreeIterator<CellType> {
   // Map order to child cell orientation for each mother orientation
   const std::array<std::array<unsigned, number_of_corners>, number_of_orientations> &child_orientations;
   // Map sibling number to order for each mother orientation
-  const std::array<std::array<unsigned, number_of_corners>, number_of_orientations> reverse_child_orderings;
+  const std::array<std::array<unsigned, number_of_corners>, number_of_orientations> &reverse_child_orderings;
   // Default leaf orientation
   const unsigned default_leaf_orientation;
   // Root cell orientations
