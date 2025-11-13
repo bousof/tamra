@@ -57,12 +57,6 @@ class HilbertIterator : public AbstractTreeIterator<CellType> {
   HilbertIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level);
 
   //***********************************************************//
-  //  ACCESSORS                                                //
-  //***********************************************************//
- public:
- private:
-
-  //***********************************************************//
   //  METHODS                                                  //
   //***********************************************************//
  public:

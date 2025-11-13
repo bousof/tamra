@@ -9,6 +9,13 @@
 
 #pragma once
 
+#include<array>
+#include<numeric>
+#include<stdexcept>
+#include<string>
+#include<tuple>
+#include<vector>
+
 //***********************************************************//
 //  PROTOTYPES.                                              //
 //***********************************************************//
