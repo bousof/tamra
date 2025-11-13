@@ -155,6 +155,7 @@ bool balanceEmptyPartitionsDataParallel(int rank, int size) {
   return all_passed;
 }
 
+namespace core::manager::balance {
 class TestCellData : public AbstractCellData {
  private:
   unsigned u_value;
@@ -184,11 +185,12 @@ class TestCellData : public AbstractCellData {
     return 2;
   }
 };
+}
 
 // Load balancing (empty partitions) with custom cell data
 // Same as previous test with custom CellData (TestCellData)
 bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
-  using Cell2D = Cell<2, 2, 0, TestCellData>;
+  using Cell2D = Cell<2, 2, 0, core::manager::balance::TestCellData>;
   // Create root cell
   auto A = std::make_shared<Cell2D>(nullptr);
 
@@ -220,7 +222,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
   MortonIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
   if (iterator.toOwnedBegin())
     do {
-      TestCellData &cellData = iterator.getCell()->getCellData();
+      core::manager::balance::TestCellData &cellData = iterator.getCell()->getCellData();
       cellData.setUnsigned(iterator.getCell()->getLevel());
       cellData.setDouble(2.*iterator.getCell()->getLevel());
     } while (iterator.ownedNext());
@@ -242,7 +244,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
   // Check if cell data is valid (value==level)
   if (iterator.toOwnedBegin())
     do {
-      TestCellData &cellData = iterator.getCell()->getCellData();
+      core::manager::balance::TestCellData &cellData = iterator.getCell()->getCellData();
       passed &= (cellData.getUnsigned() == iterator.getCell()->getLevel());
       passed &= (cellData.getDouble() == 2.*iterator.getCell()->getLevel());
     } while (iterator.ownedNext());
