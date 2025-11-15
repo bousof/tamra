@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory>
 #include <tuple>
+#include <unordered_set>
 
 #include "ChildAndDirectionTables.h"
 
@@ -201,8 +202,12 @@ class Cell {
   //└────────────┴──────────────────┴──────────────────────────────────┘
   // Get a pointer to a neighbor cell
   std::shared_ptr<Cell> getNeighborCell(const int dir) const;
-  // Loop on all neighbor cells in a specific direction and apply a function
-  void applyToDirNeighborCells(const unsigned dir, const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f) const;
+  // Loop on all neighbor cells and apply a function
+  void applyToNeighborCells(const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f, const bool only_once=false, const bool skip_null=false, const std::vector<int> &directions = ChildAndDirectionTablesType::all_directions) const;
+  // Loop on all neighbor leaf cells in a specific direction and apply a function
+  void applyToDirNeighborLeafCells(const unsigned dir, const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f) const;
+  // Loop on all neighbor leaf cells and apply a function
+  void applyToNeighborLeafCells(const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f, const bool only_once=false, const bool skip_null=false, const std::vector<int> &directions = ChildAndDirectionTablesType::all_directions) const;
   //Apply extrapolation function to all non-leaf descendent cells recursively
   void extrapolateRecursively(ExtrapolationFunctionType extrapolation_function) const;
  private:

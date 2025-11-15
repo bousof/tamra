@@ -45,6 +45,15 @@ struct ChildAndDirectionTables {
   static constexpr int N12 = N1 * N2;
   static constexpr int N13 = N1 * N3;
   static constexpr int N23 = N2 * N3;
+  static constexpr unsigned max_number_neighbor_leaf_cells_1d = 2;
+  static constexpr unsigned max_number_neighbor_leaf_cells_2d = 4 + 2*(N1+N2);
+  static constexpr unsigned max_number_neighbor_leaf_cells_3d = 8 + 4*(N1+N2+N3) + 2*(N1*N2+N1*N3+N2*N3);
+  static constexpr unsigned max_number_neighbor_leaf_cells = (number_dimensions==1) ? max_number_neighbor_leaf_cells_1d :
+                                                             (number_dimensions==2) ? max_number_neighbor_leaf_cells_2d :
+                                                             max_number_neighbor_leaf_cells_3d;
+  inline static const std::vector<int> all_directions = (number_dimensions==1) ? std::vector<int>({ 0, 1 }) :
+                                                        (number_dimensions==2) ? std::vector<int>({ 0, 1, 2, 3, 4, 5, 6, 7 }) :
+                                                        std::vector<int>({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 });
 
   // Get child cells sibling numbers for each incoming direction
   inline static const std::array<std::vector<unsigned>, number_of_directions> dir_sibling_numbers = compute_dir_sibling_numbers<Nx, Ny, Nz>();

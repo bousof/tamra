@@ -115,124 +115,124 @@ bool testNeighborLeafsQuadtree() {
   bool passed = true;
   tree.applyToOwnedLeaves(
     [&passed](const std::shared_ptr<Cell2D> &cell, unsigned i) mutable {
-      for (unsigned dir{0}; dir<Cell2D::number_plane_neighbors; ++dir) // TODO USE VOLUME NEIGHBORS
-        cell->applyToDirNeighborCells(dir,
-          [&passed](const std::shared_ptr<Cell2D> &c, const std::shared_ptr<Cell2D> &n, const unsigned &dir) {
-            // If no neighbor, then cooredinates corresponds to boundaries
-            auto &cell_data = c->getCellData();
-            if (!n) {
-              passed &= (dir!=0) || (cell_data.imin==0);
-              passed &= (dir!=1) || (cell_data.imax==2*Nx*Nx);
-              passed &= (dir!=2) || (cell_data.jmin==0);
-              passed &= (dir!=3) || (cell_data.jmax==Ny*Ny);
-              passed &= (dir!=4) || (cell_data.imin==0      ) || (cell_data.jmin==0);
-              passed &= (dir!=5) || (cell_data.imax==2*Nx*Nx) || (cell_data.jmin==0);
-              passed &= (dir!=6) || (cell_data.imin==0      ) || (cell_data.jmax==Ny*Ny);
-              passed &= (dir!=7) || (cell_data.imax==2*Nx*Nx) || (cell_data.jmax==Ny*Ny);
-              return;
-            }
-
-            // Deduce the sibling number if the two cells have the same level
-            if (c->getLevel() == n->getLevel()) {
-              unsigned i_c, j_c, k_c;
-              std::tie(i_c, j_c, k_c) = Cell2D::siblingNumberToCoords(c->getSiblingNumber());
-              if (dir == 0 || dir == 4 || dir == 6)
-                i_c = (i_c + Nx - 1) % Nx;
-              if (dir == 1 || dir == 5 || dir == 7)
-                i_c = (i_c + 1) % Nx;
-              if (dir == 2 || dir == 4 || dir == 5)
-                j_c = (j_c + Ny - 1) % Ny;
-              if (dir == 3 || dir == 6 || dir == 7)
-                j_c = (j_c + 1) % Ny;
-              unsigned i_n, j_n, k_n;
-              std::tie(i_n, j_n, k_n) = Cell2D::siblingNumberToCoords(n->getSiblingNumber());
-              passed &= (i_c == i_n && j_c == j_n);
-            }
-
-            // Verify the correct computation of neighbors thanks to coordinates
-            auto &neighbor_data = n->getCellData();
-            if (dir == 0)
-              // case 1                       case 2                            case 3
-              //                      ────┬───┐    ────┬───┐            ┌───┬────    ┌───┬────
-              // ┌───┬───┐                │   │        │ C │            │   │        │ N │    
-              // │ N │ C │     OR       N ├───┤ OR   N ├───┤     OR     ├───┼ C   OR ├───┼ C  
-              // └───┴───┘                │ C │        │   │            │ N │        │   │    
-              //                      ────┴───┘    ────┴───┘            └───┴────    └───┴────
-              passed &= ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmin) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == n->getLevel()) ) // case 1
-                     || ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmin || cell_data.jmax == neighbor_data.jmax) && ( (  c->getLevel()   == (n->getLevel()+1)) // case 2
-                                                                                                                                                     || ((c->getLevel()+1) ==   n->getLevel()  ) ) ); // case 3
-            if (dir == 1)
-              // case 1                       case 2                            case 3
-              //                      ┌───┬────    ┌───┬────            ────┬───┐    ────┬───┐
-              // ┌───┬───┐            │   │        │ C │                    │   │        │ N │
-              // │ C │ N │     OR     ├───┼ N   OR ├───┼ N       OR       C ├───┤ OR   C ├───┤
-              // └───┴───┘            │ C │        │   │                    │ N │        │   │
-              //                      └───┴────    └───┴────            ────┴───┘    ────┴───┘
-              passed &= ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmin == neighbor_data.jmin) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == n->getLevel()) ) // case 1
-                     || ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmin == neighbor_data.jmin || cell_data.jmax == neighbor_data.jmax) && ( (  c->getLevel()   == (n->getLevel()+1)) // case 2
-                                                                                                                                                     || ((c->getLevel()+1) ==   n->getLevel()  ) ) ); // case 3
-            if (dir == 2)
-              // case 1                   case 2                            case 3
-              // ┌───┐            ┌───┬───┐    ┌───┬───┐            │       │    │       │
-              // │ C │            │ C │   │    │   │ C │            │   C   │    │   C   │
-              // ├───┤     OR     ├───┴───┤ OR ├───┴───┤     OR     ├───┬───┤ OR ├───┬───┤
-              // │ N │            │   N   │    │   N   │            │ N │   │    │   │ N │
-              // └───┘            │       │    │       │            └───┴───┘    └───┴───┘
-              passed &= ( (cell_data.jmin == neighbor_data.jmax) && (cell_data.imin == neighbor_data.imin) && (cell_data.imax == neighbor_data.imax) && (c->getLevel() == n->getLevel()) ) // case 1
-                     || ( (cell_data.jmin == neighbor_data.jmax) && (cell_data.imin == neighbor_data.imin || cell_data.imax == neighbor_data.imax) && ( (  c->getLevel()   == (n->getLevel()+1)) // case 2
-                                                                                                                                                     || ((c->getLevel()+1) ==   n->getLevel()  ) ) ); // case 3
-            if (dir == 3)
-              // case 1                   case 2                            case 3
-              // ┌───┐            │       │    │       │            ┌───┬───┐    ┌───┬───┐
-              // │ N │            │   N   │    │   N   │            │ N │   │    │   │ N │
-              // ├───┤     OR     ├───┬───┤ OR ├───┬───┤     OR     ├───┴───┤ OR ├───┴───┤
-              // │ C │            │ C │   │    │   │ C │            │   C   │    │   C   │
-              // └───┘            └───┴───┘    └───┴───┘            │       │    │       │
-              passed &= ( (cell_data.jmax == neighbor_data.jmin) && (cell_data.imin == neighbor_data.imin) && (cell_data.imax == neighbor_data.imax) && (c->getLevel() == n->getLevel()) ) // case 1
-                     || ( (cell_data.jmax == neighbor_data.jmin) && (cell_data.imin == neighbor_data.imin || cell_data.imax == neighbor_data.imax) && ( (  c->getLevel()   == (n->getLevel()+1)) // case 2
-                                                                                                                                                     || ((c->getLevel()+1) ==   n->getLevel()  ) ) ); // case 3
-            if (dir == 4)
-              // case 1             case 2             case 3
-              //                    ───┬───
-              //    │ C                │ C                │ C │
-              // ───┼───     OR      N ├───     OR     ───┴───┤
-              //  N │                  │                  N   │
-              //
-              passed &= ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmax) && (c->getLevel() <= (n->getLevel()+2)) && ((c->getLevel()+2) >= n->getLevel()) ) // case 1
-                     || ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == (n->getLevel()+1)) ) // case 2
-                     || ( (cell_data.jmin == neighbor_data.jmax) && (cell_data.imax == neighbor_data.imax) && (c->getLevel() == (n->getLevel()+1)) ); // case 3
-            if (dir == 5)
-              // case 1             case 2             case 3
-              //                    ───┬───
-              //  C │                C │               │ C │
-              // ───┼───     OR     ───┤ N      OR     ├───┴───
-              //    │ N                │               │   N
-              //
-              passed &= ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmin == neighbor_data.jmax) && (c->getLevel() <= (n->getLevel()+2)) && ((c->getLevel()+2) >= n->getLevel()) ) // case 1
-                     || ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == (n->getLevel()+1)) ) // case 2
-                     || ( (cell_data.jmin == neighbor_data.jmax) && (cell_data.imin == neighbor_data.imin) && (c->getLevel() == (n->getLevel()+1)) ); // case 3
-            if (dir == 6)
-              // case 1             case 2             case 3
-              //
-              //  N │                  │                  N   │
-              // ───┼───     OR      N ├───     OR     ───┬───┤
-              //    │ C                │ C                │ C │
-              //                    ───┴───
-              passed &= ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmax == neighbor_data.jmin) && (c->getLevel() <= (n->getLevel()+2)) && ((c->getLevel()+2) >= n->getLevel()) ) // case 1
-                     || ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmin) && (c->getLevel() == (n->getLevel()+1)) ) // case 2
-                     || ( (cell_data.jmax == neighbor_data.jmin) && (cell_data.imax == neighbor_data.imax) && (c->getLevel() == (n->getLevel()+1)) ); // case 3
-            if (dir == 7)
-              // case 1             case 2             case 3
-              //
-              //    │ N                │               │   N
-              // ───┼───     OR     ───┤ N      OR     ├───┬───
-              //  C │                C │               │ C │
-              //                    ───┴───
-              passed &= ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmax == neighbor_data.jmin) && (c->getLevel() <= (n->getLevel()+2)) && ((c->getLevel()+2) >= n->getLevel()) ) // case 1
-                     || ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmin == neighbor_data.jmin) && (c->getLevel() == (n->getLevel()+1)) ) // case 2
-                     || ( (cell_data.jmax == neighbor_data.jmin) && (cell_data.imin == neighbor_data.imin) && (c->getLevel() == (n->getLevel()+1)) ); // case 3
+      cell->applyToNeighborLeafCells(
+        [&passed](const std::shared_ptr<Cell2D> &c, const std::shared_ptr<Cell2D> &n, const unsigned &dir) {
+          // If no neighbor, then cooredinates corresponds to boundaries
+          auto &cell_data = c->getCellData();
+          if (!n) {
+            passed &= (dir!=0) || (cell_data.imin==0);
+            passed &= (dir!=1) || (cell_data.imax==2*Nx*Nx);
+            passed &= (dir!=2) || (cell_data.jmin==0);
+            passed &= (dir!=3) || (cell_data.jmax==Ny*Ny);
+            passed &= (dir!=4) || (cell_data.imin==0      ) || (cell_data.jmin==0);
+            passed &= (dir!=5) || (cell_data.imax==2*Nx*Nx) || (cell_data.jmin==0);
+            passed &= (dir!=6) || (cell_data.imin==0      ) || (cell_data.jmax==Ny*Ny);
+            passed &= (dir!=7) || (cell_data.imax==2*Nx*Nx) || (cell_data.jmax==Ny*Ny);
+            return;
           }
-        );
+
+          // Deduce the sibling number if the two cells have the same level
+          if (c->getLevel() == n->getLevel()) {
+            unsigned i_c, j_c, k_c;
+            std::tie(i_c, j_c, k_c) = Cell2D::siblingNumberToCoords(c->getSiblingNumber());
+            if (dir == 0 || dir == 4 || dir == 6)
+              i_c = (i_c + Nx - 1) % Nx;
+            if (dir == 1 || dir == 5 || dir == 7)
+              i_c = (i_c + 1) % Nx;
+            if (dir == 2 || dir == 4 || dir == 5)
+              j_c = (j_c + Ny - 1) % Ny;
+            if (dir == 3 || dir == 6 || dir == 7)
+              j_c = (j_c + 1) % Ny;
+            unsigned i_n, j_n, k_n;
+            std::tie(i_n, j_n, k_n) = Cell2D::siblingNumberToCoords(n->getSiblingNumber());
+            passed &= (i_c == i_n && j_c == j_n);
+          }
+
+          // Verify the correct computation of neighbors thanks to coordinates
+          auto &neighbor_data = n->getCellData();
+          if (dir == 0)
+            // case 1                       case 2                            case 3
+            //                      ────┬───┐    ────┬───┐            ┌───┬────    ┌───┬────
+            // ┌───┬───┐                │   │        │ C │            │   │        │ N │    
+            // │ N │ C │     OR       N ├───┤ OR   N ├───┤     OR     ├───┼ C   OR ├───┼ C  
+            // └───┴───┘                │ C │        │   │            │ N │        │   │    
+            //                      ────┴───┘    ────┴───┘            └───┴────    └───┴────
+            passed &= ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmin) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == n->getLevel()) ) // case 1
+                    || ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmin || cell_data.jmax == neighbor_data.jmax) && ( (  c->getLevel()   == (n->getLevel()+1)) // case 2
+                                                                                                                                                    || ((c->getLevel()+1) ==   n->getLevel()  ) ) ); // case 3
+          if (dir == 1)
+            // case 1                       case 2                            case 3
+            //                      ┌───┬────    ┌───┬────            ────┬───┐    ────┬───┐
+            // ┌───┬───┐            │   │        │ C │                    │   │        │ N │
+            // │ C │ N │     OR     ├───┼ N   OR ├───┼ N       OR       C ├───┤ OR   C ├───┤
+            // └───┴───┘            │ C │        │   │                    │ N │        │   │
+            //                      └───┴────    └───┴────            ────┴───┘    ────┴───┘
+            passed &= ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmin == neighbor_data.jmin) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == n->getLevel()) ) // case 1
+                    || ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmin == neighbor_data.jmin || cell_data.jmax == neighbor_data.jmax) && ( (  c->getLevel()   == (n->getLevel()+1)) // case 2
+                                                                                                                                                    || ((c->getLevel()+1) ==   n->getLevel()  ) ) ); // case 3
+          if (dir == 2)
+            // case 1                   case 2                            case 3
+            // ┌───┐            ┌───┬───┐    ┌───┬───┐            │       │    │       │
+            // │ C │            │ C │   │    │   │ C │            │   C   │    │   C   │
+            // ├───┤     OR     ├───┴───┤ OR ├───┴───┤     OR     ├───┬───┤ OR ├───┬───┤
+            // │ N │            │   N   │    │   N   │            │ N │   │    │   │ N │
+            // └───┘            │       │    │       │            └───┴───┘    └───┴───┘
+            passed &= ( (cell_data.jmin == neighbor_data.jmax) && (cell_data.imin == neighbor_data.imin) && (cell_data.imax == neighbor_data.imax) && (c->getLevel() == n->getLevel()) ) // case 1
+                    || ( (cell_data.jmin == neighbor_data.jmax) && (cell_data.imin == neighbor_data.imin || cell_data.imax == neighbor_data.imax) && ( (  c->getLevel()   == (n->getLevel()+1)) // case 2
+                                                                                                                                                    || ((c->getLevel()+1) ==   n->getLevel()  ) ) ); // case 3
+          if (dir == 3)
+            // case 1                   case 2                            case 3
+            // ┌───┐            │       │    │       │            ┌───┬───┐    ┌───┬───┐
+            // │ N │            │   N   │    │   N   │            │ N │   │    │   │ N │
+            // ├───┤     OR     ├───┬───┤ OR ├───┬───┤     OR     ├───┴───┤ OR ├───┴───┤
+            // │ C │            │ C │   │    │   │ C │            │   C   │    │   C   │
+            // └───┘            └───┴───┘    └───┴───┘            │       │    │       │
+            passed &= ( (cell_data.jmax == neighbor_data.jmin) && (cell_data.imin == neighbor_data.imin) && (cell_data.imax == neighbor_data.imax) && (c->getLevel() == n->getLevel()) ) // case 1
+                    || ( (cell_data.jmax == neighbor_data.jmin) && (cell_data.imin == neighbor_data.imin || cell_data.imax == neighbor_data.imax) && ( (  c->getLevel()   == (n->getLevel()+1)) // case 2
+                                                                                                                                                    || ((c->getLevel()+1) ==   n->getLevel()  ) ) ); // case 3
+          if (dir == 4)
+            // case 1             case 2             case 3
+            //                    ───┬───
+            //    │ C                │ C                │ C │
+            // ───┼───     OR      N ├───     OR     ───┴───┤
+            //  N │                  │                  N   │
+            //
+            passed &= ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmax) && (c->getLevel() <= (n->getLevel()+2)) && ((c->getLevel()+2) >= n->getLevel()) ) // case 1
+                    || ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == (n->getLevel()+1)) ) // case 2
+                    || ( (cell_data.jmin == neighbor_data.jmax) && (cell_data.imax == neighbor_data.imax) && (c->getLevel() == (n->getLevel()+1)) ); // case 3
+          if (dir == 5)
+            // case 1             case 2             case 3
+            //                    ───┬───
+            //  C │                C │               │ C │
+            // ───┼───     OR     ───┤ N      OR     ├───┴───
+            //    │ N                │               │   N
+            //
+            passed &= ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmin == neighbor_data.jmax) && (c->getLevel() <= (n->getLevel()+2)) && ((c->getLevel()+2) >= n->getLevel()) ) // case 1
+                    || ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == (n->getLevel()+1)) ) // case 2
+                    || ( (cell_data.jmin == neighbor_data.jmax) && (cell_data.imin == neighbor_data.imin) && (c->getLevel() == (n->getLevel()+1)) ); // case 3
+          if (dir == 6)
+            // case 1             case 2             case 3
+            //
+            //  N │                  │                  N   │
+            // ───┼───     OR      N ├───     OR     ───┬───┤
+            //    │ C                │ C                │ C │
+            //                    ───┴───
+            passed &= ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmax == neighbor_data.jmin) && (c->getLevel() <= (n->getLevel()+2)) && ((c->getLevel()+2) >= n->getLevel()) ) // case 1
+                    || ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmin) && (c->getLevel() == (n->getLevel()+1)) ) // case 2
+                    || ( (cell_data.jmax == neighbor_data.jmin) && (cell_data.imax == neighbor_data.imax) && (c->getLevel() == (n->getLevel()+1)) ); // case 3
+          if (dir == 7)
+            // case 1             case 2             case 3
+            //
+            //    │ N                │               │   N
+            // ───┼───     OR     ───┤ N      OR     ├───┬───
+            //  C │                C │               │ C │
+            //                    ───┴───
+            passed &= ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmax == neighbor_data.jmin) && (c->getLevel() <= (n->getLevel()+2)) && ((c->getLevel()+2) >= n->getLevel()) ) // case 1
+                    || ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmin == neighbor_data.jmin) && (c->getLevel() == (n->getLevel()+1)) ) // case 2
+                    || ( (cell_data.jmax == neighbor_data.jmin) && (cell_data.imin == neighbor_data.imin) && (c->getLevel() == (n->getLevel()+1)) ); // case 3
+        },
+        false, false, { 0, 1, 2, 3, 4, 5, 6, 7 }
+      );
     }
   );
   return passed;

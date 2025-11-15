@@ -299,9 +299,35 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeigh
     return getVolumeNeighborCell(sibling_number, dir);
 }
 
-// Loop on all neighbor cells in a specific direction and apply a function
+// Loop on all neighbor leaf cells and apply a function
 template<int Nx, int Ny, int Nz, typename DataType>
-void Cell<Nx, Ny, Nz, DataType>::applyToDirNeighborCells(const unsigned dir, const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f) const {
+void Cell<Nx, Ny, Nz, DataType>::applyToNeighborCells(const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f, const bool only_once, const bool skip_null, const std::vector<int> &directions) const {
+  std::unordered_set<Cell*> cell_already_seen;
+  cell_already_seen.reserve(ChildAndDirectionTablesType::max_number_neighbor_leaf_cells);
+  for (const unsigned dir : directions) {
+    // Get the neighbor cell
+    std::shared_ptr<Cell> neighbor = getNeighborCell(dir);
+
+    // No neighbor cell in this direction
+    if (!neighbor) {
+      if (!skip_null)
+        f(thisAsSmartPtr(), nullptr, dir);
+      continue;
+    }
+
+    // The neighbor leaf cell has the same level
+    if (neighbor->isLeaf()) {
+      if (!only_once || !cell_already_seen.count(neighbor.get()))
+        f(thisAsSmartPtr(), neighbor, dir);
+      else if (only_once && !cell_already_seen.count(neighbor.get()))
+        cell_already_seen.insert(neighbor.get());
+    }
+  }
+}
+
+// Loop on all neighbor leaf cells in a specific direction and apply a function
+template<int Nx, int Ny, int Nz, typename DataType>
+void Cell<Nx, Ny, Nz, DataType>::applyToDirNeighborLeafCells(const unsigned dir, const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f) const {
   // Get the neighbor cell
   std::shared_ptr<Cell> neighbor = getNeighborCell(dir);
 
@@ -318,8 +344,45 @@ void Cell<Nx, Ny, Nz, DataType>::applyToDirNeighborCells(const unsigned dir, con
   }
 
   // The neighbor cell is higher level so we loop on its children
-  for (const auto &nbChildCell : neighbor->getDirChildCells(dir))
-    f(thisAsSmartPtr(), nbChildCell, dir);
+  for (const auto &neighbor_child_cell : neighbor->getDirChildCells(dir))
+    f(thisAsSmartPtr(), neighbor_child_cell, dir);
+}
+
+// Loop on all neighbor leaf cells and apply a function
+template<int Nx, int Ny, int Nz, typename DataType>
+void Cell<Nx, Ny, Nz, DataType>::applyToNeighborLeafCells(const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f, const bool only_once, const bool skip_null, const std::vector<int> &directions) const {
+  std::unordered_set<Cell*> cell_already_seen;
+  cell_already_seen.reserve(ChildAndDirectionTablesType::max_number_neighbor_leaf_cells);
+  for (const unsigned dir : directions) {
+    // Get the neighbor cell
+    std::shared_ptr<Cell> neighbor = getNeighborCell(dir);
+
+    // No neighbor cell in this direction
+    if (!neighbor) {
+      if (!skip_null)
+        f(thisAsSmartPtr(), nullptr, dir);
+      continue;
+    }
+
+    // The neighbor leaf cell has the same level
+    if (neighbor->isLeaf()) {
+      if (!only_once || !cell_already_seen.count(neighbor.get())) {
+        f(thisAsSmartPtr(), neighbor, dir);
+        if (only_once)
+          cell_already_seen.insert(neighbor.get());
+      }
+      continue;
+    }
+
+    // The neighbor cell is higher level so we loop on its children
+    for (const auto &neighbor_child_cell : neighbor->getDirChildCells(dir)) {
+      if (!only_once || !cell_already_seen.count(neighbor_child_cell.get())) {
+        f(thisAsSmartPtr(), neighbor_child_cell, dir);
+        if (only_once)
+          cell_already_seen.insert(neighbor_child_cell.get());
+      }
+    }
+  }
 }
 
 //Apply extrapolation function to all non-leaf descendent cells recursively
