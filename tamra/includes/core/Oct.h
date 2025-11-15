@@ -20,8 +20,6 @@ class Oct {
  public:
   static constexpr int number_children = CellType::number_children;
   static constexpr int number_neighbors = CellType::number_neighbors;
-  static constexpr int number_plane_neighbors = CellType::number_plane_neighbors;
-  static constexpr int number_volume_neighbors = CellType::number_volume_neighbors;
 
   //***********************************************************//
 	//  VARIABLES                                                //

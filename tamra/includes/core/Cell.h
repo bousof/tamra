@@ -13,6 +13,8 @@
 #include <memory>
 #include <tuple>
 
+#include "ChildAndDirectionTables.h"
+
 template<int NX, int NY, int NZ, typename DataType> class Cell;
 
 #include "CellData.h"
@@ -21,25 +23,20 @@ template<int NX, int NY, int NZ, typename DataType> class Cell;
 template<int NX = 2, int NY = 0, int NZ = 0, typename DataType = CellData>
 class Cell {
  public:
-  using CellDataType = DataType;
-  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<Cell<NX, NY, NZ, DataType>>&)>;
-  using InterpolationFunctionType = std::function<void(const std::shared_ptr<Cell<NX, NY, NZ, DataType>>&)>;
-  using OctType = Oct<Cell<NX, NY, NZ, DataType>>;
   static constexpr int Nx = NX;
   static constexpr int Ny = NY;
   static constexpr int Nz = NZ;
-  static constexpr int number_dimensions = (Nx>0) + (Ny>0) + (Nz>0);
-  static constexpr int number_split_dimensions = (Nx>1) + (Ny>1) + (Nz>1);
-  static constexpr int number_neighbors = 2 * number_dimensions;
-  static constexpr int number_plane_neighbors = number_dimensions==3 ? 18 : number_dimensions==2 ? 8 : 2;
-  static constexpr int number_volume_neighbors = number_dimensions==3 ? 26 : number_dimensions==2 ? 8 : 2;
-  static constexpr int N1 = Nx>0 ? Nx : Ny>0 ? Ny : Nz;
-  static constexpr int N2 = (Nx>0 && Ny>0) ? Ny : number_dimensions>1 ? Nz : 1;
-  static constexpr int N3 = number_dimensions==3 ? Nz : 1;
-  static constexpr int number_children = N1 * N2 * N3;
-  static constexpr int N12 = N1 * N2;
-  static constexpr int N13 = N1 * N3;
-  static constexpr int N23 = N2 * N3;
+  using CellDataType = DataType;
+  using ChildAndDirectionTablesType = ChildAndDirectionTables<Nx, Ny, Nz>;
+  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>&)>;
+  using InterpolationFunctionType = std::function<void(const std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>&)>;
+  using OctType = Oct<Cell<Nx, Ny, Nz, DataType>>;
+  static constexpr int number_dimensions = ChildAndDirectionTablesType::number_dimensions;
+  static constexpr int number_split_dimensions = ChildAndDirectionTablesType::number_split_dimensions;
+  static constexpr int number_neighbors = ChildAndDirectionTablesType::number_neighbors;
+  static constexpr int number_plane_neighbors = ChildAndDirectionTablesType::number_plane_neighbors;
+  static constexpr int number_volume_neighbors = ChildAndDirectionTablesType::number_volume_neighbors;
+  static constexpr int number_children = ChildAndDirectionTablesType::number_children;
 
   //***********************************************************//
   //  VARIABLES                                                //
@@ -87,9 +84,6 @@ class Cell {
   const std::array<std::shared_ptr<Cell>, number_children>& getChildCells() const;
   // Get child cells in a specific direction
   const std::vector<std::shared_ptr<Cell>> getDirChildCells(const int dir) const;
-  const std::vector<std::shared_ptr<Cell>> getDirFaceChildCells(const int dir) const;
-  const std::vector<std::shared_ptr<Cell>> getDirEdgeChildCells(const int dir) const;
-  const std::vector<std::shared_ptr<Cell>> getDirCornerChildCells(const int dir) const;
   // Get level of the cell
   unsigned getLevel() const;
   // Get parent oct
@@ -153,7 +147,7 @@ class Cell {
         child->setToCoarseRecurs();
   }
  private:
-  bool setToBoundary()     { return indicator = 6+indicator%3; }
+  bool setToBoundary() { return indicator = 6+indicator%3; }
 
   //***********************************************************//
   //  METHODS                                                  //
@@ -173,36 +167,38 @@ class Cell {
   const std::array<std::shared_ptr<Cell>, number_children>& split(const int max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) {});
   // Coarsen a cell if neighbors cell allow to preserve consistency else nothing is done
   bool coarsen(const int min_level, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<Cell> &cell) {});
-  //_________________________________________________________________
-  //  Priority  |   Available if   |   Indexes (dir)
-  //____________|__________________|_________________________________
-  //  -X        |  Nx>1            |
-  //  +X        |  Nx>1            |
-  //     -Y     |       Ny>1       |  MIN: 0
-  //     +Y     |       Ny>1       |  MAX: number_neighbors-1
-  //        -Z  |            Nz>1  |
-  //        +Z  |            Nz>1  |_________________________________
-  //  -X -Y     |  Nx>1 Ny>1       |
-  //  +X -Y     |  Nx>1 Ny>1       |
-  //  -X +Y     |  Nx>1 Ny>1       |
-  //  +X +Y     |  Nx>1 Ny>1       |
-  //  -X    -Z  |  Nx>1      Nz>1  |
-  //  +X    -Z  |  Nx>1      Nz>1  |  MIN: number_neighbors
-  //  -X    +Z  |  Nx>1      Nz>1  |  MAX: number_plane_neighbors-1
-  //  +X    +Z  |  Nx>1      Nz>1  |
-  //     -Y -Z  |       Ny>1 Nz>1  |
-  //     +Y -Z  |       Ny>1 Nz>1  |
-  //     -Y +Z  |       Ny>1 Nz>1  |
-  //     +Y +Z  |       Ny>1 Nz>1  |_________________________________
-  //  -X -Y -Z  |  Nx>1 Ny>1 Nz>1  |
-  //  +X -Y -Z  |  Nx>1 Ny>1 Nz>1  |
-  //  -X +Y -Z  |  Nx>1 Ny>1 Nz>1  |
-  //  +X +Y -Z  |  Nx>1 Ny>1 Nz>1  |  MIN: number_plane_neighbors
-  //  -X -Y +Z  |  Nx>1 Ny>1 Nz>1  |  MAX: number_volume_neighbors-1
-  //  +X -Y +Z  |  Nx>1 Ny>1 Nz>1  |
-  //  -X +Y +Z  |  Nx>1 Ny>1 Nz>1  |
-  //  +X +Y +Z  |  Nx>1 Ny>1 Nz>1  |
-  //____________|__________________|_________________________________
+  //┌────────────┬──────────────────┬──────────────────────────────────┐
+  //│  Priority  │   Available if   │   Indexes (dir)                  │
+  //├────────────┼──────────────────┼──────────────────────────────────┤
+  //│  -X        │  Nx>0            │                                  │
+  //│  +X        │  Nx>0            │                                  │
+  //│     -Y     │       Ny>0       │  MIN: 0                          │
+  //│     +Y     │       Ny>0       │  MAX: number_neighbors-1         │
+  //│        -Z  │            Nz>0  │                                  │
+  //│        +Z  │            Nz>0  │                                  │
+  //├────────────┼──────────────────┼──────────────────────────────────┤
+  //│  -X -Y     │  Nx>0 Ny>0       │                                  │
+  //│  +X -Y     │  Nx>0 Ny>0       │                                  │
+  //│  -X +Y     │  Nx>0 Ny>0       │                                  │
+  //│  +X +Y     │  Nx>0 Ny>0       │                                  │
+  //│  -X    -Z  │  Nx>0      Nz>0  │                                  │
+  //│  +X    -Z  │  Nx>0      Nz>0  │  MIN: number_neighbors           │
+  //│  -X    +Z  │  Nx>0      Nz>0  │  MAX: number_plane_neighbors-1   │
+  //│  +X    +Z  │  Nx>0      Nz>0  │                                  │
+  //│     -Y -Z  │       Ny>0 Nz>0  │                                  │
+  //│     +Y -Z  │       Ny>0 Nz>0  │                                  │
+  //│     -Y +Z  │       Ny>0 Nz>0  │                                  │
+  //│     +Y +Z  │       Ny>0 Nz>0  │                                  │
+  //├────────────┼──────────────────┼──────────────────────────────────┤
+  //│  -X -Y -Z  │  Nx>0 Ny>0 Nz>0  │                                  │
+  //│  +X -Y -Z  │  Nx>0 Ny>0 Nz>0  │                                  │
+  //│  -X +Y -Z  │  Nx>0 Ny>0 Nz>0  │                                  │
+  //│  +X +Y -Z  │  Nx>0 Ny>0 Nz>0  │  MIN: number_plane_neighbors     │
+  //│  -X -Y +Z  │  Nx>0 Ny>0 Nz>0  │  MAX: number_volume_neighbors-1  │
+  //│  +X -Y +Z  │  Nx>0 Ny>0 Nz>0  │                                  │
+  //│  -X +Y +Z  │  Nx>0 Ny>0 Nz>0  │                                  │
+  //│  +X +Y +Z  │  Nx>0 Ny>0 Nz>0  │                                  │
+  //└────────────┴──────────────────┴──────────────────────────────────┘
   // Get a pointer to a neighbor cell
   std::shared_ptr<Cell> getNeighborCell(const int dir) const;
   // Loop on all neighbor cells in a specific direction and apply a function
@@ -219,19 +215,19 @@ class Cell {
   // Verify if neighbors coarsening is needed before cell coarsening
   bool verifyCoarsenNeighbors();
  public:
-  // Transform sibling number to (i,j,k) coordinates
-  static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const int sibling_number);
+ // Transform sibling number to (i,j,k) coordinates
+  static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const int sibling_number) { return ChildAndDirectionTablesType::siblingNumberToCoords(sibling_number); };
   // Transform (i,j,k) coordinates to sibling number
-  inline int coordsToSiblingNumber(const unsigned sibling_coord_1, const unsigned sibling_coord_2, const unsigned sibling_coord_3) const;
+  static int coordsToSiblingNumber(const unsigned sibling_coord_1, const unsigned sibling_coord_2, const unsigned sibling_coord_3) { return ChildAndDirectionTablesType::coordsToSiblingNumber(sibling_coord_1, sibling_coord_2, sibling_coord_3); };
  private:
   // For a given sibling number, determine if the neighbor cell in a given direction:
   // - shares the same parent cell (true) or belongs to another cell (false)
   // - it's sibling number
-  std::pair<bool, unsigned> getDirectNeighborCellInfos(const int sibling_number, const int dir) const;
+  static std::pair<bool, unsigned> getDirectNeighborCellInfos(const int sibling_number, const int dir) { return ChildAndDirectionTablesType::directNeighborCellInfos(sibling_number, dir); };
+  // convert two direct neighbor directions to a plane direction
+  static int directToPlaneDir(const int dir1, const int dir2) { return ChildAndDirectionTablesType::directToPlaneDir(dir1, dir2); };
   // Get a pointer to a neighbor cell accessible by 2 consecutive othogonal direction (corners in 2D)
   std::shared_ptr<Cell> getPlaneNeighborCell(const int sibling_number, const int dir) const;
-  // convert two direct neighbor directions to a plane direction
-  int directToPlaneDir(const int dir1, const int dir2) const;
   // Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)
   std::shared_ptr<Cell> getVolumeNeighborCell(const int sibling_number, const int dir) const;
   // Flags propagation from parent to children
