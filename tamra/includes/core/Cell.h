@@ -201,7 +201,10 @@ class Cell {
   //│  +X +Y +Z  │  Nx>0 Ny>0 Nz>0  │                                  │
   //└────────────┴──────────────────┴──────────────────────────────────┘
   // Get a pointer to a neighbor cell
-  std::shared_ptr<Cell> getNeighborCell(const int dir) const;
+  std::shared_ptr<Cell> getNeighborCell(const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors = nullptr) const;
+  // Get a pointer to a neighbor cell and save it  to array for reuse
+  // If the neighbor was already computed, extract from cached_neighbors array
+  std::shared_ptr<Cell> getNeighborCellAndSave(const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors = nullptr) const;
   // Loop on all neighbor cells and apply a function
   void applyToNeighborCells(const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f, const bool only_once=false, const bool skip_null=false, const std::vector<int> &directions = ChildAndDirectionTablesType::all_directions) const;
   // Loop on all neighbor leaf cells in a specific direction and apply a function
@@ -232,9 +235,9 @@ class Cell {
   // convert two direct neighbor directions to a plane direction
   static int directToPlaneDir(const int dir1, const int dir2) { return ChildAndDirectionTablesType::directToPlaneDir(dir1, dir2); };
   // Get a pointer to a neighbor cell accessible by 2 consecutive othogonal direction (corners in 2D)
-  std::shared_ptr<Cell> getPlaneNeighborCell(const int sibling_number, const int dir) const;
+  std::shared_ptr<Cell> getPlaneNeighborCell(const int sibling_number, const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const;
   // Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)
-  std::shared_ptr<Cell> getVolumeNeighborCell(const int sibling_number, const int dir) const;
+  std::shared_ptr<Cell> getVolumeNeighborCell(const int sibling_number, const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const;
   // Flags propagation from parent to children
   void setIndicatorFromParent(const Cell &parent_cell);
 };

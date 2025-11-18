@@ -269,7 +269,7 @@ bool Cell<Nx, Ny, Nz, DataType>::coarsen(const int min_level, InterpolationFunct
 //└────────────┴──────────────────┴──────────────────────────────────┘
 // Get a pointer to a neighbor cell
 template<int Nx, int Ny, int Nz, typename DataType>
-std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeighborCell(const int dir) const {
+std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeighborCell(const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
   if (dir<0 || dir>=number_volume_neighbors)
     throw std::runtime_error("Invalid neighbor direction in Cell::getNeighborCell()");
 
@@ -294,19 +294,45 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeigh
     }
     return neighbor_cell;
   } else if (dir < number_plane_neighbors)
-    return getPlaneNeighborCell(sibling_number, dir);
+    return getPlaneNeighborCell(sibling_number, dir, cached_neighbors);
   else
-    return getVolumeNeighborCell(sibling_number, dir);
+    return getVolumeNeighborCell(sibling_number, dir, cached_neighbors);
 }
+
+// Get a pointer to a neighbor cell and save it  to array for reuse
+// If the neighbor was already computed, extract from cached_neighbors array
+template<int Nx, int Ny, int Nz, typename DataType>
+std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeighborCellAndSave(const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
+  // Check if direction already cached
+  std::shared_ptr<Cell> this_cell = thisAsSmartPtr();
+  if (cached_neighbors && dir < number_plane_neighbors && (*cached_neighbors)[dir] != this_cell)
+    return (*cached_neighbors)[dir];
+
+  // Compute neighbors
+  std::shared_ptr<Cell> neighbor_cell = getNeighborCell(dir, cached_neighbors);
+
+  // Cache the neighbor cell
+  if (cached_neighbors && dir < number_plane_neighbors)
+    (*cached_neighbors)[dir] = neighbor_cell;
+
+  return neighbor_cell;
+};
 
 // Loop on all neighbor leaf cells and apply a function
 template<int Nx, int Ny, int Nz, typename DataType>
 void Cell<Nx, Ny, Nz, DataType>::applyToNeighborCells(const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f, const bool only_once, const bool skip_null, const std::vector<int> &directions) const {
+  // If a neighbor is used more than once in the process it can be retrived from this array
+  std::array<std::shared_ptr<Cell>, number_plane_neighbors> cached_neighbors;
+  cached_neighbors.fill(thisAsSmartPtr());
+
+  // Cells already seen are saved in this set
   std::unordered_set<Cell*> cell_already_seen;
   cell_already_seen.reserve(ChildAndDirectionTablesType::max_number_neighbor_leaf_cells);
+
+  // Loop through all directions
   for (const unsigned dir : directions) {
     // Get the neighbor cell
-    std::shared_ptr<Cell> neighbor = getNeighborCell(dir);
+    std::shared_ptr<Cell> neighbor = getNeighborCellAndSave(dir, &cached_neighbors);
 
     // No neighbor cell in this direction
     if (!neighbor) {
@@ -351,38 +377,29 @@ void Cell<Nx, Ny, Nz, DataType>::applyToDirNeighborLeafCells(const unsigned dir,
 // Loop on all neighbor leaf cells and apply a function
 template<int Nx, int Ny, int Nz, typename DataType>
 void Cell<Nx, Ny, Nz, DataType>::applyToNeighborLeafCells(const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f, const bool only_once, const bool skip_null, const std::vector<int> &directions) const {
-  std::unordered_set<Cell*> cell_already_seen;
-  cell_already_seen.reserve(ChildAndDirectionTablesType::max_number_neighbor_leaf_cells);
-  for (const unsigned dir : directions) {
-    // Get the neighbor cell
-    std::shared_ptr<Cell> neighbor = getNeighborCell(dir);
-
-    // No neighbor cell in this direction
-    if (!neighbor) {
-      if (!skip_null)
-        f(thisAsSmartPtr(), nullptr, dir);
-      continue;
-    }
-
-    // The neighbor leaf cell has the same level
-    if (neighbor->isLeaf()) {
-      if (!only_once || !cell_already_seen.count(neighbor.get())) {
-        f(thisAsSmartPtr(), neighbor, dir);
-        if (only_once)
-          cell_already_seen.insert(neighbor.get());
+  applyToNeighborCells(
+    [&f](const std::shared_ptr<Cell> &c, const std::shared_ptr<Cell> &n, const unsigned &dir) {
+      // No neighbor cell in this direction
+      if (!n) {
+        f(c, nullptr, dir);
+        return;
       }
-      continue;
-    }
 
-    // The neighbor cell is higher level so we loop on its children
-    for (const auto &neighbor_child_cell : neighbor->getDirChildCells(dir)) {
-      if (!only_once || !cell_already_seen.count(neighbor_child_cell.get())) {
-        f(thisAsSmartPtr(), neighbor_child_cell, dir);
-        if (only_once)
-          cell_already_seen.insert(neighbor_child_cell.get());
+      // The neighbor leaf cell has the same level
+      if (n->isLeaf()) {
+        f(c, n, dir);
+        return;
       }
-    }
-  }
+
+      // The neighbor cell is higher level so we loop on its children
+      for (const auto &neighbor_child_cell : n->getDirChildCells(dir)) {
+        f(c, neighbor_child_cell, dir);
+      }
+    },
+    only_once, // Only once per cell
+    skip_null, // Skip nullptr values
+    directions
+  );
 }
 
 //Apply extrapolation function to all non-leaf descendent cells recursively
@@ -463,7 +480,7 @@ bool Cell<Nx, Ny, Nz, DataType>::verifyCoarsenNeighbors() {
 
 // Get a pointer to a neighbor cell accessible by 2 consecutive othogonal direction (corners in 2D)
 template<int Nx, int Ny, int Nz, typename DataType>
-std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getPlaneNeighborCell(const int sibling_number, const int dir) const {
+std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getPlaneNeighborCell(const int sibling_number, const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
   // Split plane neighbor dir to 2 direct neighbor dirs
   const auto [dir1, dir2] = ChildAndDirectionTablesType::planeToDirectDirs(dir);
 
@@ -471,8 +488,8 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getPlane
   const auto [neighbor_is_sibling1, neighbor_sibling_number1] = getDirectNeighborCellInfos(sibling_number, dir1);
   const bool neighbor_is_sibling2 = std::get<0>(getDirectNeighborCellInfos(sibling_number, dir2));
 
-  std::shared_ptr<Cell> neighbor_cell1 = getNeighborCell(dir1),
-                        neighbor_cell2 = getNeighborCell(dir2);
+  std::shared_ptr<Cell> neighbor_cell1 = getNeighborCellAndSave(dir1, cached_neighbors),
+                        neighbor_cell2 = getNeighborCellAndSave(dir2, cached_neighbors);
   if (!neighbor_cell1 && !neighbor_cell2)
     return nullptr;
   else if (neighbor_is_sibling1) // Going through the sibling first ensure the good neighbor
@@ -499,39 +516,34 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getPlane
 
 // Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)
 template<int Nx, int Ny, int Nz, typename DataType>
-std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getVolumeNeighborCell(const int sibling_number, const int dir) const {
+std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getVolumeNeighborCell(const int sibling_number, const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
   const auto [dir1, dir2, dir3] = ChildAndDirectionTablesType::volumeToDirectDirs(dir);
-
-  // Get the neighbors infos in each directions
-  const auto [neighbor_is_sibling1, neighbor_sibling_number1] = getDirectNeighborCellInfos(sibling_number, dir1);
-  const bool neighbor_is_sibling2 = std::get<0>(getDirectNeighborCellInfos(sibling_number, dir2));
-  const bool neighbor_is_sibling3 = std::get<0>(getDirectNeighborCellInfos(sibling_number, dir3));
 
   // If one of the neighbor cells have the same level, then finding the target neighbor cell is easier:
   // - get the direct neighbor cell of same level in direction dir in {dir1, dir2, dir3}
   // - get the target cell by getting its plane neighbor cell in directions {dir1, dir2, dir3} - {dir}
-  std::shared_ptr<Cell> neighbor_cell1 = getNeighborCell(dir1);
+  std::shared_ptr<Cell> neighbor_cell1 = getNeighborCellAndSave(dir1, cached_neighbors);
   if (neighbor_cell1 && neighbor_cell1->getLevel() >= getLevel()) {
     std::shared_ptr<Cell> neighbor_cell1_23 = neighbor_cell1->getNeighborCell(directToPlaneDir(dir2, dir3));
     if (neighbor_cell1_23)
       return neighbor_cell1_23;
   }
-  std::shared_ptr<Cell> neighbor_cell2 = getNeighborCell(dir2);
+  std::shared_ptr<Cell> neighbor_cell2 = getNeighborCellAndSave(dir2, cached_neighbors);
   if (neighbor_cell2 && neighbor_cell2->getLevel() >= getLevel()) {
     std::shared_ptr<Cell> neighbor_cell2_13 = neighbor_cell2->getNeighborCell(directToPlaneDir(dir1, dir3));
     if (neighbor_cell2_13)
       return neighbor_cell2_13;
   }
-  std::shared_ptr<Cell> neighbor_cell3 = getNeighborCell(dir3);
+  std::shared_ptr<Cell> neighbor_cell3 = getNeighborCellAndSave(dir3, cached_neighbors);
   if (neighbor_cell3 && neighbor_cell3->getLevel() >= getLevel()) {
     std::shared_ptr<Cell> neighbor_cell3_12 = neighbor_cell3->getNeighborCell(directToPlaneDir(dir1, dir2));
     if (neighbor_cell3_12)
       return neighbor_cell3_12;
   }
 
-  std::shared_ptr<Cell> neighbor_cell12 = getPlaneNeighborCell(sibling_number, directToPlaneDir(dir1, dir2)),
-                        neighbor_cell13 = getPlaneNeighborCell(sibling_number, directToPlaneDir(dir1, dir3)),
-                        neighbor_cell23 = getPlaneNeighborCell(sibling_number, directToPlaneDir(dir2, dir3));
+  std::shared_ptr<Cell> neighbor_cell12 = getNeighborCellAndSave(directToPlaneDir(dir1, dir2), cached_neighbors),
+                        neighbor_cell13 = getNeighborCellAndSave(directToPlaneDir(dir1, dir3), cached_neighbors),
+                        neighbor_cell23 = getNeighborCellAndSave(directToPlaneDir(dir2, dir3), cached_neighbors);
   if (!neighbor_cell12 && !neighbor_cell13 && !neighbor_cell23)
     return nullptr;
   else if (neighbor_cell12==neighbor_cell13) // If two of the plane neighbors are the same, then they all direct to the target neighbor cell
@@ -540,8 +552,6 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getVolum
     return neighbor_cell12;
   else if (neighbor_cell13==neighbor_cell23) // If two of the plane neighbors are the same, then they all direct to the target neighbor cell
     return neighbor_cell13;
-  else if (neighbor_is_sibling1 && neighbor_is_sibling2 && neighbor_is_sibling3) // Id all direct neighbors are sibling then the target neighbor cell also
-    return neighbor_cell12->getNeighborCell(dir3);
 
   std::shared_ptr<Cell> neighbor_cell123 = neighbor_cell12 ? neighbor_cell12->getNeighborCell(dir3) : nullptr,
                         neighbor_cell132 = neighbor_cell13 ? neighbor_cell13->getNeighborCell(dir2) : nullptr,
