@@ -7,7 +7,7 @@
 #include <core/manager/CellIdManager.h>
 #include <core/RootCellEntry.h>
 #include <core/Tree.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 
 bool testNeighborLeafsQuadtree();
 bool testNeighborsOctreeOneLevel();

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <linear_algebra/jacobi.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 
 void registerCoreCellOctParallelTests() {
   int rank, size;

@@ -5,7 +5,7 @@
 #include <core/Cell.h>
 #include <core/Tree.h>
 #include <core/RootCellEntry.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 
 void registerCoreManagerRefineParallelTests() {
   int rank, size;

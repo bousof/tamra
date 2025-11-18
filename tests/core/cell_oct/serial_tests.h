@@ -5,7 +5,7 @@
 #include <core/Oct.h>
 #include <core/Tree.h>
 #include <core/RootCellEntry.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 
 bool testCoreTemplateClasses();
 bool testCellAndOctBasicBehavior();

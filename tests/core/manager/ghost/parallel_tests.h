@@ -5,7 +5,7 @@
 #include <core/Tree.h>
 #include <memory>
 #include <parallel/allreduce.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 #include <vector>
 
 bool ghostOneRoot1DParallel(int rank, int size);

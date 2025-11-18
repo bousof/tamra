@@ -6,7 +6,7 @@
 #include <core/Tree.h>
 #include <memory>
 #include <parallel/allreduce.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 #include <vector>
 
 bool balanceEmptyPartitionsParallel(int rank, int size);

@@ -7,7 +7,7 @@
 #include <parallel/allreduce.h>
 #include <parallel/alltoall.h>
 #include <parallel/alltoallv.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 #include <vector>
 
 bool testIntAlltoall(int rank, int size);

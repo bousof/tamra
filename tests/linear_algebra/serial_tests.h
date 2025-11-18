@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <linear_algebra/jacobi.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 
 bool testJacobi2x2Serial1();
 bool testJacobi2x2Serial100();

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <linear_algebra/jacobi.h>
 #include <parallel/allreduce.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 #include <vector>
 
 bool testJacobiNoOverlapParallel100(int rank, int size);

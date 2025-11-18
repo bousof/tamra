@@ -6,7 +6,7 @@
 #include <iostream>
 #include <parallel/allreduce.h>
 #include <parallel/bcast.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 #include <vector>
 
 bool testVectorUnsignedBcastCount(int rank, int size);

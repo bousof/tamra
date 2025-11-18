@@ -5,7 +5,7 @@
 #include <core/manager/CellIdManager.h>
 #include <core/Tree.h>
 #include <core/RootCellEntry.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 
 bool cellIDInversion2x2();
 bool cellIDInversion3x2();

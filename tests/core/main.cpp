@@ -1,5 +1,5 @@
 #include <parallel/wrapper.h>
-#include <testing/UnitTestRegistry.h>
+#include <UnitTestRegistry.h>
 #include "test.h"
 
 int main(int argc, char** argv) {

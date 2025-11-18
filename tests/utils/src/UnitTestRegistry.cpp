@@ -1,4 +1,4 @@
-#include "../../includes/testing/UnitTestRegistry.h"
+#include "../includes/UnitTestRegistry.h"
 
 //***********************************************************//
 //  DATA                                                     //
