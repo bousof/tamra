@@ -109,7 +109,7 @@ bool testCellSplitting() {
 // Test recursive splitting to deeper levels
 bool testRecursiveSplitting() {
   using CellType = Cell<2,2>; // 2D
-  const int max_level = 3;
+  const unsigned max_level{3};
 
   auto root = std::make_shared<CellType>(nullptr);
   auto children = root->splitRoot(max_level, root);
@@ -138,7 +138,7 @@ bool testRecursiveSplitting() {
 // structure  ->  |___|___|_______|
 bool testRecursiveSplittingPropagation1D() {
   using CellType = Cell<2>; // 1D
-  const int max_level = 3;
+  const unsigned max_level{3};
 
   // Create initial tree
   auto root = std::make_shared<CellType>(nullptr);
@@ -170,7 +170,7 @@ bool testRecursiveSplittingPropagation1D() {
 //                |___|___|_______|
 bool testRecursiveSplittingPropagation2DPlane() {
   using CellType = Cell<2, 2>; // 2D
-  const int max_level = 3;
+  const unsigned max_level{3};
 
   // Create initial tree
   auto root = std::make_shared<CellType>(nullptr);
@@ -206,7 +206,7 @@ bool testRecursiveSplittingPropagation2DPlane() {
 //                |_______|___|___|
 bool testRecursiveSplittingPropagation2DDirect() {
   using CellType = Cell<2, 2>; // 2D
-  const int max_level = 3;
+  const unsigned max_level{3};
 
   // Create initial tree
   auto root = std::make_shared<CellType>(nullptr);
@@ -233,7 +233,7 @@ bool testRecursiveSplittingPropagation2DDirect() {
 // Test coarsening a cell
 bool testCoarsening() {
   using CellType = Cell<2,2>; // 2D
-  const int min_level = 0;
+  const unsigned min_level{0};
 
   auto root = std::make_shared<CellType>(nullptr);
   root->splitRoot(2, root);
@@ -283,7 +283,7 @@ bool testGetSiblingNumber() {
   auto oct = root->getChildOct();
 
   bool passed = true;
-  for (int i{0}; i<children.size(); ++i) {
+  for (size_t i{0}; i<children.size(); ++i) {
     auto actual_index = oct->getSiblingNumber(children[i].get());
     passed &= (i == actual_index);
   }

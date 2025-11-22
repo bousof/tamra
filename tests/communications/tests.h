@@ -1,16 +1,14 @@
-//#define USE_MPI
-
-#ifndef USE_MPI
-
-void registerCommunicationsAllToAllTests() {}
-void registerCommunicationsBcastTests() {}
-
-#else
+#ifdef USE_MPI
 
 #include "alltoall/tests.h"
 #include "bcast/tests.h"
 
-#endif
+#else
+
+void registerCommunicationsAllToAllTests() {}
+void registerCommunicationsBcastTests() {}
+
+#endif // USE_MPI
 
 void registerCommunicationsTests() {
   registerCommunicationsAllToAllTests();

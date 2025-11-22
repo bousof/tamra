@@ -17,9 +17,9 @@ class CellIdManager {
 	//***********************************************************//
  protected:
   // Number of root cells
-  const int number_root_cells;
+  const unsigned number_root_cells;
   // Tree max level
-  const int max_level;
+  const unsigned max_level;
   // Cell ID unsigned int slots
   unsigned cell_id_size;
 
@@ -28,7 +28,7 @@ class CellIdManager {
   //***********************************************************//
  public:
   // Constructor
-  CellIdManager(const int number_root_cells, const int max_level);
+  CellIdManager(const unsigned number_root_cells, const unsigned max_level);
   // Destructor
   ~CellIdManager() = default;
 
@@ -50,7 +50,7 @@ class CellIdManager {
   // Generate the IDs of the first and last leaf cells of the
   // partitions obatined by splitting into equal parts and taking
   // the n-th one
-  std::vector<std::vector<unsigned>> getEqualPartitions(const int level, const int size) const;
+  std::vector<std::vector<unsigned>> getEqualPartitions(const unsigned level, const unsigned size) const;
   // Moves the cell ID to child cell
   void toChild(std::vector<unsigned> &cell_id, const unsigned order) const;
   // Moves the cell ID to parent cell
@@ -81,18 +81,18 @@ class CellIdManager {
   // Extract the cell_id level
   virtual int getIdLevel(const std::vector<unsigned> &cell_id) const;
   // Edit the cell_id level
-  virtual void setIdLevel(std::vector<unsigned> &cell_id, const int level) const;
+  virtual void setIdLevel(std::vector<unsigned> &cell_id, const unsigned level) const;
   // Extract the cell_id root index
   virtual unsigned getIdRoot(const std::vector<unsigned> &cell_id) const;
   // Edit the cell_id root index and return the old one
   virtual void setIdRoot(std::vector<unsigned> &cell_id, const unsigned root_number) const;
   // Extract the cell_id child index
-  virtual unsigned getIdChild(const std::vector<unsigned> &cell_id, const int level) const;
+  virtual unsigned getIdChild(const std::vector<unsigned> &cell_id, const unsigned level) const;
   // Edit the cell_id child index and return the old one
-  virtual void setIdChild(std::vector<unsigned> &cell_id, const int level, const unsigned child_index) const;
+  virtual void setIdChild(std::vector<unsigned> &cell_id, const unsigned level, const unsigned child_index) const;
  private:
   // Moves the cell ID to a leaf cell
-  void toLeaf(std::vector<unsigned> &cell_id, const int sweep_level, const bool reverse) const;
+  void toLeaf(std::vector<unsigned> &cell_id, const unsigned sweep_level, const bool reverse) const;
 };
 
 #include "CellIdManager.tpp"

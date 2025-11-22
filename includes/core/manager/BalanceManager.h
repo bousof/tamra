@@ -26,20 +26,20 @@ class BalanceManager {
   //  VARIABLES                                                //
   //***********************************************************//
   // Minimum mesh level
-  const int min_level;
+  const unsigned min_level;
   // Maximum mesh level
-  const int max_level;
+  const unsigned max_level;
   // Process rank
-  const int rank;
+  const unsigned rank;
   // Number of process
-  const int size;
+  const unsigned size;
 
   //***********************************************************//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
   //***********************************************************//
  public :
   // Constructor
-  BalanceManager(int min_level, int max_level, int rank, int size);
+  BalanceManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
   // Destructor
   ~BalanceManager();
 
@@ -50,7 +50,7 @@ class BalanceManager {
   // Determine if load balancing is needed
   std::pair<bool, std::vector<double>> isLoadBalancingNeeded(const std::vector<std::shared_ptr<CellType>> &root_cells, const double max_pct_unbalance) const;
   // Performs load balancing between processes
-	void loadBalance(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const double max_pct_unbalance = 0., ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) {}) const;
+	void loadBalance(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const double max_pct_unbalance = 0., ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }) const;
  private:
   // Determine the local load for this process
   double computeLoad(const std::shared_ptr<CellType> &cell) const;

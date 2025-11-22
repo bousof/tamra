@@ -40,13 +40,13 @@ class Tree {
   //***********************************************************//
  private:
   // Minimum mesh level
-  int min_level;
+  unsigned min_level;
   // Maximum mesh level
-  int max_level;
+  unsigned max_level;
   // Process rank
-  const int rank;
+  const unsigned rank;
   // Number of process
-  const int size;
+  const unsigned size;
   // Root cells
   std::vector<std::shared_ptr<CellType>> root_cells;
   // Load balancing manager
@@ -65,7 +65,7 @@ class Tree {
   //***********************************************************//
  public:
   // Constructor
-  Tree(const int min_level = 1, const int max_level = 2, const int rank = 0, const int size = 1);
+  Tree(const unsigned min_level = 1, const unsigned max_level = 2, const unsigned rank = 0, const unsigned size = 1);
   // Destructor
   ~Tree();
   // Create root cell
@@ -78,9 +78,9 @@ class Tree {
   // Get root cells
   const std::vector<std::shared_ptr<CellType>>& getRootCells() const;
   // Get min mesh level
-  int getMinLevel() const;
+  unsigned getMinLevel() const;
   // Get max mesh level
-  int getMaxLevel() const;
+  unsigned getMaxLevel() const;
   // Get ghost manager
   GhostManagerType getGhostManager() const;
   // Default directions
@@ -102,21 +102,21 @@ class Tree {
   void meshAtMinLevel(TreeIteratorType &iterator);
 
   // Split all the leaf cells belonging to this proc that need to be refined and are not at max level
-  bool refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) {});
+  bool refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; });
 
   // Creation of ghost cells
-  GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {}, const std::vector<int> &directions = defaultDirections());
+  GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }, const std::vector<int> &directions = defaultDirections());
   // Exchange ghost cell values
-  void exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {});
+  void exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; });
 
   // Redistribute cells among processes to balance computation load
-  void loadBalance(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {}, const double max_pct_unbalance = 0.1);
+  void loadBalance(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }, const double max_pct_unbalance = 0.1);
 
   //--- Propagating -------------------------------------------//
   void propagate() {};
 
   //--- Coarsening --------------------------------------------//
-  bool coarsen(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {});
+  bool coarsen(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; });
 
   //--- Computing SFC indices ---------------------------------//
   void boundaryConditions() {};

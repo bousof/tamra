@@ -1,14 +1,12 @@
-//#define USE_MPI
-
-#ifndef USE_MPI
-
-void registerCoreManagerBalanceParallelTests() {}
-
-#else
+#ifdef USE_MPI
 
 #include "parallel_tests.h"
 
-#endif
+#else
+
+void registerCoreManagerBalanceParallelTests() {}
+
+#endif // USE_MPI
 
 void registerCoreManagerBalanceTests() {
   registerCoreManagerBalanceParallelTests();

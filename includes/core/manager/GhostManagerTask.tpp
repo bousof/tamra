@@ -184,13 +184,13 @@ bool GhostManagerTask<GhostManagerType>::applyExtrapolationFunctionRecurs(const 
 
 template<typename GhostManagerType>
 void GhostManagerTask<GhostManagerType>::continueExtrapolateTaskOwned(std::vector<bool> &resolution_flags) {
-  for (int i{0}; i<extrapolate_owned_cells.size(); ++i)
+  for (size_t i{0}; i<extrapolate_owned_cells.size(); ++i)
     resolution_flags[i] = applyExtrapolationFunctionRecurs(extrapolate_owned_cells[i], owned_extrapolation_function);
 }
 
 template<typename GhostManagerType>
 void GhostManagerTask<GhostManagerType>::continueExtrapolateTaskGhost(std::vector<bool> &resolution_flags) {
-  for (int i{0}; i<extrapolate_ghost_cells.size(); ++i)
+  for (size_t i{0}; i<extrapolate_ghost_cells.size(); ++i)
     resolution_flags[i] = applyExtrapolationFunctionRecurs(extrapolate_ghost_cells[i], ghost_extrapolation_function);
 }
 

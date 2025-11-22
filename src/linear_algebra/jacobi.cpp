@@ -4,14 +4,14 @@ std::vector<double> jacobiIteration(const Eigen::SparseMatrix<double, Eigen::Row
                                     const std::vector<double> &b_local,
                                     const std::vector<double> &x_local,
                                     const std::unordered_map<int, double> &x_lacking,
-                                    const int rank, // Default process rank
-                                    const int col_offset) { // Number of rows
+                                    const unsigned rank, // Default process rank
+                                    const unsigned col_offset) { // Number of rows
 
   // Number of local rows owned by this rank
   const int nb_local_rows = A_local.rows();
   const int col_max = col_offset + nb_local_rows;
   std::vector<double> x_next(nb_local_rows);
-  for (int i{0}; i<A_local.rows(); ++i) {
+  for (long i{0}; i<A_local.rows(); ++i) {
     double diag = 0.0, sum = 0.0;
 
     for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(A_local, i); it; ++it) {
@@ -38,13 +38,13 @@ std::vector<double> jacobiIteration(const Eigen::SparseMatrix<double, Eigen::Row
 std::vector<double> sparseJacobi(const Eigen::SparseMatrix<double, Eigen::RowMajor> &A,
                                  const std::vector<double> &b,
                                  const std::vector<double> &x,
-                                 const int max_iterations) {
+                                 const unsigned max_iterations) {
 
   const int nb_rows = A.rows();
   std::vector<double> x_next = x;
   x_next.resize(nb_rows);
 
-  for (int iter{0}; iter<max_iterations; ++iter)
+  for (unsigned iter{0}; iter<max_iterations; ++iter)
     x_next = jacobiIteration(A, b, x_next);
 
   return x_next;
@@ -52,7 +52,7 @@ std::vector<double> sparseJacobi(const Eigen::SparseMatrix<double, Eigen::RowMaj
 
 #ifdef USE_MPI
 
-inline int owner_rank(int col, const std::vector<int> &row_cumsum) {
+inline unsigned owner_rank(unsigned col, const std::vector<int> &row_cumsum) {
   auto it = std::upper_bound(row_cumsum.begin(), row_cumsum.end(), col);
   return std::distance(row_cumsum.begin(), it);
 }
@@ -60,8 +60,8 @@ inline int owner_rank(int col, const std::vector<int> &row_cumsum) {
 std::vector<double> parallelSparseJacobi(const Eigen::SparseMatrix<double, Eigen::RowMajor> &A_local,
                                          const std::vector<double> &b_local,
                                          const std::vector<double> &x_local,
-                                         const int max_iterations,
-                                         const int rank, const int size) {
+                                         const unsigned max_iterations,
+                                         const unsigned rank, const unsigned size) {
 
   // If only one process run the sequential version
   if (size == 1)
@@ -78,16 +78,16 @@ std::vector<double> parallelSparseJacobi(const Eigen::SparseMatrix<double, Eigen
 
   // Compute index of rows to receive from each process
   std::vector<std::set<int>> recv_indexes_sets(size);
-  for (int i{0}; i<A_local.rows(); ++i)
+  for (long i{0}; i<A_local.rows(); ++i)
     for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(A_local, i); it; ++it) {
-      int p = owner_rank(it.col(), row_cumsum);
+      unsigned p = owner_rank(it.col(), row_cumsum);
       if (p != rank)
         recv_indexes_sets[p].insert(it.col());
     }
 
   std::vector<std::vector<int>> recv_indexes_buffers(size);
   std::vector<int> recv_indexes;
-  for (int p{0}; p<size; ++p) {
+  for (unsigned p{0}; p<size; ++p) {
     recv_indexes_buffers[p].assign(
       recv_indexes_sets[p].begin(),
       recv_indexes_sets[p].end()
@@ -113,17 +113,17 @@ std::vector<double> parallelSparseJacobi(const Eigen::SparseMatrix<double, Eigen
   std::unordered_map<int, double> x_lacking;
   std::vector<double> x_next = x_local;
   x_next.resize(nb_local_rows);
-  for (int iter{0}; iter<max_iterations; ++iter) {
-    for (int p{0}; p<size; ++p) {
+  for (unsigned iter{0}; iter<max_iterations; ++iter) {
+    for (unsigned p{0}; p<size; ++p) {
       send_values[p].resize(send_indexes[p].size());
-      for (int i{0}; i<send_indexes[p].size(); ++i)
+      for (size_t i{0}; i<send_indexes[p].size(); ++i)
         send_values[p][i] = x_next[send_indexes[p][i] - rows_offset];
     }
 
     vectorDoubleAlltoallv(send_values, recv_values);
 
     // Create a vector for storing lacking x values
-    for (int i{0}; i<recv_indexes.size(); ++i)
+    for (size_t i{0}; i<recv_indexes.size(); ++i)
       x_lacking[recv_indexes[i]] = recv_values[i];
 
       x_next = jacobiIteration(A_local, b_local, x_next, x_lacking, rank, rows_offset);
@@ -132,5 +132,16 @@ std::vector<double> parallelSparseJacobi(const Eigen::SparseMatrix<double, Eigen
   return x_next;
 }
 
-#endif
- 
+#else
+
+std::vector<double> parallelSparseJacobi(const Eigen::SparseMatrix<double, Eigen::RowMajor> &A_local,
+                                         const std::vector<double> &b_local,
+                                         const std::vector<double> &x_local,
+                                         const unsigned max_iterations,
+                                         const unsigned, const unsigned) {
+
+  // If MPI is not used, run the sequential version
+  return sparseJacobi(A_local, b_local, x_local, max_iterations);;
+}
+
+#endif // USE_MPI

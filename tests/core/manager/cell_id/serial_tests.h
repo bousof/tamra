@@ -34,7 +34,7 @@ bool cellIDInversion2x2() {
   auto A = std::make_shared<Cell2D>(nullptr);
 
   //Splitting some cells
-  int max_level = 2;
+  unsigned max_level{2};
   A->splitRoot(max_level, A);
   A->getChildCell(2)->split(max_level);
 
@@ -72,9 +72,9 @@ bool cellIDInversion3x2() {
   auto A = std::make_shared<Cell2D>(nullptr);
 
   //Splitting some cells
-  int max_level = 20;
+  unsigned max_level{20};
   auto child_cells = A->splitRoot(max_level, A);
-  for (int i{0}; i<(max_level-1); ++i)
+  for (unsigned i{0}; i<(max_level-1); ++i)
     child_cells = child_cells[0]->split(max_level);
 
   // Initialize iterator

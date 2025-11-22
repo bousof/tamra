@@ -89,7 +89,7 @@ bool testNeighborLeafsQuadtree() {
   std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Create the tree
-  int max_level = 2;
+  unsigned max_level{2};
   Tree<Cell2D> tree(1, max_level);
   tree.createRootCells(entries);
 
@@ -114,7 +114,7 @@ bool testNeighborLeafsQuadtree() {
   // Check neighbors in all directions
   bool passed = true;
   tree.applyToOwnedLeaves(
-    [&passed](const std::shared_ptr<Cell2D> &cell, unsigned i) mutable {
+    [&passed](const std::shared_ptr<Cell2D> &cell, unsigned) mutable {
       cell->applyToNeighborLeafCells(
         [&passed](const std::shared_ptr<Cell2D> &c, const std::shared_ptr<Cell2D> &n, const unsigned &dir) {
           // If no neighbor, then cooredinates corresponds to boundaries
@@ -637,7 +637,7 @@ bool testNeighborsOctreeOneLevel() {
   std::vector<RootCellEntry<Cell3D>> entries { eA, eB };
 
   // Create the tree
-  int max_level = 2;
+  unsigned max_level{2};
   Tree<Cell3D> tree(1, max_level);
   tree.createRootCells(entries);
 
@@ -670,7 +670,7 @@ bool testNeighborsOctreeOneLevel() {
   // Check neighbors in all directions
   bool passed = true;
   tree.applyToOwnedLeaves(
-    [&passed](const std::shared_ptr<Cell3D> &cell, unsigned i) mutable {
+    [&passed](const std::shared_ptr<Cell3D> &cell, unsigned) mutable {
       if (!passed) return;
       passed &= check_octree_cell<Cell3D>(cell, 2*Nx*Nx, Ny*Ny, Nz*Nz);
     }
@@ -713,7 +713,7 @@ bool testNeighborsOctreeDeep() {
   std::vector<RootCellEntry<Cell3D>> entries { eA, eB };
 
   // Create the tree
-  int max_level = 4;
+  unsigned max_level{4};
   Tree<Cell3D> tree(1, max_level);
   tree.createRootCells(entries);
 
@@ -752,7 +752,7 @@ bool testNeighborsOctreeDeep() {
   // Check neighbors in all directions
   bool passed = true;
   tree.applyToOwnedLeaves(
-    [&passed](const std::shared_ptr<Cell3D> &cell, unsigned i) mutable {
+    [&passed](const std::shared_ptr<Cell3D> &cell, unsigned) mutable {
       if (!passed) return;
       passed &= check_octree_cell<Cell3D>(cell, 2*Nx*Nx*Nx*Nx, Ny*Ny*Ny*Ny, Nz*Nz*Nz*Nz);
     }

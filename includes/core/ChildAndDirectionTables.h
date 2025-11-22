@@ -32,19 +32,19 @@ auto compute_dir_sibling_numbers();
 template<int Nx, int Ny, int Nz>
 struct ChildAndDirectionTables {
  public:
-  static constexpr int number_dimensions = (Nx>0) + (Ny>0) + (Nz>0);
-  static constexpr int number_split_dimensions = (Nx>1) + (Ny>1) + (Nz>1);
-  static constexpr int number_neighbors = 2 * number_dimensions;
-  static constexpr int number_plane_neighbors = number_dimensions==3 ? 18 : number_dimensions==2 ? 8 : 2;
-  static constexpr int number_volume_neighbors = number_dimensions==3 ? 26 : number_dimensions==2 ? 8 : 2;
+  static constexpr unsigned number_dimensions = (Nx>0) + (Ny>0) + (Nz>0);
+  static constexpr unsigned number_split_dimensions = (Nx>1) + (Ny>1) + (Nz>1);
+  static constexpr unsigned number_neighbors = 2 * number_dimensions;
+  static constexpr unsigned number_plane_neighbors = number_dimensions==3 ? 18 : number_dimensions==2 ? 8 : 2;
+  static constexpr unsigned number_volume_neighbors = number_dimensions==3 ? 26 : number_dimensions==2 ? 8 : 2;
   static constexpr unsigned number_of_directions = number_dimensions==3 ? 26 : number_dimensions==2 ? 8 : 2;
-  static constexpr int N1 = Nx>0 ? Nx : Ny>0 ? Ny : Nz;
-  static constexpr int N2 = (Nx>0 && Ny>0) ? Ny : number_dimensions>1 ? Nz : 1;
-  static constexpr int N3 = number_dimensions==3 ? Nz : 1;
-  static constexpr int number_children = N1 * N2 * N3;
-  static constexpr int N12 = N1 * N2;
-  static constexpr int N13 = N1 * N3;
-  static constexpr int N23 = N2 * N3;
+  static constexpr unsigned N1 = Nx>0 ? Nx : Ny>0 ? Ny : Nz;
+  static constexpr unsigned N2 = (Nx>0 && Ny>0) ? Ny : number_dimensions>1 ? Nz : 1;
+  static constexpr unsigned N3 = number_dimensions==3 ? Nz : 1;
+  static constexpr unsigned number_children = N1 * N2 * N3;
+  static constexpr unsigned N12 = N1 * N2;
+  static constexpr unsigned N13 = N1 * N3;
+  static constexpr unsigned N23 = N2 * N3;
   static constexpr unsigned max_number_neighbor_leaf_cells_1d = 2;
   static constexpr unsigned max_number_neighbor_leaf_cells_2d = 4 + 2*(N1+N2);
   static constexpr unsigned max_number_neighbor_leaf_cells_3d = 8 + 4*(N1+N2+N3) + 2*(N1*N2+N1*N3+N2*N3);
@@ -63,19 +63,19 @@ struct ChildAndDirectionTables {
   //***********************************************************//
  public:
   // Transform sibling number to (i,j,k) coordinates
-  static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const int sibling_number);
+  static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const unsigned sibling_number);
   // Transform (i,j,k) coordinates to sibling number
   static unsigned coordsToSiblingNumber(const unsigned sibling_coord_1, const unsigned sibling_coord_2, const unsigned sibling_coord_3);
   // For a given sibling number, determine if the neighbor cell in a given direction:
   // - shares the same parent cell (true) or belongs to another cell (false)
   // - its sibling number
-  static std::pair<bool, unsigned> directNeighborCellInfos(const int sibling_number, const int dir);
+  static std::pair<bool, unsigned> directNeighborCellInfos(const unsigned sibling_number, const unsigned dir);
   // Convert two direct neighbor directions to a plane direction
-  static int directToPlaneDir(const int dir1, const int dir2);
+  static unsigned directToPlaneDir(const unsigned dir1, const unsigned dir2);
   // Convert a plane direction to a pair of direct neighbor directions
-  static std::pair<int, int> planeToDirectDirs(const int dir);
+  static std::pair<unsigned, unsigned> planeToDirectDirs(const unsigned dir);
   // Convert a volume direction to a triplet of direct neighbor directions
-  static std::tuple<int, int, int> volumeToDirectDirs(const int dir);
+  static std::tuple<unsigned, unsigned, unsigned> volumeToDirectDirs(const unsigned dir);
 };
 
 
@@ -89,16 +89,16 @@ auto compute_dir_sibling_numbers() {
   static constexpr int N1 = ChildAndDirectionTablesType::N1;
   static constexpr int N2 = ChildAndDirectionTablesType::N2;
   static constexpr int N3 = ChildAndDirectionTablesType::N3;
-  static constexpr int number_dimensions = ChildAndDirectionTablesType::number_dimensions;
-  static constexpr int number_neighbors = ChildAndDirectionTablesType::number_neighbors;
-  static constexpr int number_plane_neighbors = ChildAndDirectionTablesType::number_plane_neighbors;
+  static constexpr unsigned number_dimensions = ChildAndDirectionTablesType::number_dimensions;
+  static constexpr unsigned number_neighbors = ChildAndDirectionTablesType::number_neighbors;
+  static constexpr unsigned number_plane_neighbors = ChildAndDirectionTablesType::number_plane_neighbors;
   static constexpr unsigned number_of_directions = number_dimensions==3 ? 26 : number_dimensions==2 ? 8 : 2;
 
   std::array<std::vector<unsigned>, number_of_directions> directional_sibling_numbers;
-  for (int dir{0}; dir<number_of_directions; ++dir) {
+  for (unsigned dir{0}; dir<number_of_directions; ++dir) {
     // Face sibling numbers
     if (dir < number_neighbors) {
-      int ni, Nj, Nk;
+      unsigned ni, Nj, Nk;
       switch (dir) {
         case 0: ni = N1-1; Nj = N2; Nk = N3; break;
         case 1: ni = 0;    Nj = N2; Nk = N3; break;
@@ -110,8 +110,8 @@ auto compute_dir_sibling_numbers() {
 
       std::vector<unsigned> face_sibling_numbers;
       face_sibling_numbers.reserve(Nj * Nk);
-      for (int j{0}; j<Nj; ++j)
-        for (int k{0}; k<Nk; ++k) {
+      for (unsigned j{0}; j<Nj; ++j)
+        for (unsigned k{0}; k<Nk; ++k) {
           if (dir < 2)
             face_sibling_numbers.push_back(ChildAndDirectionTablesType::coordsToSiblingNumber(ni, j, k));
           else if (dir < 4)
@@ -124,7 +124,7 @@ auto compute_dir_sibling_numbers() {
     }
     // Edge sibling numbers
     else if (dir >= number_neighbors && dir < number_plane_neighbors) {
-      int ni, nj, Nk;
+      unsigned ni, nj, Nk;
       switch (dir-number_neighbors) {
         case  0: ni = N1-1; nj = N2-1; Nk = N3; break;
         case  1: ni = 0;    nj = N2-1; Nk = N3; break;
@@ -142,7 +142,7 @@ auto compute_dir_sibling_numbers() {
 
       std::vector<unsigned> edge_sibling_numbers;
       edge_sibling_numbers.reserve(Nk);
-      for (int k{0}; k<Nk; ++k) {
+      for (unsigned k{0}; k<Nk; ++k) {
         if (dir-number_neighbors < 4)
           edge_sibling_numbers.push_back(ChildAndDirectionTablesType::coordsToSiblingNumber(ni, nj,  k));
         else if (dir-number_neighbors < 8)

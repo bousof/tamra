@@ -8,16 +8,19 @@
 
 #pragma once
 
-#include <mpi.h>
+#ifdef USE_MPI
+  #include <mpi.h>
+#endif // USE_MPI
 
 #include <functional>
 #include <iostream>
 #include <numeric>
 #include <vector>
-#include"ParallelData.h"
+
+#ifdef USE_MPI
 
 template<typename T>
-void scalarAllgather(const T &value, std::vector<T> &recv_buffer, const int size, const MPI_Datatype data_type) {
+void scalarAllgather(const T &value, std::vector<T> &recv_buffer, const unsigned size, const MPI_Datatype data_type) {
   static_assert(
     std::is_same<T, int>::value,
     "scalarAllgather only supports T = int"
@@ -28,10 +31,27 @@ void scalarAllgather(const T &value, std::vector<T> &recv_buffer, const int size
 	MPI_Allgather(&value, 1, data_type, recv_buffer.data(), 1, data_type, MPI_COMM_WORLD);
 }
 
-void intAllgather(const int &value, std::vector<int> &recv_buffer, const int size);
+#else
 
 template<typename T>
-void vectorAllgather(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const int size, const MPI_Datatype data_type) {
+void scalarAllgather(const T &value, std::vector<T> &recv_buffer, const unsigned) {
+  static_assert(
+    std::is_same<T, int>::value,
+    "scalarAllgather only supports T = int"
+  );
+
+	// No MPI, so one proc then only gather from itself
+  recv_buffer = { value };
+}
+
+#endif // USE_MPI
+
+void intAllgather(const int &value, std::vector<int> &recv_buffer, const unsigned size);
+
+#ifdef USE_MPI
+
+template<typename T>
+void vectorAllgather(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned size, const MPI_Datatype data_type) {
   static_assert(
     std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, unsigned>::value,
     "vectorAllgather only supports T = bool, double, or unsigned"
@@ -46,23 +66,49 @@ void vectorAllgather(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, c
 }
 
 template<typename T>
-void matrixAllgather(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const int size, const MPI_Datatype data_type) {
+void matrixAllgather(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned size, const MPI_Datatype data_type) {
   unsigned rowCount = send_buffers.size(),
            colCount = send_buffers[0].size();
   // Call the merging all to all function
 	std::vector<T> send_buffer, recv_buffer;
   send_buffer.reserve(rowCount * colCount);
-  for (int i{0}; i<rowCount; ++i)
+  for (unsigned i{0}; i<rowCount; ++i)
     send_buffer.insert(send_buffer.end(), send_buffers[i].begin(), send_buffers[i].end());
   vectorAllgather(send_buffer, recv_buffer, size, data_type);
 
   // Split received data from each processor
   recv_buffers.resize(size * rowCount);
-  for (int p{0}, i, j; p<size; ++p)
-    for (i=0; i<rowCount; ++i) {
-      j = p*rowCount+i;
+  for (unsigned p{0}; p<size; ++p)
+    for (unsigned i=0; i<rowCount; ++i) {
+      unsigned j = p*rowCount+i;
       recv_buffers[j].assign(recv_buffer.begin() + j*colCount, recv_buffer.begin() + (j+1)*colCount);
     }
 }
 
-void matrixUnsignedAllgather(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers, const int size);
+#else
+
+template<typename T>
+void vectorAllgather(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned) {
+  static_assert(
+    std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, unsigned>::value,
+    "vectorAllgather only supports T = bool, double, or unsigned"
+  );
+
+  // No MPI, so one proc then only gather from itself
+  recv_buffer = send_buffer;
+}
+
+template<typename T>
+void matrixAllgather(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned) {
+  static_assert(
+    std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, unsigned>::value,
+    "vectorAllgather only supports T = bool, double, or unsigned"
+  );
+
+  // No MPI, so one proc then only gather from itself
+  recv_buffers = send_buffers;
+}
+
+#endif // USE_MPI
+
+void matrixUnsignedAllgather(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers, const unsigned size);

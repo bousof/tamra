@@ -1,25 +1,19 @@
-#ifndef USE_MPI
-#  define USE_MPI
-#endif
-#include <mpi.h>
-
 #include <iostream>
 #include <parallel/allreduce.h>
 #include <parallel/bcast.h>
+#include <parallel/wrapper.h>
 #include <UnitTestRegistry.h>
 #include <vector>
 
-bool testVectorUnsignedBcastCount(int rank, int size);
-bool testVectorUnsignedBcastNoCount(int rank, int size);
-bool testMatrixUnsignedBcastCount(int rank, int size);
-bool testMatrixUnsignedBcastNoCount(int rank, int size);
+bool testVectorUnsignedBcastCount(const unsigned rank, const unsigned);
+bool testVectorUnsignedBcastNoCount(const unsigned rank, const unsigned);
+bool testMatrixUnsignedBcastCount(const unsigned rank, const unsigned);
+bool testMatrixUnsignedBcastNoCount(const unsigned rank, const unsigned);
 
 void registerCommunicationsBcastTests() {
-  int rank; int size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  const unsigned rank = mpi_rank(),
+                 size = mpi_size();
 
-  UnitTestRegistry::label = "P_" + std::to_string(rank) + ": ";
   UnitTestRegistry::registerParallelTest("Broadcast vector of unsigned (count known)", [=]() { return testVectorUnsignedBcastCount(rank, size); }, "communications/bcast");
   UnitTestRegistry::registerParallelTest("Broadcast vector of unsigned (count unknown)", [=]() { return testVectorUnsignedBcastNoCount(rank, size); }, "communications/bcast");
   UnitTestRegistry::registerParallelTest("Broadcast matrix of unsigned (count known)", [=]() { return testMatrixUnsignedBcastCount(rank, size); }, "communications/bcast");
@@ -27,8 +21,8 @@ void registerCommunicationsBcastTests() {
 }
 
 // Broadcast vector of unsigned (count known)
-bool testVectorUnsignedBcastCount(int rank, int size) {
-  int root = 0, count = 3;
+bool testVectorUnsignedBcastCount(const unsigned rank, const unsigned) {
+  unsigned root = 0, count = 3;
 
   std::vector<unsigned> buffer;
   if (rank == root)
@@ -44,8 +38,8 @@ bool testVectorUnsignedBcastCount(int rank, int size) {
 }
 
 // Broadcast vector of unsigned (count unknown)
-bool testVectorUnsignedBcastNoCount(int rank, int size) {
-  int root = 0;
+bool testVectorUnsignedBcastNoCount(const unsigned rank, const unsigned) {
+  unsigned root = 0;
 
   std::vector<unsigned> buffer;
   if (rank == root)
@@ -61,8 +55,8 @@ bool testVectorUnsignedBcastNoCount(int rank, int size) {
 }
 
 // Broadcast matrix of unsigned (count known)
-bool testMatrixUnsignedBcastCount(int rank, int size) {
-  int root = 0, rowCount = 4, colCount = 3;
+bool testMatrixUnsignedBcastCount(const unsigned rank, const unsigned) {
+  unsigned root = 0, rowCount = 4, colCount = 3;
 
   std::vector<std::vector<unsigned>> buffer;
   if (rank == root)
@@ -81,8 +75,8 @@ bool testMatrixUnsignedBcastCount(int rank, int size) {
 }
 
 // Broadcast matrix of unsigned (count unknown)
-bool testMatrixUnsignedBcastNoCount(int rank, int size) {
-  int root = 0;
+bool testMatrixUnsignedBcastNoCount(const unsigned rank, const unsigned) {
+  unsigned root = 0;
 
   std::vector<std::vector<unsigned>> buffer;
   if (rank == root)

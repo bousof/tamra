@@ -1,9 +1,12 @@
 #include <parallel/wrapper.h>
 #include <UnitTestRegistry.h>
+
 #include "test.h"
 
 int main(int argc, char** argv) {
   mpi_init(&argc, &argv);
+
+  UnitTestRegistry::label = "P_" + std::to_string(mpi_rank()) + ": ";
 
   // Registering tests
   registerCoreTests();

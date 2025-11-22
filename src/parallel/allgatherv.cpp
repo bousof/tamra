@@ -1,17 +1,25 @@
 #include "../../includes/parallel/allgatherv.h"
 
-std::vector<int> vectorDoubleAllgatherv(const std::vector<double> &send_buffer, std::vector<double> &recv_buffer, const int size) {
-	return vectorAllgatherv(send_buffer, recv_buffer, size, MPI_DOUBLE);
+std::vector<int> vectorDoubleAllgatherv(const std::vector<double> &send_buffer, std::vector<double> &recv_buffer, const unsigned size) {
+#ifdef USE_MPI
+  return vectorAllgatherv(send_buffer, recv_buffer, size, MPI_DOUBLE);
+#else
+  return vectorAllgatherv(send_buffer, recv_buffer, size);
+#endif // USE_MPI
 }
 
-std::vector<int> vectorUnsignedAllgatherv(const std::vector<unsigned> &send_buffer, std::vector<unsigned> &recv_buffer, const int size) {
-	return vectorAllgatherv(send_buffer, recv_buffer, size, MPI_UNSIGNED);
+std::vector<int> vectorUnsignedAllgatherv(const std::vector<unsigned> &send_buffer, std::vector<unsigned> &recv_buffer, const unsigned size) {
+#ifdef USE_MPI
+  return vectorAllgatherv(send_buffer, recv_buffer, size, MPI_UNSIGNED);
+#else
+  return vectorAllgatherv(send_buffer, recv_buffer, size);
+#endif // USE_MPI
 }
 
-void vectorDataAllgatherv(const std::vector<std::unique_ptr<ParallelData>> &send_buffer, std::vector<std::unique_ptr<ParallelData>> &recv_buffer, const int size, const ParallelDataFactory createData) {
+void vectorDataAllgatherv(const std::vector<std::unique_ptr<ParallelData>> &send_buffer, std::vector<std::unique_ptr<ParallelData>> &recv_buffer, const unsigned size, const ParallelDataFactory createData) {
   // Prepare data sizes for sharing between processors
 	std::vector<unsigned> send_counts(send_buffer.size());
-	for (unsigned i{0}; i<send_buffer.size(); ++i)
+	for (size_t i{0}; i<send_buffer.size(); ++i)
 		send_counts[i] = send_buffer[i]->getDataSize();
 
 	// Communication of data sizes between all processors
@@ -34,7 +42,7 @@ void vectorDataAllgatherv(const std::vector<std::unique_ptr<ParallelData>> &send
 	// Sending buffer, data come as a vector of doubles and must be transformed to a vector of ParallelData
 	recv_buffer.resize(recv_counts.size());
 	int data_counter = 0;
-	for (int i{0}; i<recv_counts.size(); ++i) {
+	for (size_t i{0}; i<recv_counts.size(); ++i) {
 		std::vector<double> subdata(&recv_data_buffer[data_counter], &recv_data_buffer[data_counter+recv_counts[i]]);
 		data_counter += recv_counts[i];
 

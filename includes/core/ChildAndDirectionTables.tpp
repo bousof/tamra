@@ -6,7 +6,7 @@
 
 // Transform sibling number to (i,j,k) coordinates
 template<int Nx, int Ny, int Nz>
-std::tuple<unsigned, unsigned, unsigned> ChildAndDirectionTables<Nx, Ny, Nz>::siblingNumberToCoords(const int sibling_number) {
+std::tuple<unsigned, unsigned, unsigned> ChildAndDirectionTables<Nx, Ny, Nz>::siblingNumberToCoords(const unsigned sibling_number) {
   unsigned sibling_coord_1 = sibling_number % N1,
             sibling_coord_2 = (sibling_number / N1) % N2,
             sibling_coord_3 = (sibling_number / (N12)) % N3;
@@ -24,7 +24,7 @@ unsigned ChildAndDirectionTables<Nx, Ny, Nz>::coordsToSiblingNumber(const unsign
 // - shares the same parent cell (true) or belongs to another cell (false)
 // - its sibling number
 template<int Nx, int Ny, int Nz>
-std::pair<bool, unsigned> ChildAndDirectionTables<Nx, Ny, Nz>::directNeighborCellInfos(const int sibling_number, const int dir) {
+std::pair<bool, unsigned> ChildAndDirectionTables<Nx, Ny, Nz>::directNeighborCellInfos(const unsigned sibling_number, const unsigned dir) {
   unsigned sibling_coord_1, sibling_coord_2, sibling_coord_3;
   std::tie(sibling_coord_1, sibling_coord_2, sibling_coord_3) = siblingNumberToCoords(sibling_number);
 
@@ -33,7 +33,7 @@ std::pair<bool, unsigned> ChildAndDirectionTables<Nx, Ny, Nz>::directNeighborCel
 
   // Determine if the neighbor sibling number and its sibling number
   bool neighbor_is_sibling = false;
-  const int Ndir = dir<2 ? N1 : dir < 4 ? N2 : N3;
+  const unsigned Ndir = dir<2 ? N1 : dir < 4 ? N2 : N3;
   if (dir%2 == 0) {
     neighbor_is_sibling = sibling_coord > 0;
     sibling_coord = (sibling_coord+Ndir-1) % Ndir;
@@ -48,8 +48,10 @@ std::pair<bool, unsigned> ChildAndDirectionTables<Nx, Ny, Nz>::directNeighborCel
 
 // Convert two direct neighbor directions to a plane direction
 template<int Nx, int Ny, int Nz>
-int ChildAndDirectionTables<Nx, Ny, Nz>::directToPlaneDir(const int dir1, const int dir2) {
-  int dir = number_neighbors;
+unsigned ChildAndDirectionTables<Nx, Ny, Nz>::directToPlaneDir(const unsigned dir1, const unsigned dir2) {
+  if (dir1 >= number_neighbors || dir2 >= number_neighbors)
+    throw std::runtime_error("Invalid direct neighbor direction in Oct::directToPlaneDir()");
+  unsigned dir = number_neighbors;
   if constexpr (number_dimensions == 2) {
     if (dir1==0 && dir2==2) dir = 0;
     if (dir1==1 && dir2==2) dir = 1;
@@ -74,9 +76,11 @@ int ChildAndDirectionTables<Nx, Ny, Nz>::directToPlaneDir(const int dir1, const 
 
 // Convert a plane direction to a pair of direct neighbor directions
 template<int Nx, int Ny, int Nz>
-std::pair<int, int> ChildAndDirectionTables<Nx, Ny, Nz>::planeToDirectDirs(const int dir) {
-  const int plane_dir = dir - number_neighbors;
-  int dir1, dir2;
+std::pair<unsigned, unsigned> ChildAndDirectionTables<Nx, Ny, Nz>::planeToDirectDirs(const unsigned dir) {
+  if (dir < number_neighbors || dir >= number_plane_neighbors)
+    throw std::runtime_error("Invalid plane neighbor direction in Oct::planeToDirectDirs()");
+  const unsigned plane_dir = dir - number_neighbors;
+  unsigned dir1, dir2;
   if (plane_dir < 4 && Nx>0 && Ny>0) {
     dir1 = (plane_dir  ) % 2 ? 1 : 0,
     dir2 = (plane_dir/2) % 2 ? 3 : 2;
@@ -92,10 +96,13 @@ std::pair<int, int> ChildAndDirectionTables<Nx, Ny, Nz>::planeToDirectDirs(const
 
 // Convert a volume direction to a triplet of direct neighbor directions
 template<int Nx, int Ny, int Nz>
-std::tuple<int, int, int> ChildAndDirectionTables<Nx, Ny, Nz>::volumeToDirectDirs(const int dir) {
-  const int volume_dir = dir - number_plane_neighbors;
-  int dir1 = (volume_dir  ) % 2 ? 1 : 0,
-      dir2 = (volume_dir/2) % 2 ? 3 : 2,
-      dir3 = (volume_dir/4) % 2 ? 5 : 4;
+std::tuple<unsigned, unsigned, unsigned> ChildAndDirectionTables<Nx, Ny, Nz>::volumeToDirectDirs(const unsigned dir) {
+  if (dir < number_plane_neighbors || dir >= number_volume_neighbors)
+    throw std::runtime_error("Invalid volume neighbor direction in Oct::volumeToDirectDirs()");
+
+  const unsigned volume_dir = dir - number_plane_neighbors;
+  unsigned dir1 = (volume_dir  ) % 2 ? 1 : 0,
+           dir2 = (volume_dir/2) % 2 ? 3 : 2,
+           dir3 = (volume_dir/4) % 2 ? 5 : 4;
   return std::make_tuple(dir1, dir2, dir3);
 }

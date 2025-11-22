@@ -19,20 +19,20 @@ class RefineManager {
   //  VARIABLES                                                //
   //***********************************************************//
   // Minimum mesh level
-  const int min_level;
+  const unsigned min_level;
   // Maximum mesh level
-  const int max_level;
+  const unsigned max_level;
   // Process rank
-  const int rank;
+  const unsigned rank;
   // Number of process
-  const int size;
+  const unsigned size;
 
   //***********************************************************//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
   //***********************************************************//
  public :
   // Constructor
-  RefineManager(int min_level, int max_level, int rank, int size);
+  RefineManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
   // Destructor
   ~RefineManager();
 
@@ -41,7 +41,7 @@ class RefineManager {
   //***********************************************************//
  public:
   // Go through all the leaf cells and split them one time if needed.
-	bool refine(const std::vector<std::shared_ptr<CellType>> &root_cells, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) {}) const;
+	bool refine(const std::vector<std::shared_ptr<CellType>> &root_cells, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }) const;
 
  private:
   // Recursively refine child cells if needed

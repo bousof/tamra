@@ -8,35 +8,33 @@
 
 #pragma once
 
+#ifdef USE_MPI
+  #include <mpi.h>
+#endif // USE_MPI
+
+#include "../utils/array_utils.h"
 #include <Eigen/Sparse>
 #include <functional>
 #include <iostream>
 #include <set>
-#include <vector>
 #include <unordered_map>
-#include "../utils/array_utils.h"
+#include <vector>
+#include"../parallel/alltoallv.h"
 
 std::vector<double> jacobiIteration(const Eigen::SparseMatrix<double, Eigen::RowMajor> &A_local,
                                     const std::vector<double> &b_local,
                                     const std::vector<double> &x_local = {},
                                     const std::unordered_map<int, double> &x_lacking = {},
-                                    const int rank = 0,
-                                    const int col_offset = 0);
+                                    const unsigned rank = 0,
+                                    const unsigned col_offset = 0);
 
 std::vector<double> sparseJacobi(const Eigen::SparseMatrix<double, Eigen::RowMajor> &A,
                                  const std::vector<double> &b,
                                  const std::vector<double> &x = {},
-                                 const int max_iterations = 100);
-
-//#define USE_MPI
-#ifdef USE_MPI
-#include <mpi.h>
-#include "../parallel/alltoallv.h"
+                                 const unsigned max_iterations = 100);
 
 std::vector<double> parallelSparseJacobi(const Eigen::SparseMatrix<double, Eigen::RowMajor> &A_local,
                                          const std::vector<double> &b_local,
                                          const std::vector<double> &x_local = {},
-                                         const int max_iterations = 100,
-                                         const int rank = 0, const int size = 1);
-
-#endif
+                                         const unsigned max_iterations = 100,
+                                         const unsigned rank = 0, const unsigned size = 1);

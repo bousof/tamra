@@ -8,9 +8,13 @@
 
 #pragma once
 
-#include <mpi.h>
+#ifdef USE_MPI
+  #include <mpi.h>
+#endif // USE_MPI
 
 #include <vector>
+
+#ifdef USE_MPI
 
 template<typename T>
 void scalarAlltoall(const std::vector<int> &send_buffer, std::vector<T> &recv_buffer, const MPI_Datatype data_type) {
@@ -22,5 +26,20 @@ void scalarAlltoall(const std::vector<int> &send_buffer, std::vector<T> &recv_bu
 	// Sharing of values between all processors
   MPI_Alltoall(send_buffer.data(), 1, data_type, recv_buffer.data(), 1, data_type, MPI_COMM_WORLD);
 }
+
+#else
+
+template<typename T>
+void scalarAlltoall(const std::vector<int> &send_buffer, std::vector<T> &recv_buffer) {
+  static_assert(
+    std::is_same<T, int>::value,
+    "scalarAlltoall only supports T = int"
+  );
+
+	// No MPI, so one proc then only receive from itself
+  recv_buffer = send_buffer;
+}
+
+#endif // USE_MPI
 
 void intAlltoall(const std::vector<int> &send_buffer, std::vector<int> &recv_buffer);

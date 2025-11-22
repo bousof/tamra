@@ -7,7 +7,7 @@
 
 // Constructor
 template<typename CellType, typename TreeIteratorType>
-BalanceManager<CellType, TreeIteratorType>::BalanceManager(const int min_level, const int max_level, const int rank, const int size)
+BalanceManager<CellType, TreeIteratorType>::BalanceManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size)
 : min_level(min_level),
   max_level(max_level),
   rank(rank),
@@ -98,7 +98,7 @@ void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector<s
   std::vector<std::vector<std::shared_ptr<CellType>>> cells_to_send = cellsToExchange(cumulative_loads, target_cumulative_loads, iterator);
 
   //std::cout << "P_" << rank << ": nb of cells to send ";
-  //for (int p{0}; p<size; ++p) {
+  //for (unsigned p{0}; p<size; ++p) {
   //  std::cout << cells_to_send[p].size() << " ";
   //}
   //std::cout << std::endl;
@@ -141,7 +141,7 @@ std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, Tre
     // Main loop for determination of transition cell ids
     bool loop = true;
     double previous_load = cumulative_loads[rank], current_cell_load;
-    int target_proc = 0;
+    unsigned target_proc = 0;
     do {
       // Computation load of the current cell
       current_cell_load = iterator.getCell()->getLoad();
@@ -165,7 +165,7 @@ std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, Tre
     iterator.toOwnedEnd();
     bool loop = true;
     double next_load = cumulative_loads[rank+1], current_cell_load;
-    int target_proc = size-1;
+    unsigned target_proc = size-1;
     do {
       // Computation load of the current cell
       current_cell_load = iterator.getCell()->getLoad();
@@ -184,11 +184,11 @@ std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, Tre
   }
 
   // Reverse array for ranks > rank because they are starting from end
-  for (int p{rank+1}; p<size; ++p)
+  for (unsigned p{rank+1}; p<size; ++p)
     std::reverse(cells_to_send[p].begin(), cells_to_send[p].end());
 
   { // Unset sent leaf flags to belong to other proc
-    for (int p{0}; p<size; ++p)
+    for (unsigned p{0}; p<size; ++p)
       for (auto &cell : cells_to_send[p])
         cell->setToOtherProcRecurs();
   }
@@ -210,7 +210,7 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
         first_cell_id = iterator.getCellId(cells_to_send[p][0]);
         // Other cells levels
         cell_levels.resize(cells_to_send[p].size() - 1);
-        for (unsigned i{1}; i<cells_to_send[p].size(); ++i)
+        for (size_t i{1}; i<cells_to_send[p].size(); ++i)
           cell_levels[i-1] = cells_to_send[p][i]->getLevel();
         // Insert the other cells levels
         compressCellStructure(first_cell_id, cell_levels, cells_structure_to_send[p]);
@@ -222,7 +222,7 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
   {
     for (unsigned p{0}; p<size; ++p) {
       all_cell_data[p].reserve(cells_to_send[p].size());
-      for (unsigned i{0}; i<cells_to_send[p].size(); ++i)
+      for (size_t i{0}; i<cells_to_send[p].size(); ++i)
         all_cell_data[p].push_back(std::make_unique<typename CellType::CellDataType>(cells_to_send[p][i]->getCellData()));
     }
   }

@@ -19,20 +19,20 @@ class MinLevelMeshManager {
   //  VARIABLES                                                //
   //***********************************************************//
   // Minimum mesh level
-  const int min_level;
+  const unsigned min_level;
   // Maximum mesh level
-  const int max_level;
+  const unsigned max_level;
   // Process rank
-  const int rank;
+  const unsigned rank;
   // Number of process
-  const int size;
+  const unsigned size;
 
   //***********************************************************//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
   //***********************************************************//
  public :
   // Constructor
-  MinLevelMeshManager(int min_level, int max_level, int rank, int size);
+  MinLevelMeshManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
   // Destructor
   ~MinLevelMeshManager();
 

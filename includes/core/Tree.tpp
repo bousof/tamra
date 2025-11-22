@@ -6,7 +6,7 @@
 
 // Constructor
 template<typename CellType, typename TreeIteratorType>
-Tree<CellType, TreeIteratorType>::Tree(const int min_level, const int max_level, const int rank, const int size)
+Tree<CellType, TreeIteratorType>::Tree(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size)
 : min_level(min_level),
   max_level(max_level),
   rank(rank),
@@ -39,7 +39,7 @@ void Tree<CellType, TreeIteratorType>::createRootCells(const std::vector<RootCel
       cell->splitRoot(max_level, cell);
 
     // Connect the neighbors in the root's child_oct
-    for (int dir{0}; dir<CellType::number_neighbors; ++dir) {
+    for (unsigned dir{0}; dir<CellType::number_neighbors; ++dir) {
       const auto &neighbor = entry.neighbor_cells[dir];
       if (neighbor)
         cell->getChildOct()->setNeighborCell(dir, neighbor);
@@ -60,13 +60,13 @@ const std::vector<std::shared_ptr<CellType>>& Tree<CellType, TreeIteratorType>::
 
 // Get min mesh level
 template<typename CellType, typename TreeIteratorType>
-int Tree<CellType, TreeIteratorType>::getMinLevel() const {
+unsigned Tree<CellType, TreeIteratorType>::getMinLevel() const {
   return min_level;
 }
 
 // Get max mesh level
 template<typename CellType, typename TreeIteratorType>
-int Tree<CellType, TreeIteratorType>::getMaxLevel() const {
+unsigned Tree<CellType, TreeIteratorType>::getMaxLevel() const {
   return max_level;
 }
 

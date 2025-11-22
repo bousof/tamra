@@ -32,12 +32,12 @@ class Cell {
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>&)>;
   using InterpolationFunctionType = std::function<void(const std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>&)>;
   using OctType = Oct<Cell<Nx, Ny, Nz, DataType>>;
-  static constexpr int number_dimensions = ChildAndDirectionTablesType::number_dimensions;
-  static constexpr int number_split_dimensions = ChildAndDirectionTablesType::number_split_dimensions;
-  static constexpr int number_neighbors = ChildAndDirectionTablesType::number_neighbors;
-  static constexpr int number_plane_neighbors = ChildAndDirectionTablesType::number_plane_neighbors;
-  static constexpr int number_volume_neighbors = ChildAndDirectionTablesType::number_volume_neighbors;
-  static constexpr int number_children = ChildAndDirectionTablesType::number_children;
+  static constexpr unsigned number_dimensions = ChildAndDirectionTablesType::number_dimensions;
+  static constexpr unsigned number_split_dimensions = ChildAndDirectionTablesType::number_split_dimensions;
+  static constexpr unsigned number_neighbors = ChildAndDirectionTablesType::number_neighbors;
+  static constexpr unsigned number_plane_neighbors = ChildAndDirectionTablesType::number_plane_neighbors;
+  static constexpr unsigned number_volume_neighbors = ChildAndDirectionTablesType::number_volume_neighbors;
+  static constexpr unsigned number_children = ChildAndDirectionTablesType::number_children;
 
   //***********************************************************//
   //  VARIABLES                                                //
@@ -84,7 +84,7 @@ class Cell {
   // Get child cells
   const std::array<std::shared_ptr<Cell>, number_children>& getChildCells() const;
   // Get child cells in a specific direction
-  const std::vector<std::shared_ptr<Cell>> getDirChildCells(const int dir) const;
+  const std::vector<std::shared_ptr<Cell>> getDirChildCells(const unsigned dir) const;
   // Get level of the cell
   unsigned getLevel() const;
   // Get parent oct
@@ -163,11 +163,11 @@ class Cell {
   // Count the number of owned leaf cells
   unsigned countOwnedLeaves() const;
   // Split a root cell (a pointer to the root is needed for back reference in child oct)
-  const std::array<std::shared_ptr<Cell>, number_children>& splitRoot(const int max_level, std::shared_ptr<Cell> root_cell, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) {});
+  const std::array<std::shared_ptr<Cell>, number_children>& splitRoot(const unsigned max_level, std::shared_ptr<Cell> root_cell, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) { (void)cell; });
   // Split a cell and it's direct neighbors if needed for mesh conformity
-  const std::array<std::shared_ptr<Cell>, number_children>& split(const int max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) {});
+  const std::array<std::shared_ptr<Cell>, number_children>& split(const unsigned max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) { (void)cell; });
   // Coarsen a cell if neighbors cell allow to preserve consistency else nothing is done
-  bool coarsen(const int min_level, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<Cell> &cell) {});
+  bool coarsen(const unsigned min_level, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<Cell> &cell) { (void)cell; });
   //┌────────────┬──────────────────┬──────────────────────────────────┐
   //│  Priority  │   Available if   │   Indexes (dir)                  │
   //├────────────┼──────────────────┼──────────────────────────────────┤
@@ -201,10 +201,10 @@ class Cell {
   //│  +X +Y +Z  │  Nx>0 Ny>0 Nz>0  │                                  │
   //└────────────┴──────────────────┴──────────────────────────────────┘
   // Get a pointer to a neighbor cell
-  std::shared_ptr<Cell> getNeighborCell(const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors = nullptr) const;
+  std::shared_ptr<Cell> getNeighborCell(const unsigned dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors = nullptr) const;
   // Get a pointer to a neighbor cell and save it  to array for reuse
   // If the neighbor was already computed, extract from cached_neighbors array
-  std::shared_ptr<Cell> getNeighborCellAndSave(const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors = nullptr) const;
+  std::shared_ptr<Cell> getNeighborCellAndSave(const unsigned dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors = nullptr) const;
   // Loop on all neighbor cells and apply a function
   void applyToNeighborCells(const std::function<void(const std::shared_ptr<Cell>&, const std::shared_ptr<Cell>&, const unsigned&)> &&f, const bool only_once=false, const bool skip_null=false, const std::vector<int> &directions = ChildAndDirectionTablesType::all_directions) const;
   // Loop on all neighbor leaf cells in a specific direction and apply a function
@@ -215,29 +215,29 @@ class Cell {
   void extrapolateRecursively(ExtrapolationFunctionType extrapolation_function) const;
  private:
   // Verify if neighbors splitting is needed before cell splitting
-  bool verifySplitNeighbors(const int max_level);
+  bool verifySplitNeighbors(const unsigned max_level);
   // Split neighbors first if needed before cell splitting
-  void checkSplitNeighbors(const int max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) {});
+  void checkSplitNeighbors(const unsigned max_level, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) { (void)cell; });
   // Verify if children coarsening is needed before cell coarsening
   bool verifyCoarsenChildren();
   // Verify if neighbors coarsening is needed before cell coarsening
   bool verifyCoarsenNeighbors();
  public:
  // Transform sibling number to (i,j,k) coordinates
-  static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const int sibling_number) { return ChildAndDirectionTablesType::siblingNumberToCoords(sibling_number); };
+  static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const unsigned sibling_number) { return ChildAndDirectionTablesType::siblingNumberToCoords(sibling_number); };
   // Transform (i,j,k) coordinates to sibling number
   static int coordsToSiblingNumber(const unsigned sibling_coord_1, const unsigned sibling_coord_2, const unsigned sibling_coord_3) { return ChildAndDirectionTablesType::coordsToSiblingNumber(sibling_coord_1, sibling_coord_2, sibling_coord_3); };
  private:
   // For a given sibling number, determine if the neighbor cell in a given direction:
   // - shares the same parent cell (true) or belongs to another cell (false)
   // - it's sibling number
-  static std::pair<bool, unsigned> getDirectNeighborCellInfos(const int sibling_number, const int dir) { return ChildAndDirectionTablesType::directNeighborCellInfos(sibling_number, dir); };
+  static std::pair<bool, unsigned> getDirectNeighborCellInfos(const unsigned sibling_number, const unsigned dir) { return ChildAndDirectionTablesType::directNeighborCellInfos(sibling_number, dir); };
   // convert two direct neighbor directions to a plane direction
   static int directToPlaneDir(const int dir1, const int dir2) { return ChildAndDirectionTablesType::directToPlaneDir(dir1, dir2); };
   // Get a pointer to a neighbor cell accessible by 2 consecutive othogonal direction (corners in 2D)
-  std::shared_ptr<Cell> getPlaneNeighborCell(const int sibling_number, const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const;
+  std::shared_ptr<Cell> getPlaneNeighborCell(const unsigned dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const;
   // Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)
-  std::shared_ptr<Cell> getVolumeNeighborCell(const int sibling_number, const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const;
+  std::shared_ptr<Cell> getVolumeNeighborCell(const unsigned dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const;
   // Flags propagation from parent to children
   void setIndicatorFromParent(const Cell &parent_cell);
 };

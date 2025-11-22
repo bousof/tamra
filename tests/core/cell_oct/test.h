@@ -1,14 +1,12 @@
-//#define USE_MPI
-
-#ifndef USE_MPI
-
-void registerCoreCellOctParallelTests() {}
-
-#else
+#ifdef USE_MPI
 
 #include "parallel_tests.h"
 
-#endif
+#else
+
+void registerCoreCellOctParallelTests() {}
+
+#endif // USE_MPI
 
 #include "serial_tests.h"
 

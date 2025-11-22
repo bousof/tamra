@@ -69,7 +69,7 @@ const std::array<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>, Cell<Nx, Ny, Nz, D
 
 // Get child cells in a specific direction
 template<int Nx, int Ny, int Nz, typename DataType>
-const std::vector<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>> Cell<Nx, Ny, Nz, DataType>::getDirChildCells(const int dir) const {
+const std::vector<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>> Cell<Nx, Ny, Nz, DataType>::getDirChildCells(const unsigned dir) const {
   if (isLeaf())
     throw std::runtime_error("Cannot call on leaf in Cell::getDirChildCells()");
 
@@ -77,7 +77,7 @@ const std::vector<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>> Cell<Nx, Ny, Nz, 
     const auto &child_cells = getChildCells();
     const auto &dir_sibling_numbers = ChildAndDirectionTablesType::dir_sibling_numbers[dir];
     std::vector<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>> dir_child_cells(dir_sibling_numbers.size());
-    for (int i{0}; i<dir_sibling_numbers.size(); ++i)
+    for (size_t i{0}; i<dir_sibling_numbers.size(); ++i)
       dir_child_cells[i] = child_cells[dir_sibling_numbers[i]];
     return dir_child_cells;
   }
@@ -167,7 +167,7 @@ unsigned Cell<Nx, Ny, Nz, DataType>::countOwnedLeaves() const {
 
 // Split a root cell (a pointer to the root is needed for back reference in child oct)
 template<int Nx, int Ny, int Nz, typename DataType>
-const std::array<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>, Cell<Nx, Ny, Nz, DataType>::number_children>& Cell<Nx, Ny, Nz, DataType>::splitRoot(const int max_level, std::shared_ptr<Cell> root_cell, ExtrapolationFunctionType extrapolation_function) {
+const std::array<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>, Cell<Nx, Ny, Nz, DataType>::number_children>& Cell<Nx, Ny, Nz, DataType>::splitRoot(const unsigned max_level, std::shared_ptr<Cell> root_cell, ExtrapolationFunctionType extrapolation_function) {
   if (!isRoot())
     throw std::runtime_error("Can be call only on root in Cell::splitRoot()");
 
@@ -184,7 +184,7 @@ const std::array<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>, Cell<Nx, Ny, Nz, D
 
 // Split a cell and it's direct neighbors if needed for mesh conformity
 template<int Nx, int Ny, int Nz, typename DataType>
-const std::array<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>, Cell<Nx, Ny, Nz, DataType>::number_children>& Cell<Nx, Ny, Nz, DataType>::split(const int max_level, ExtrapolationFunctionType extrapolation_function) {
+const std::array<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>, Cell<Nx, Ny, Nz, DataType>::number_children>& Cell<Nx, Ny, Nz, DataType>::split(const unsigned max_level, ExtrapolationFunctionType extrapolation_function) {
   if (!isLeaf() || getLevel()>=max_level)
     throw std::runtime_error("Cell cannot be splitted in Cell::split()");
 
@@ -196,14 +196,14 @@ const std::array<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>, Cell<Nx, Ny, Nz, D
   std::shared_ptr oct = std::make_shared<OctType>();
   oct->init(!isRoot() ? thisAsSmartPtr() : nullptr, getLevel() + 1);
   if (!isRoot())
-    for (int dir{0}; dir<number_neighbors; ++dir)
+    for (unsigned dir{0}; dir<number_neighbors; ++dir)
       oct->setNeighborCell(dir, getNeighborCell(dir));
 
   // Make oct as child
   child_oct = oct;
 
   std::shared_ptr<Cell> cell;
-  for (auto i{0}; i<number_children; ++i) {
+  for (unsigned i{0}; i<number_children; ++i) {
     cell = std::make_shared<Cell>(oct, indicator);
     oct->setChildCell(i, cell);
     cell->setToUnchange();
@@ -217,7 +217,7 @@ const std::array<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>, Cell<Nx, Ny, Nz, D
 
 // Coarsen a cell if neighbors cell allow to preserve consistency else nothing is done
 template<int Nx, int Ny, int Nz, typename DataType>
-bool Cell<Nx, Ny, Nz, DataType>::coarsen(const int min_level, InterpolationFunctionType interpolation_function) {
+bool Cell<Nx, Ny, Nz, DataType>::coarsen(const unsigned min_level, InterpolationFunctionType interpolation_function) {
   if (isLeaf() || getLevel()<min_level)
     throw std::runtime_error("Cell cannot be coarsened in Cell::coarsenn()");
 
@@ -269,8 +269,8 @@ bool Cell<Nx, Ny, Nz, DataType>::coarsen(const int min_level, InterpolationFunct
 //└────────────┴──────────────────┴──────────────────────────────────┘
 // Get a pointer to a neighbor cell
 template<int Nx, int Ny, int Nz, typename DataType>
-std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeighborCell(const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
-  if (dir<0 || dir>=number_volume_neighbors)
+std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeighborCell(const unsigned dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
+  if (dir>=number_volume_neighbors)
     throw std::runtime_error("Invalid neighbor direction in Cell::getNeighborCell()");
 
   if (!isLeaf() && dir < number_neighbors)
@@ -278,11 +278,9 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeigh
   if (isRoot())
     return nullptr;
 
-  unsigned sibling_number = getSiblingNumber();
-
   // Determine if the neighbor cell is a sibling or should be deduced from parent oct neighbors
   if (dir < number_neighbors) {
-    const auto [neighbor_is_sibling, neighbor_sibling_number] = getDirectNeighborCellInfos(sibling_number, dir);
+    const auto [neighbor_is_sibling, neighbor_sibling_number] = getDirectNeighborCellInfos(getSiblingNumber(), dir);
 
     std::shared_ptr<Cell> neighbor_cell;
     if (neighbor_is_sibling)
@@ -294,15 +292,15 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeigh
     }
     return neighbor_cell;
   } else if (dir < number_plane_neighbors)
-    return getPlaneNeighborCell(sibling_number, dir, cached_neighbors);
+    return getPlaneNeighborCell(dir, cached_neighbors);
   else
-    return getVolumeNeighborCell(sibling_number, dir, cached_neighbors);
+    return getVolumeNeighborCell(dir, cached_neighbors);
 }
 
 // Get a pointer to a neighbor cell and save it  to array for reuse
 // If the neighbor was already computed, extract from cached_neighbors array
 template<int Nx, int Ny, int Nz, typename DataType>
-std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeighborCellAndSave(const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
+std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getNeighborCellAndSave(const unsigned dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
   // Check if direction already cached
   std::shared_ptr<Cell> this_cell = thisAsSmartPtr();
   if (cached_neighbors && dir < number_plane_neighbors && (*cached_neighbors)[dir] != this_cell)
@@ -416,11 +414,11 @@ void Cell<Nx, Ny, Nz, DataType>::extrapolateRecursively(ExtrapolationFunctionTyp
 
 // Verify if neighbors splitting is needed before cell splitting
 template<int Nx, int Ny, int Nz, typename DataType>
-bool Cell<Nx, Ny, Nz, DataType>::verifySplitNeighbors(const int max_level) {
+bool Cell<Nx, Ny, Nz, DataType>::verifySplitNeighbors(const unsigned max_level) {
   if (isRoot() && max_level>0)
     return (max_level>0);
 
-  for (int dir{0}; dir<number_neighbors; ++dir) {
+  for (unsigned dir{0}; dir<number_neighbors; ++dir) {
     auto neighbor_cell = getNeighborCell(dir);
     if (neighbor_cell && neighbor_cell->getLevel()<getLevel() && neighbor_cell->isLeaf())
       return false;
@@ -430,12 +428,12 @@ bool Cell<Nx, Ny, Nz, DataType>::verifySplitNeighbors(const int max_level) {
 
 // Split neighbors first if needed before cell splitting
 template<int Nx, int Ny, int Nz, typename DataType>
-void Cell<Nx, Ny, Nz, DataType>::checkSplitNeighbors(const int max_level, ExtrapolationFunctionType extrapolation_function) {
+void Cell<Nx, Ny, Nz, DataType>::checkSplitNeighbors(const unsigned max_level, ExtrapolationFunctionType extrapolation_function) {
   if (isRoot())
     return;
 
   // Assuming 4 connexity neighbor size consistency
-  for (int dir{0}; dir<number_neighbors; ++dir) {
+  for (unsigned dir{0}; dir<number_neighbors; ++dir) {
     auto neighbor_cell = getNeighborCell(dir);
     if (neighbor_cell && neighbor_cell->getLevel()<getLevel() && neighbor_cell->isLeaf())
       neighbor_cell->split(max_level, extrapolation_function);
@@ -448,7 +446,7 @@ bool Cell<Nx, Ny, Nz, DataType>::verifyCoarsenChildren() {
   if (isLeaf())
     return false;
 
-  for (int i{0}; i<number_children; ++i) {
+  for (unsigned i{0}; i<number_children; ++i) {
     auto child_cell = getChildCell(i);
     if (!child_cell->isLeaf())
       return false;
@@ -463,7 +461,7 @@ bool Cell<Nx, Ny, Nz, DataType>::verifyCoarsenNeighbors() {
     return false;
 
   // Get the neighbor cell
-  for (int dir{0}; dir<number_neighbors; ++dir) {
+  for (unsigned dir{0}; dir<number_neighbors; ++dir) {
     // Get only the neighbor's children adjacent to the shared face (opposite direction)
     std::shared_ptr<Cell> neighbor = getNeighborCell(dir);
     if (!neighbor || neighbor->isLeaf())
@@ -480,26 +478,26 @@ bool Cell<Nx, Ny, Nz, DataType>::verifyCoarsenNeighbors() {
 
 // Get a pointer to a neighbor cell accessible by 2 consecutive othogonal direction (corners in 2D)
 template<int Nx, int Ny, int Nz, typename DataType>
-std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getPlaneNeighborCell(const int sibling_number, const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
+std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getPlaneNeighborCell(const unsigned dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
   // Split plane neighbor dir to 2 direct neighbor dirs
   const auto [dir1, dir2] = ChildAndDirectionTablesType::planeToDirectDirs(dir);
 
-  // Get the neighbors infos in each directions
-  const auto [neighbor_is_sibling1, neighbor_sibling_number1] = getDirectNeighborCellInfos(sibling_number, dir1);
-  const bool neighbor_is_sibling2 = std::get<0>(getDirectNeighborCellInfos(sibling_number, dir2));
+  std::shared_ptr<Cell> neighbor_cell1 = getNeighborCellAndSave(dir1, cached_neighbors), neighbor_cell12;
+  if (neighbor_cell1) {
+    neighbor_cell12 = neighbor_cell1->getNeighborCell(dir2);
+    if (neighbor_cell1->getLevel() >= getLevel() && neighbor_cell12)
+      return neighbor_cell12;
+  }
 
-  std::shared_ptr<Cell> neighbor_cell1 = getNeighborCellAndSave(dir1, cached_neighbors),
-                        neighbor_cell2 = getNeighborCellAndSave(dir2, cached_neighbors);
+  std::shared_ptr<Cell> neighbor_cell2 = getNeighborCellAndSave(dir2, cached_neighbors), neighbor_cell21;
+  if (neighbor_cell2) {
+    neighbor_cell21 = neighbor_cell2->getNeighborCell(dir1);
+    if (neighbor_cell2->getLevel() >= getLevel() && neighbor_cell21)
+      return neighbor_cell21;
+  }
+
   if (!neighbor_cell1 && !neighbor_cell2)
     return nullptr;
-  else if (neighbor_is_sibling1) // Going through the sibling first ensure the good neighbor
-    return neighbor_cell1->getNeighborCell(dir2);
-  else if (neighbor_is_sibling2) // Going through the sibling first ensure the good neighbor
-    return neighbor_cell2->getNeighborCell(dir1);
-
-  std::shared_ptr<Cell> neighbor_cell12 = neighbor_cell1 ? neighbor_cell1->getNeighborCell(dir2) : nullptr;
-  std::shared_ptr<Cell> neighbor_cell21 = neighbor_cell2 ? neighbor_cell2->getNeighborCell(dir1) : nullptr;
-
   if (!neighbor_cell12 && !neighbor_cell21)
     return nullptr;
 
@@ -509,6 +507,7 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getPlane
   if (neighbor_cell12->isLeaf() || neighbor_cell12->getLevel()>=getLevel())
     return neighbor_cell12;
   else {
+    const unsigned neighbor_sibling_number1 = std::get<1>(getDirectNeighborCellInfos(getSiblingNumber(), dir1));
     const unsigned neighbor_sibling_number12 = std::get<1>(getDirectNeighborCellInfos(neighbor_sibling_number1, dir2));
     return neighbor_cell12->getChildOct()->getChildCell(neighbor_sibling_number12);
   }
@@ -516,7 +515,7 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getPlane
 
 // Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)
 template<int Nx, int Ny, int Nz, typename DataType>
-std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getVolumeNeighborCell(const int sibling_number, const int dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
+std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getVolumeNeighborCell(const unsigned dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const {
   const auto [dir1, dir2, dir3] = ChildAndDirectionTablesType::volumeToDirectDirs(dir);
 
   // If one of the neighbor cells have the same level, then finding the target neighbor cell is easier:
@@ -540,6 +539,8 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::getVolum
     if (neighbor_cell3_12)
       return neighbor_cell3_12;
   }
+  if (!neighbor_cell1 && !neighbor_cell2 && !neighbor_cell3)
+    return nullptr;
 
   std::shared_ptr<Cell> neighbor_cell12 = getNeighborCellAndSave(directToPlaneDir(dir1, dir2), cached_neighbors),
                         neighbor_cell13 = getNeighborCellAndSave(directToPlaneDir(dir1, dir3), cached_neighbors),

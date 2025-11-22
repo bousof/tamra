@@ -35,7 +35,7 @@ bool refineTreeOneRootSerial() {
   std::vector<RootCellEntry<Cell2D>> entries{ eA };
 
   // Construction of the tree
-  int min_level = 1, max_level = 3;
+  unsigned min_level{1}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level);
   tree.createRootCells(entries);
 
@@ -92,7 +92,7 @@ bool refineTreeTwoRootsSerial() {
   std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
-  int min_level = 1, max_level = 3;
+  unsigned min_level{1}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level);
   tree.createRootCells(entries);
 

@@ -19,20 +19,20 @@ class CoarseManager {
   //  VARIABLES                                                //
   //***********************************************************//
   // Minimum mesh level
-  const int min_level;
+  const unsigned min_level;
   // Maximum mesh level
-  const int max_level;
+  const unsigned max_level;
   // Process rank
-  const int rank;
+  const unsigned rank;
   // Number of process
-  const int size;
+  const unsigned size;
 
   //***********************************************************//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
   //***********************************************************//
  public :
   // Constructor
-  CoarseManager(int min_level, int max_level, int rank, int size);
+  CoarseManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
   // Destructor
   ~CoarseManager();
 
@@ -41,11 +41,11 @@ class CoarseManager {
   //***********************************************************//
  public:
   // Go through all the parent cells and coarse them one time if needed
-	bool coarsen(const std::vector<std::shared_ptr<CellType>> &root_cells, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) {}) const;
+	bool coarsen(const std::vector<std::shared_ptr<CellType>> &root_cells, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }) const;
 
  private:
   // Recursively coarse cells at a specific level
-  bool coarsenToLevelRecurs(const std::shared_ptr<CellType> &cell, const int &coarse_level, InterpolationFunctionType interpolation_function) const;
+  bool coarsenToLevelRecurs(const std::shared_ptr<CellType> &cell, const unsigned coarse_level, InterpolationFunctionType interpolation_function) const;
 };
 
 #include "./CoarseManager.tpp"

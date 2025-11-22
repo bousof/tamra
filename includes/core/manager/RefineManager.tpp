@@ -6,7 +6,7 @@
 
 // Constructor
 template<typename CellType>
-RefineManager<CellType>::RefineManager(const int min_level, const int max_level, const int rank, const int size)
+RefineManager<CellType>::RefineManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size)
 : min_level(min_level),
   max_level(max_level),
   rank(rank),

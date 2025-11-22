@@ -45,34 +45,34 @@ constexpr std::array<unsigned, CellType::number_children> make_orderings() {
                  Nz = std::max(CellType::Nz, 1);
   unsigned counter{0};
   if constexpr (MORTON_ORIENTATION==132)
-    for (int j{0}; j<Ny; ++j)
-      for (int k{0}; k<Nz; ++k)
-        for (int i{0}; i<Nx; ++i)
+  for (unsigned k{0}; k<Nz; ++k)
+    for (unsigned j{0}; j<Ny; ++j)
+        for (unsigned i{0}; i<Nx; ++i)
           orderings[counter++] = i + j * Nx + k * Nx * Ny;
   else if constexpr (MORTON_ORIENTATION==213)
-    for (int k{0}; k<Nz; ++k)
-      for (int i{0}; i<Nx; ++i)
-        for (int j{0}; j<Ny; ++j)
+    for (unsigned k{0}; k<Nz; ++k)
+      for (unsigned i{0}; i<Nx; ++i)
+        for (unsigned j{0}; j<Ny; ++j)
           orderings[counter++] = i + j * Nx + k * Nx * Ny;
   else if constexpr (MORTON_ORIENTATION==231)
-    for (int i{0}; i<Nx; ++i)
-      for (int k{0}; k<Nz; ++k)
-        for (int j{0}; j<Ny; ++j)
+    for (unsigned i{0}; i<Nx; ++i)
+      for (unsigned k{0}; k<Nz; ++k)
+        for (unsigned j{0}; j<Ny; ++j)
           orderings[counter++] = i + j * Nx + k * Nx * Ny;
   else if constexpr (MORTON_ORIENTATION==312)
-    for (int j{0}; j<Ny; ++j)
-      for (int i{0}; i<Nx; ++i)
-        for (int k{0}; k<Nz; ++k)
+    for (unsigned j{0}; j<Ny; ++j)
+      for (unsigned i{0}; i<Nx; ++i)
+        for (unsigned k{0}; k<Nz; ++k)
           orderings[counter++] = i + j * Nx + k * Nx * Ny;
   else if constexpr (MORTON_ORIENTATION==321)
-    for (int i{0}; i<Nx; ++i)
-      for (int j{0}; j<Ny; ++j)
-        for (int k{0}; k<Nz; ++k)
+    for (unsigned i{0}; i<Nx; ++i)
+      for (unsigned j{0}; j<Ny; ++j)
+        for (unsigned k{0}; k<Nz; ++k)
           orderings[counter++] = i + j * Nx + k * Nx * Ny;
   else // MORTON_ORIENTATION==123 is default if unhandled value
-    for (int k{0}; k<Nz; ++k)
-      for (int j{0}; j<Ny; ++j)
-        for (int i{0}; i<Nx; ++i)
+    for (unsigned k{0}; k<Nz; ++k)
+      for (unsigned j{0}; j<Ny; ++j)
+        for (unsigned i{0}; i<Nx; ++i)
           orderings[counter++] = i + j * Nx + k * Nx * Ny;
   return orderings;
 }
@@ -80,7 +80,7 @@ constexpr std::array<unsigned, CellType::number_children> make_orderings() {
 template<size_t ARRAY_SIZE>
 std::array<unsigned, ARRAY_SIZE> reverse_orderings(const std::array<unsigned, ARRAY_SIZE> &orderings) {
   std::array<unsigned, ARRAY_SIZE> reverse_orderings;
-  for (int i{0}; i<ARRAY_SIZE; ++i)
+  for (unsigned i{0}; i<ARRAY_SIZE; ++i)
     reverse_orderings[orderings[i]] = i;
   return reverse_orderings;
 }

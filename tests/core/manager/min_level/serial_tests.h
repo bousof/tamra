@@ -25,7 +25,7 @@ bool meshTreeToMinLevelOneRootSerial() {
   std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
-  int min_level = 2, max_level = 3;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level);
   tree.createRootCells(entries);
 
@@ -33,9 +33,9 @@ bool meshTreeToMinLevelOneRootSerial() {
   tree.meshAtMinLevel();
 
   // Count number of leaf cells
-  int number_leaf_cells = A->countLeaves();
+  unsigned number_leaf_cells = A->countLeaves();
 
-  bool passed = number_leaf_cells == (int)(pow(Cell2D::number_children, min_level));
+  bool passed = number_leaf_cells == (unsigned)(pow(Cell2D::number_children, min_level));
   return passed;
 }
 
@@ -53,7 +53,7 @@ bool meshTreeToMinLevelTwoRootsSerial() {
   std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
-  int min_level = 2, max_level = 3;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level);
   tree.createRootCells(entries);
 
@@ -61,8 +61,8 @@ bool meshTreeToMinLevelTwoRootsSerial() {
   tree.meshAtMinLevel();
 
   // Count number of leaf cells
-  int number_leaf_cells = A->countLeaves() + B->countLeaves();
+  unsigned number_leaf_cells = A->countLeaves() + B->countLeaves();
 
-  bool passed = number_leaf_cells == tree.getRootCells().size() * (int)(pow(Cell2D::number_children, min_level));
+  bool passed = number_leaf_cells == tree.getRootCells().size() * (unsigned)(pow(Cell2D::number_children, min_level));
   return passed;
 }

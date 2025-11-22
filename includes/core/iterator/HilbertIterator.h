@@ -54,7 +54,7 @@ class HilbertIterator : public AbstractTreeIterator<CellType> {
   //***********************************************************//
  public:
   // Constructor
-  HilbertIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level);
+  HilbertIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const unsigned max_level);
 
   //***********************************************************//
   //  METHODS                                                  //

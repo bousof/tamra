@@ -1,45 +1,77 @@
 #include "../../includes/parallel/alltoallv.h"
 
 std::vector<int> vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<unsigned> &recv_buffer) {
+#ifdef USE_MPI
 	return vectorAlltoallv(send_buffers, recv_buffer, MPI_UNSIGNED);
+#else
+  return vectorAlltoallv(send_buffers, recv_buffer);
+#endif // USE_MPI
 }
 
 std::vector<int> vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<int> &recv_buffer) {
+#ifdef USE_MPI
 	return vectorAlltoallv(send_buffers, recv_buffer, MPI_INT);
+#else
+  return vectorAlltoallv(send_buffers, recv_buffer);
+#endif // USE_MPI
 }
 
 std::vector<int> vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<double> &recv_buffer) {
+#ifdef USE_MPI
 	return vectorAlltoallv(send_buffers, recv_buffer, MPI_DOUBLE);
+#else
+  return vectorAlltoallv(send_buffers, recv_buffer);
+#endif // USE_MPI
 }
 
 void vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers) {
-	vectorAlltoallv(send_buffers, recv_buffers, MPI_UNSIGNED);
+#ifdef USE_MPI
+  vectorAlltoallv(send_buffers, recv_buffers, MPI_UNSIGNED);
+#else
+  vectorAlltoallv(send_buffers, recv_buffers);
+#endif // USE_MPI
 }
 
 void vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<std::vector<int>> &recv_buffers) {
-	vectorAlltoallv(send_buffers, recv_buffers, MPI_INT);
+#ifdef USE_MPI
+  vectorAlltoallv(send_buffers, recv_buffers, MPI_INT);
+#else
+  vectorAlltoallv(send_buffers, recv_buffers);
+#endif // USE_MPI
 }
 
 void vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<std::vector<double>> &recv_buffers) {
-	vectorAlltoallv(send_buffers, recv_buffers, MPI_DOUBLE);
+#ifdef USE_MPI
+  vectorAlltoallv(send_buffers, recv_buffers, MPI_DOUBLE);
+#else
+  vectorAlltoallv(send_buffers, recv_buffers);
+#endif // USE_MPI
 }
 
 void matrixUnsignedAlltoallv(const std::vector<std::vector<std::vector<unsigned>>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers, const unsigned colCount) {
+#ifdef USE_MPI
   matrixAlltoallv(send_buffers, recv_buffers, MPI_UNSIGNED, colCount);
+#else
+  matrixAlltoallv(send_buffers, recv_buffers, colCount);
+#endif // USE_MPI
 }
 
 void matrixUnsignedAlltoallv(const std::vector<std::vector<std::vector<unsigned>>> &send_buffers, std::vector<std::vector<std::vector<unsigned>>> &recv_buffers, const unsigned colCount) {
+#ifdef USE_MPI
   matrixAlltoallv(send_buffers, recv_buffers, MPI_UNSIGNED, colCount);
+#else
+  matrixAlltoallv(send_buffers, recv_buffers, colCount);
+#endif // USE_MPI
 }
 
 void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelData>>> &send_buffers, std::vector<std::unique_ptr<ParallelData>> &recv_buffer, const ParallelDataFactory createData) {
-  int size = send_buffers.size();
+  unsigned size = send_buffers.size();
 
   // Prepare data sizes for sharing between processors
 	std::vector<std::vector<unsigned>> send_counts(size);
-	for (int p{0}; p<size; ++p) {
+	for (unsigned p{0}; p<size; ++p) {
 		send_counts[p].resize(send_buffers[p].size());
-		for (unsigned i{0}; i<send_buffers[p].size(); ++i)
+		for (size_t i{0}; i<send_buffers[p].size(); ++i)
 			send_counts[p][i] = send_buffers[p][i]->getDataSize();
 	}
 
@@ -49,7 +81,7 @@ void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelD
 
 	// Sending buffer, data must be put to a vector of vector of doubles
 	std::vector<std::vector<double>> send_data_buffers(size);
-	for (int p{0}; p<size; ++p) {
+	for (unsigned p{0}; p<size; ++p) {
     int tot_size_data_p = std::accumulate(send_counts[p].begin(), send_counts[p].end(), 0);
 		send_data_buffers[p].reserve(tot_size_data_p);
 
@@ -66,7 +98,7 @@ void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelD
 	// Sending buffer, data come as a vector of doubles and must be transformed to a vector of ParallelData
 	recv_buffer.resize(recv_counts.size());
 	int data_counter = 0;
-	for (int i{0}; i<recv_counts.size(); ++i) {
+	for (size_t i{0}; i<recv_counts.size(); ++i) {
 		std::vector<double> subdata(&recv_data_buffer[data_counter], &recv_data_buffer[data_counter+recv_counts[i]]);
 		data_counter += recv_counts[i];
 

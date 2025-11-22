@@ -1,23 +1,20 @@
-#include <mpi.h>
-
 #include <core/Cell.h>
 #include <core/RootCellEntry.h>
 #include <core/Tree.h>
 #include <memory>
 #include <parallel/allreduce.h>
+#include <parallel/wrapper.h>
 #include <UnitTestRegistry.h>
 #include <vector>
 
-bool meshTreeToMinLevelOneRootParallel(int rank, int size);
-bool meshTreeToMinLevelTwoRootsParallel(int rank, int size);
-bool meshTreeToMinLevelOneRootPerProcParallel(int rank, int size);
+bool meshTreeToMinLevelOneRootParallel(const unsigned rank, const unsigned size);
+bool meshTreeToMinLevelTwoRootsParallel(const unsigned rank, const unsigned size);
+bool meshTreeToMinLevelOneRootPerProcParallel(const unsigned rank, const unsigned size);
 
 void registerCoreManagerMinLevelParallelTests() {
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  const unsigned rank = mpi_rank(),
+                 size = mpi_size();
 
-  UnitTestRegistry::label = "P_" + std::to_string(rank) + ": ";
   UnitTestRegistry::registerParallelTest("Meshing at min level (one root, parallel)", [=]() { return meshTreeToMinLevelOneRootParallel(rank, size); }, "core/manager/min_level");
   UnitTestRegistry::registerParallelTest("Meshing at min level (two roots, parallel)", [=]() { return meshTreeToMinLevelTwoRootsParallel(rank, size); }, "core/manager/min_level");
   UnitTestRegistry::registerParallelTest("Mesh at min level (1 root per process)", [=]() { return meshTreeToMinLevelOneRootPerProcParallel(rank, size); }, "core/manager/min_level");
@@ -36,7 +33,7 @@ void registerCoreManagerMinLevelParallelTests() {
 //                | X | X | X |   |    |       |   | X |    |       |       |
 //                |___|___|___|___|    |_______|___|___|    |_______|_______|
 // X show the leaf cells that belong to each process
-bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
+bool meshTreeToMinLevelOneRootParallel(const unsigned rank, const unsigned size) {
   using Cell2D = Cell<2,2>;
   // Create root cell
   auto A = std::make_shared<Cell2D>(nullptr);
@@ -46,7 +43,7 @@ bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
-  int min_level = 2, max_level = 3;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D, MortonIterator<Cell2D, 213>> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -54,10 +51,10 @@ bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
   tree.meshAtMinLevel();
 
   // Count number of owned leaf cells
-  int number_leaf_cells = A->countOwnedLeaves();
+  unsigned number_leaf_cells = A->countOwnedLeaves();
 
   // Compute the number of cells on each process
-  int total_cells_min_level = (int)(pow(Cell2D::number_children, min_level));
+  unsigned total_cells_min_level = (unsigned)(pow(Cell2D::number_children, min_level));
 
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
@@ -105,7 +102,7 @@ bool meshTreeToMinLevelOneRootParallel(int rank, int size) {
 //             |   |   |   |   ||   |   |   | X |
 //             |___|___|___|___||___|___|___|___|
 // X show the leaf cells that belong to each process
-bool meshTreeToMinLevelTwoRootsParallel(int rank, int size) {
+bool meshTreeToMinLevelTwoRootsParallel(const unsigned rank, const unsigned size) {
   using Cell2D = Cell<2,2>;
   // Create 2 root cells
   auto A = std::make_shared<Cell2D>(nullptr);
@@ -118,7 +115,7 @@ bool meshTreeToMinLevelTwoRootsParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
-  int min_level = 2, max_level = 3;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -126,10 +123,10 @@ bool meshTreeToMinLevelTwoRootsParallel(int rank, int size) {
   tree.meshAtMinLevel();
 
   // Count number of owned leaf cells
-  int number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
+  unsigned number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
 
   // Compute the number of cells on each process
-  int total_cells_min_level = tree.getRootCells().size() * (int)(pow(Cell2D::number_children, min_level));
+  unsigned total_cells_min_level = tree.getRootCells().size() * (unsigned)(pow(Cell2D::number_children, min_level));
 
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
@@ -155,7 +152,7 @@ bool meshTreeToMinLevelTwoRootsParallel(int rank, int size) {
 //             | 0 | 0 ||   |   |       |   |   |
 //             |___|___||___|___|       |___|___|
 // root i should be the partition of process i
-bool meshTreeToMinLevelOneRootPerProcParallel(int rank, int size) {
+bool meshTreeToMinLevelOneRootPerProcParallel(const unsigned rank, const unsigned size) {
   using Cell2D = Cell<2,2>;
   // Create 2 root cells
   auto A = std::make_shared<Cell2D>(nullptr);
@@ -168,7 +165,7 @@ bool meshTreeToMinLevelOneRootPerProcParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
-  int min_level = 2, max_level = 3;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -176,10 +173,10 @@ bool meshTreeToMinLevelOneRootPerProcParallel(int rank, int size) {
   tree.meshAtMinLevel();
 
   // Count number of owned leaf cells
-  int number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
+  unsigned number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
 
   // Compute the number of cells on each process
-  unsigned total_cells_min_level = tree.getRootCells().size() * (int)(pow(Cell2D::number_children, min_level));
+  unsigned total_cells_min_level = tree.getRootCells().size() * (unsigned)(pow(Cell2D::number_children, min_level));
 
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;

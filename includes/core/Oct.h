@@ -18,8 +18,8 @@ template<typename CellType> class Oct;
 template<typename CellType>
 class Oct {
  public:
-  static constexpr int number_children = CellType::number_children;
-  static constexpr int number_neighbors = CellType::number_neighbors;
+  static constexpr unsigned number_children = CellType::number_children;
+  static constexpr unsigned number_neighbors = CellType::number_neighbors;
 
   //***********************************************************//
 	//  VARIABLES                                                //
@@ -28,7 +28,7 @@ class Oct {
   // Oct parent
   std::shared_ptr<CellType> parent_cell;
   // Oct level
-  int level;
+  unsigned level;
   // Neighbor cells
   std::array<std::shared_ptr<CellType>, number_neighbors> neighbor_cells;
   // Child cells
@@ -43,7 +43,7 @@ class Oct {
   // Destructor
   ~Oct();
   // Oct initializer
-  void init(std::shared_ptr<CellType> parent_cell, int level);
+  void init(std::shared_ptr<CellType> parent_cell, unsigned level);
   // Clear oct
   void clear();
   // Reset oct
@@ -56,13 +56,13 @@ class Oct {
   // Get parent cell
   std::shared_ptr<CellType> getParentCell() const;
   // Get level of the oct
-  int getLevel() const;
+  unsigned getLevel() const;
   // Get neighbor cells
   const std::array<std::shared_ptr<CellType>, number_neighbors>& getNeighborCells() const;
   // Get child cells
   const std::array<std::shared_ptr<CellType>, number_children>& getChildCells() const;
   // Get a specific child cell
-  std::shared_ptr<CellType> getChildCell(const int sibling_number) const;
+  std::shared_ptr<CellType> getChildCell(const unsigned sibling_number) const;
 
   //***********************************************************//
 	//  MUTATORS                                                 //
@@ -71,9 +71,9 @@ class Oct {
   // Set the parent cell
   void setParentCell(std::shared_ptr<CellType> cell);
   // Set the neighbor cell (only for direct neighbors)
-  void setNeighborCell(const int dir, std::shared_ptr<CellType> cell);
+  void setNeighborCell(const unsigned dir, std::shared_ptr<CellType> cell);
   // Set a specific child cell
-  void setChildCell(const int sibling_number, std::shared_ptr<CellType> cell);
+  void setChildCell(const unsigned sibling_number, std::shared_ptr<CellType> cell);
 
   //***********************************************************//
   //  METHODS                                                  //
@@ -82,7 +82,7 @@ class Oct {
   // Get the sibling number (position of the cell in the child_cells array)
   unsigned getSiblingNumber(const CellType* ptr_child_cell) const;
   // Get a pointer to a neighbor cell
-  std::shared_ptr<CellType> getNeighborCell(const int dir) const;
+  std::shared_ptr<CellType> getNeighborCell(const unsigned dir) const;
 };
 
 #include "Oct.tpp"

@@ -39,7 +39,7 @@ class MortonIterator : public AbstractTreeIterator<CellType> {
   //***********************************************************//
  public:
   // Constructor
-  MortonIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level);
+  MortonIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const unsigned max_level);
 
   //***********************************************************//
   //  METHODS                                                  //

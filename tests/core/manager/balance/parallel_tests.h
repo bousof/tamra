@@ -1,5 +1,3 @@
-#include <mpi.h>
-
 #include <core/Cell.h>
 #include <core/iterator/MortonIterator.h>
 #include <core/RootCellEntry.h>
@@ -9,19 +7,17 @@
 #include <UnitTestRegistry.h>
 #include <vector>
 
-bool balanceEmptyPartitionsParallel(int rank, int size);
-bool balanceEmptyPartitionsDataParallel(int rank, int size);
-bool balanceEmptyPartitionsCustomDataParallel(int rank, int size);
-bool balanceSmallOneRootParallel(int rank, int size);
-bool balanceBigOneRootParallel(int rank, int size);
-bool balanceSmallTwoRootsParallel(int rank, int size);
+bool balanceEmptyPartitionsParallel(const unsigned rank, const unsigned size);
+bool balanceEmptyPartitionsDataParallel(const unsigned rank, const unsigned size);
+bool balanceEmptyPartitionsCustomDataParallel(const unsigned rank, const unsigned size);
+bool balanceSmallOneRootParallel(const unsigned rank, const unsigned size);
+bool balanceBigOneRootParallel(const unsigned rank, const unsigned size);
+bool balanceSmallTwoRootsParallel(const unsigned rank, const unsigned size);
 
 void registerCoreManagerBalanceParallelTests() {
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  const unsigned rank = mpi_rank(),
+                 size = mpi_size();
 
-  UnitTestRegistry::label = "P_" + std::to_string(rank) + ": ";
   UnitTestRegistry::registerParallelTest("Load balancing (empty partitions)", [=]() { return balanceEmptyPartitionsParallel(rank, size); }, "core/manager/balance");
   UnitTestRegistry::registerParallelTest("Load balancing (empty partitions, data exchange)", [=]() { return balanceEmptyPartitionsDataParallel(rank, size); }, "core/manager/balance");
   UnitTestRegistry::registerParallelTest("Load balancing (empty partitions, custom data)", [=]() { return balanceEmptyPartitionsCustomDataParallel(rank, size); }, "core/manager/balance");
@@ -33,7 +29,7 @@ void registerCoreManagerBalanceParallelTests() {
 // Load balancing (empty partitions)
 // Mesh at level 3 on first process (serial) and all other process have empty partitions
 // Then load balance between process
-bool balanceEmptyPartitionsParallel(int rank, int size) {
+bool balanceEmptyPartitionsParallel(const unsigned rank, const unsigned size) {
   using Cell2D = Cell<2,2>;
   // Create root cell
   auto A = std::make_shared<Cell2D>(nullptr);
@@ -43,7 +39,7 @@ bool balanceEmptyPartitionsParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
-  int min_level = 2, max_level = 3;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -62,7 +58,7 @@ bool balanceEmptyPartitionsParallel(int rank, int size) {
   tree.loadBalance();
 
   // Count number of owned leaf cells
-  int number_leaf_cells = A->countOwnedLeaves();
+  unsigned number_leaf_cells = A->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
@@ -93,7 +89,7 @@ bool balanceEmptyPartitionsParallel(int rank, int size) {
 //                |___|___|_|_|___|
 //                |   |   |   |_|_|
 //                |___|___|___|_|_|
-bool balanceEmptyPartitionsDataParallel(int rank, int size) {
+bool balanceEmptyPartitionsDataParallel(const unsigned rank, const unsigned size) {
   using Cell2D = Cell<2,2>;
   // Create root cell
   auto A = std::make_shared<Cell2D>(nullptr);
@@ -103,7 +99,7 @@ bool balanceEmptyPartitionsDataParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
-  int min_level = 2, max_level = 3;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -133,7 +129,7 @@ bool balanceEmptyPartitionsDataParallel(int rank, int size) {
   tree.loadBalance();
 
   // Count number of owned leaf cells
-  int number_leaf_cells = A->countOwnedLeaves();
+  unsigned number_leaf_cells = A->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
@@ -168,7 +164,7 @@ class TestCellData : public AbstractCellData {
   void setUnsigned(unsigned u_value) { this->u_value = u_value; }
   double getDouble() { return d_value; }
   void setDouble(double d_value) { this->d_value = d_value; }
-  double getLoad(bool isLeaf, const std::shared_ptr<void> &cell=nullptr) const override {
+  double getLoad(bool isLeaf, const std::shared_ptr<void> =nullptr) const override {
     return isLeaf ? 1. : 0.; // Can use custom load here for load balancing
   }
   // Conversion as vector of double for data communication
@@ -189,7 +185,7 @@ class TestCellData : public AbstractCellData {
 
 // Load balancing (empty partitions) with custom cell data
 // Same as previous test with custom CellData (TestCellData)
-bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
+bool balanceEmptyPartitionsCustomDataParallel(const unsigned rank, const unsigned size) {
   using Cell2D = Cell<2, 2, 0, core::manager::balance::TestCellData>;
   // Create root cell
   auto A = std::make_shared<Cell2D>(nullptr);
@@ -199,7 +195,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
-  int min_level = 2, max_level = 3;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -231,7 +227,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
   tree.loadBalance();
 
   // Count number of owned leaf cells
-  int number_leaf_cells = A->countOwnedLeaves();
+  unsigned number_leaf_cells = A->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
@@ -281,7 +277,7 @@ bool balanceEmptyPartitionsCustomDataParallel(int rank, int size) {
 //                |X|X|X|X|   |   |    |   |   | X | X |    |       |   |   |
 //                |X|X|X|X|___|___|    |___|___|___|___|    |_______|___|___|
 // The new loads (nb leaf cells) are [17, 5, 6]
-bool balanceSmallOneRootParallel(int rank, int size) {
+bool balanceSmallOneRootParallel(const unsigned rank, const unsigned size) {
   using Cell2D = Cell<2,2>;
   // Create root cell
   auto A = std::make_shared<Cell2D>(nullptr);
@@ -291,7 +287,7 @@ bool balanceSmallOneRootParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
-  int min_level = 2, max_level = 3;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -308,7 +304,7 @@ bool balanceSmallOneRootParallel(int rank, int size) {
   tree.loadBalance();
 
   // Count number of owned leaf cells
-  int number_leaf_cells = A->countOwnedLeaves();
+  unsigned number_leaf_cells = A->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
@@ -368,7 +364,7 @@ bool balanceSmallOneRootParallel(int rank, int size) {
 // Cells marked as Y are split to respect the mesh consistency.
 // We then try to set their mother cells from data received from rank 1
 // An extrapolation is needed to extend received mother cell data to childs Y
-bool balanceBigOneRootParallel(int rank, int size) {
+bool balanceBigOneRootParallel(const unsigned rank, const unsigned size) {
   using Cell2D = Cell<2,2>;
   // Create root cell
   auto A = std::make_shared<Cell2D>(nullptr);
@@ -378,7 +374,7 @@ bool balanceBigOneRootParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell2D>> entries { eA };
 
   // Construction of the tree
-  int min_level = 2, max_level = 4;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D, MortonIterator<Cell2D, 123>> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -430,7 +426,7 @@ bool balanceBigOneRootParallel(int rank, int size) {
 // Small load balancing (two roots)
 // Mesh at min level 2 then split the first root cell until max level 3
 // The new loads (nb leaf cells) are [40, 29, 11]
-bool balanceSmallTwoRootsParallel(int rank, int size) {
+bool balanceSmallTwoRootsParallel(const unsigned rank, const unsigned size) {
   using Cell2D = Cell<2,2>;
   // Create root cell
   auto A = std::make_shared<Cell2D>(nullptr);
@@ -443,7 +439,7 @@ bool balanceSmallTwoRootsParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
 
   // Construction of the tree
-  int min_level = 2, max_level = 3;
+  unsigned min_level{2}, max_level{3};
   Tree<Cell2D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -461,7 +457,7 @@ bool balanceSmallTwoRootsParallel(int rank, int size) {
   tree.loadBalance();
 
   // Count number of owned leaf cells
-  int number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
+  unsigned number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;

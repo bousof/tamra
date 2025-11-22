@@ -6,12 +6,12 @@
 
 // Constructor
 template<typename CellType>
-AbstractTreeIterator<CellType>::AbstractTreeIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level)
+AbstractTreeIterator<CellType>::AbstractTreeIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const unsigned max_level)
 : root_cells(root_cells),
   max_level(max_level),
   cell_id_manager(root_cells.size(), max_level) {
   level_partition_sizes.assign(max_level+1, 1);
-  for (int i{max_level-1}; i>=0; --i)
+  for (int i=(max_level-1); i>=0; --i)
     level_partition_sizes[i] = level_partition_sizes[i+1] * CellType::number_children;
   index_path.reserve(max_level+1);
   index_path.resize(1);
@@ -79,7 +79,7 @@ std::vector<unsigned> AbstractTreeIterator<CellType>::getCellIndexPath(const std
     parent = parent->getParentOct()->getParentCell();
   }
   // Find the associated root (parent should be a root now)
-  for (unsigned i{0}; i<root_cells.size(); ++i)
+  for (size_t i{0}; i<root_cells.size(); ++i)
     if (root_cells[i] == parent)
       cell_index_path[0] = i;
 
@@ -92,7 +92,7 @@ std::vector<unsigned> AbstractTreeIterator<CellType>::getCellIndexPath(const std
 
 // Go to the next leaf cell
 template<typename CellType>
-bool AbstractTreeIterator<CellType>::next(const int sweep_level) {
+bool AbstractTreeIterator<CellType>::next(const unsigned sweep_level) {
   unsigned current_order = order_path.back();
   if (current_order < (CellType::number_children-1)) { // Going to the next sibling
     this->toParent();
@@ -112,14 +112,14 @@ bool AbstractTreeIterator<CellType>::next(const int sweep_level) {
 
 // Go to the next leaf cell belonging to this proc
 template<typename CellType>
-bool AbstractTreeIterator<CellType>::ownedNext(const int sweep_level) {
+bool AbstractTreeIterator<CellType>::ownedNext(const unsigned sweep_level) {
   bool notLoop = next(sweep_level);
   return notLoop && current_cell->belongToThisProc();
 }
 
 // Go to the previous leaf cell
 template<typename CellType>
-bool AbstractTreeIterator<CellType>::prev(const int sweep_level) {
+bool AbstractTreeIterator<CellType>::prev(const unsigned sweep_level) {
   unsigned current_order = order_path.back();
   if (current_order > 0) { // Going to the next sibling
     this->toParent();
@@ -139,14 +139,14 @@ bool AbstractTreeIterator<CellType>::prev(const int sweep_level) {
 
 // Go to the previous leaf cell belonging to this proc
 template<typename CellType>
-bool AbstractTreeIterator<CellType>::ownedPrev(const int sweep_level) {
+bool AbstractTreeIterator<CellType>::ownedPrev(const unsigned sweep_level) {
   bool notLoop = prev(sweep_level);
   return notLoop && current_cell->belongToThisProc();
 }
 
 // Go to the first leaf cell of first root
 template<typename CellType>
-void AbstractTreeIterator<CellType>::toBegin(const int sweep_level) {
+void AbstractTreeIterator<CellType>::toBegin(const unsigned sweep_level) {
   // Go to first root
   this->toRoot(0);
   toLeaf(sweep_level, false);
@@ -154,7 +154,7 @@ void AbstractTreeIterator<CellType>::toBegin(const int sweep_level) {
 
 // Go to the first leaf cell of first root belonging to this process
 template<typename CellType>
-bool AbstractTreeIterator<CellType>::toOwnedBegin(const int sweep_level) {
+bool AbstractTreeIterator<CellType>::toOwnedBegin(const unsigned sweep_level) {
   // Find first owned root
   unsigned i;
   bool found = false;
@@ -175,7 +175,7 @@ bool AbstractTreeIterator<CellType>::toOwnedBegin(const int sweep_level) {
 
 // Go to the last leaf cell of last root
 template<typename CellType>
-void AbstractTreeIterator<CellType>::toEnd(const int sweep_level) {
+void AbstractTreeIterator<CellType>::toEnd(const unsigned sweep_level) {
   // Go last root
   this->toRoot(root_cells.size()-1);
   toLeaf(sweep_level, true);
@@ -183,7 +183,7 @@ void AbstractTreeIterator<CellType>::toEnd(const int sweep_level) {
 
 // Go to the last leaf cell of last root belonging to this process
 template<typename CellType>
-bool AbstractTreeIterator<CellType>::toOwnedEnd(const int sweep_level) {
+bool AbstractTreeIterator<CellType>::toOwnedEnd(const unsigned sweep_level) {
   // Find last owned root
   unsigned i;
   bool found = false;
@@ -204,7 +204,7 @@ bool AbstractTreeIterator<CellType>::toOwnedEnd(const int sweep_level) {
 
 // Moves the iterator to a leaf cell of the current cell
 template<typename CellType>
-void AbstractTreeIterator<CellType>::toLeaf(const int sweep_level, const bool reverse) {
+void AbstractTreeIterator<CellType>::toLeaf(const unsigned sweep_level, const bool reverse) {
   while (!current_cell->isLeaf() && order_path.size()<=sweep_level)
     // Update current to child
     if (reverse)
@@ -215,7 +215,7 @@ void AbstractTreeIterator<CellType>::toLeaf(const int sweep_level, const bool re
 
 // Moves the iterator to a leaf cell of the current cell that belong to the process
 template<typename CellType>
-void AbstractTreeIterator<CellType>::toOwnedLeaf(const int sweep_level, const bool reverse) {
+void AbstractTreeIterator<CellType>::toOwnedLeaf(const unsigned sweep_level, const bool reverse) {
   while (!current_cell->isLeaf() && order_path.size()<=sweep_level) {
     unsigned order;
     if (reverse)
@@ -240,7 +240,7 @@ void AbstractTreeIterator<CellType>::toCellId(const std::vector<unsigned> &cell_
 
   // Go to right cell
   this->toRoot(order_path[0]);
-  for (unsigned i{1}; i<order_path.size(); ++i) {
+  for (size_t i{1}; i<order_path.size(); ++i) {
     if (create && current_cell->isLeaf())
       current_cell->split(max_level, extrapolation_function);
     if (!current_cell->isLeaf())

@@ -6,7 +6,7 @@
 
 // Constructor
 template <typename CellType>
-HilbertIterator<CellType>::HilbertIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level)
+HilbertIterator<CellType>::HilbertIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const unsigned max_level)
 : AbstractTreeIterator<CellType>(root_cells, max_level),
   possible_leaf_orientations(HilbertTables<CellType>::get_possible_leaf_orientations()),
   child_orderings(HilbertTables<CellType>::child_orderings()),
@@ -30,7 +30,7 @@ std::vector<unsigned> HilbertIterator<CellType>::indexToOrderPath(const std::vec
   std::vector<unsigned> order_path(index_path.size());
   order_path[0] = index_path[0];
   unsigned orientation = root_cell_orientations[index_path[0]];
-  for (int i{1}; i<index_path.size(); ++i) {
+  for (size_t i{1}; i<index_path.size(); ++i) {
     order_path[i] = reverse_child_orderings[orientation][index_path[i]];
     orientation = child_orientations[orientation][order_path[i]];
   }

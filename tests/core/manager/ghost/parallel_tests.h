@@ -1,22 +1,19 @@
-#include <mpi.h>
-
 #include <core/Cell.h>
 #include <core/RootCellEntry.h>
 #include <core/Tree.h>
 #include <memory>
 #include <parallel/allreduce.h>
+#include <parallel/wrapper.h>
 #include <UnitTestRegistry.h>
 #include <vector>
 
-bool ghostOneRoot1DParallel(int rank, int size);
-bool ghostOneRootExtrapolateConflict1DParallel(int rank, int size);
+bool ghostOneRoot1DParallel(const unsigned rank, const unsigned size);
+bool ghostOneRootExtrapolateConflict1DParallel(const unsigned rank, const unsigned size);
 
 void registerCoreManagerGhostParallelTests() {
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  const unsigned rank = mpi_rank(),
+                 size = mpi_size();
 
-  UnitTestRegistry::label = "P_" + std::to_string(rank) + ": ";
   UnitTestRegistry::registerParallelTest("1D Ghost Cells creation (one root, 1D)", [=]() { return ghostOneRoot1DParallel(rank, size); }, "core/manager/ghost");
   UnitTestRegistry::registerParallelTest("1D Ghost Cells leading to extrapolate conflict (one root, 1D)", [=]() { return ghostOneRootExtrapolateConflict1DParallel(rank, size); }, "core/manager/ghost");
 }
@@ -33,7 +30,7 @@ void registerCoreManagerGhostParallelTests() {
 //                |       |       |  |       |       |
 //                |   |   | Y |   |  |   | Y |   |   |
 // structure  ->  |___|___|___|___|  |___|___|___|___|
-bool ghostOneRoot1DParallel(int rank, int size) {
+bool ghostOneRoot1DParallel(const unsigned rank, const unsigned size) {
   using Cell1D = Cell<2>;
   // Create 2 root cells
   auto A = std::make_shared<Cell1D>(nullptr);
@@ -43,7 +40,7 @@ bool ghostOneRoot1DParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell1D>> entries { eA };
 
   // Construction of the tree
-  int min_level = 1, max_level = 2;
+  unsigned min_level{1}, max_level{2};
   Tree<Cell1D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -70,7 +67,7 @@ bool ghostOneRoot1DParallel(int rank, int size) {
 
   // Ghost parent cell Y should not be leaf anymore
   if (rank==0 || rank==1) {
-    int otherRank = (rank+1) % 2;
+    unsigned otherRank = (rank+1) % 2;
     passed &= !A->getChildCell(otherRank)->isLeaf();
     // Check value
     passed &= A->getChildCell(otherRank)->getChildCell(rank)->getCellData().getValue() == (2*otherRank+rank);
@@ -105,7 +102,7 @@ bool ghostOneRoot1DParallel(int rank, int size) {
 //                |       |       |       |       |
 //                |       |   | Y |   Z   |   Z   |
 // structure  ->  |_______|___|___|_______|_______|
-bool ghostOneRootExtrapolateConflict1DParallel(int rank, int size) {
+bool ghostOneRootExtrapolateConflict1DParallel(const unsigned rank, const unsigned size) {
   using Cell1D = Cell<2>;
   // Create 2 root cells
   auto A = std::make_shared<Cell1D>(nullptr);
@@ -115,7 +112,7 @@ bool ghostOneRootExtrapolateConflict1DParallel(int rank, int size) {
   std::vector<RootCellEntry<Cell1D>> entries { eA };
 
   // Construction of the tree
-  int min_level = 1, max_level = 3;
+  unsigned min_level{1}, max_level{3};
   Tree<Cell1D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
@@ -161,13 +158,13 @@ bool ghostOneRootExtrapolateConflict1DParallel(int rank, int size) {
 
   // Ghost parent cell Y should not be leaf anymore
   if (rank == 0) {
-    int otherRank = 1;
+    unsigned otherRank = 1;
     passed &= !A->getChildCell(1)->isLeaf();
     // Check value
     passed &= A->getChildCell(1)->getChildCell(0)->getCellData().getValue() == (otherRank);
   }
   if (rank == 1) {
-    int otherRank = 0;
+    unsigned otherRank = 0;
     passed &= !A->getChildCell(0)->isLeaf();
     passed &= !A->getChildCell(0)->getChildCell(1)->isLeaf();
     // Check value

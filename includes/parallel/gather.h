@@ -8,7 +8,9 @@
 
 #pragma once
 
-#include <mpi.h>
+#ifdef USE_MPI
+  #include <mpi.h>
+#endif // USE_MPI
 
 #include <functional>
 #include <iostream>
@@ -16,8 +18,10 @@
 #include <vector>
 #include"ParallelData.h"
 
+#ifdef USE_MPI
+
 template<typename T>
-void gather(const T value, std::vector<T> &buffer, const int root, const int rank, const int size, const MPI_Datatype data_type) {
+void gather(const T value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size, const MPI_Datatype data_type) {
   static_assert(
     std::is_same<T, double>::value,
     "gather only supports T = double"
@@ -29,4 +33,18 @@ void gather(const T value, std::vector<T> &buffer, const int root, const int ran
 	MPI_Gather(&value, 1, data_type, buffer.data(), 1, data_type, root, MPI_COMM_WORLD);
 }
 
-void doubleGather(double &value, std::vector<double> &buffer, const int root, const int rank, const int size);
+#else
+
+template<typename T>
+void gather(const T value, std::vector<T> &buffer, const unsigned, const unsigned, const unsigned) {
+  static_assert(
+    std::is_same<T, double>::value,
+    "gather only supports T = double"
+  );
+
+	buffer = { value };
+}
+
+#endif // USE_MPI
+
+void doubleGather(double &value, std::vector<double> &buffer, const unsigned root, const unsigned rank, const unsigned size);

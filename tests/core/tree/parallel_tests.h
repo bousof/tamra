@@ -1,16 +1,12 @@
-#include <mpi.h>
-
-#include <memory>
-#include <vector>
 #include <core/Cell.h>
-#include <core/Tree.h>
 #include <core/RootCellEntry.h>
+#include <core/Tree.h>
+#include <memory>
+#include <parallel/wrapper.h>
 #include <UnitTestRegistry.h>
+#include <vector>
 
 void registerCoreTreeParallelTests() {
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-  UnitTestRegistry::label = "P_" + std::to_string(rank) + ": ";
+//  const unsigned rank = mpi_rank(),
+//                 size = mpi_size();
 }

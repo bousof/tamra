@@ -32,14 +32,14 @@ struct RootCellEntry {
 	//***********************************************************//
  public:
   // Get a neighbor cell
-  std::shared_ptr<CellType> getNeighbor(const int dir) const;
+  std::shared_ptr<CellType> getNeighbor(const unsigned dir) const;
 
   //***********************************************************//
 	//  MUTATORS                                                 //
 	//***********************************************************//
  public:
   // Set a neighbor cell
-  void setNeighbor(int dir, std::shared_ptr<CellType> cell);
+  void setNeighbor(unsigned dir, std::shared_ptr<CellType> cell);
 };
 
 #include "RootCellEntry.tpp"

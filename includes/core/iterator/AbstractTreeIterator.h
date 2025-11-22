@@ -29,7 +29,7 @@ class AbstractTreeIterator {
   // Root cells
   const std::vector<std::shared_ptr<CellType>> root_cells;
   // Tree max level
-  const int max_level;
+  const unsigned max_level;
  protected:
   // Vector of sibling numbers
   std::vector<unsigned> index_path;
@@ -52,7 +52,7 @@ class AbstractTreeIterator {
   //***********************************************************//
  public:
   // Constructor
-  AbstractTreeIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const int max_level);
+  AbstractTreeIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const unsigned max_level);
   // Destructor
   virtual ~AbstractTreeIterator() = default;
 
@@ -83,27 +83,27 @@ class AbstractTreeIterator {
   //***********************************************************//
  public:
   // Go to the next leaf cell
-  bool next(const int sweep_level = std::numeric_limits<int>::max());
+  bool next(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Go to the next leaf cell belonging to this proc
-  bool ownedNext(const int sweep_level = std::numeric_limits<int>::max());
+  bool ownedNext(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Go to the previous leaf cell
-  bool prev(const int sweep_level = std::numeric_limits<int>::max());
+  bool prev(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Go to the previous leaf cell belonging to this proc
-  bool ownedPrev(const int sweep_level = std::numeric_limits<int>::max());
+  bool ownedPrev(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Go to the first leaf cell of first root
-  void toBegin(const int sweep_level = std::numeric_limits<int>::max());
+  void toBegin(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Go to the first leaf cell of first root belonging to this process
-  bool toOwnedBegin(const int sweep_level = std::numeric_limits<int>::max());
+  bool toOwnedBegin(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Go to the last leaf cell of last root
-  void toEnd(const int sweep_level = std::numeric_limits<int>::max());
+  void toEnd(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Go to the last leaf cell of last root belonging to this process
-  bool toOwnedEnd(const int sweep_level = std::numeric_limits<int>::max());
+  bool toOwnedEnd(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Moves the iterator to a leaf cell of the current cell
-  void toLeaf(const int sweep_level = std::numeric_limits<int>::max(), const bool reverse = false);
+  void toLeaf(const unsigned sweep_level = std::numeric_limits<int>::max(), const bool reverse = false);
   // Moves the iterator to a leaf cell of the current cell that belong to the process
-  void toOwnedLeaf(const int sweep_level = std::numeric_limits<int>::max(), const bool reverse = false);
+  void toOwnedLeaf(const unsigned sweep_level = std::numeric_limits<int>::max(), const bool reverse = false);
   // Move iterator to a specific cell ID (can also create it with a flag)
-  void toCellId(const std::vector<unsigned> &cell_id, const bool create = false, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) {});
+  void toCellId(const std::vector<unsigned> &cell_id, const bool create = false, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; });
   // Check if a cell ID is greater than
   bool cellIdGt(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdGt(current_cell_id, cell_id); }
   // Check if a cell ID is greater than or equal another ID
