@@ -1,20 +1,12 @@
+#include <doctest.h>
+#include <test_macros.h>
+
 #include <iostream>
 #include <linear_algebra/jacobi.h>
 #include <parallel/allreduce.h>
 #include <parallel/wrapper.h>
 #include <UnitTestRegistry.h>
 #include <vector>
-
-bool testJacobiNoOverlapParallel100(const unsigned rank, const unsigned size);
-bool testJacobiOverlapParallel100(const unsigned rank, const unsigned size);
-
-void registerLinalgParallelTests() {
-  const unsigned rank = mpi_rank(),
-                 size = mpi_size();
-
-  UnitTestRegistry::registerParallelTest("Jacobi parallel (no overlap, 100 iter)", [=]() { return testJacobiNoOverlapParallel100(rank, size); }, "linalg");
-  UnitTestRegistry::registerParallelTest("Jacobi parallel (overlap, 100 iter)", [=]() { return testJacobiOverlapParallel100(rank, size); }, "linalg");
-}
 
 // Jacobi parallel (no overlap, 100 iter)
 //
@@ -27,7 +19,10 @@ void registerLinalgParallelTests() {
 //     [           1 1 ]       [ 1 ]        [ 0 ]         [  3 ]
 //
 // dim(A) = (2*size) x (2*size)
-bool testJacobiNoOverlapParallel100(const unsigned rank, const unsigned size) {
+TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (no overlap, 100 iter)") {
+  const unsigned rank = mpi_rank(),
+                 size = mpi_size();
+
   Eigen::SparseMatrix<double, Eigen::RowMajor> A_local(2, 2*size);
   A_local.insert(0, 2*rank) = 2.; A_local.insert(0, 2*rank+1) = 1.;
   A_local.insert(1, 2*rank) = 1.; A_local.insert(1, 2*rank+1) = 1.;
@@ -46,7 +41,9 @@ bool testJacobiNoOverlapParallel100(const unsigned rank, const unsigned size) {
   // Test should pass on all processes
   bool all_passed;
   boolAndAllReduce(passed, all_passed);
-  return all_passed;
+
+  // Final check
+  CHECK(all_passed);
 }
 
 // Jacobi parallel (no overlap, 100 iter)
@@ -61,7 +58,10 @@ bool testJacobiNoOverlapParallel100(const unsigned rank, const unsigned size) {
 //     [ (0)   1       1 ]       [ 1 ]        [ 0 ]         [  3 ]
 //
 // dim(A) = (2*size) x (2*size)
-bool testJacobiOverlapParallel100(const unsigned rank, const unsigned size) {
+TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (overlap, 100 iter)") {
+  const unsigned rank = mpi_rank(),
+                 size = mpi_size();
+
   // 3x3 diagonally dominant matrix
   Eigen::SparseMatrix<double, Eigen::RowMajor> A_local(2, 2*size);
   A_local.insert(0, (2*rank)%size)        = 2. - (2*rank)/size;
@@ -89,5 +89,7 @@ bool testJacobiOverlapParallel100(const unsigned rank, const unsigned size) {
   // Test should pass on all processes
   bool all_passed;
   boolAndAllReduce(passed, all_passed);
-  return all_passed;
+
+  // Final check
+  CHECK(all_passed);
 }
