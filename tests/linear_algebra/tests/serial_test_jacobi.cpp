@@ -3,13 +3,14 @@
 
 #include <iostream>
 #include <vector>
+
 #include <linear_algebra/jacobi.h>
 
 // Jacobi 2x2 serial (1 iter)
 //
-//     [ 2  1 ]       [ 2 ]        [ 0 ]        [ 1/2 ]
-// A = [      ] , b = [   ] , x0 = [   ] , x1 = [     ]
-//     [ 1  1 ]       [ 1 ]        [ 0 ]        [  2  ]
+//     ┌ 2  1 ┐       ┌ 2 ┐        ┌ 0 ┐        ┌ 1/2 ┐
+// A = │      │ , b = │   │ , x0 = │   │ , x1 = │     │
+//     └ 1  1 ┘       └ 1 ┘        └ 0 ┘        └  2  ┘
 //
 TEST_CASE("[linalg][jacobi] Jacobi 2x2 serial (1 iter)") {
   Eigen::SparseMatrix<double, Eigen::RowMajor> A(2, 2);
@@ -29,9 +30,9 @@ TEST_CASE("[linalg][jacobi] Jacobi 2x2 serial (1 iter)") {
 
 // Jacobi 2x2 serial (100 iter)
 //
-//     [ 2  1 ]       [ 2 ]        [ 0 ]         [ -1 ]
-// A = [      ] , b = [   ] , x0 = [   ] , sol = [    ]
-//     [ 1  1 ]       [ 1 ]        [ 0 ]         [  3 ]
+//     ┌ 2  1 ┐       ┌ 2 ┐        ┌ 0 ┐         ┌ -1 ┐
+// A = │      │ , b = │   │ , x0 = │   │ , sol = │    │
+//     └ 1  1 ┘       └ 1 ┘        └ 0 ┘         └  3 ┘
 //
 TEST_CASE("[linalg][jacobi] Jacobi 2x2 serial (100 iter)") {
   // 2x2 diagonally dominant matrix

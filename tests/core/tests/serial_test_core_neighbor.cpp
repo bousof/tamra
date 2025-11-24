@@ -1,3 +1,6 @@
+#include <doctest.h>
+#include <test_macros.h>
+
 #include <cmath>
 #include <memory>
 #include <vector>
@@ -8,16 +11,6 @@
 #include <core/RootCellEntry.h>
 #include <core/Tree.h>
 #include <UnitTestRegistry.h>
-
-bool testNeighborLeafsQuadtree();
-bool testNeighborsOctreeOneLevel();
-bool testNeighborsOctreeDeep();
-
-void registerCoreNeighborSerialTests() {
-  UnitTestRegistry::registerSerialTest("Neighbor leafs search (quadtree)", testNeighborLeafsQuadtree, "core/neighbor");
-  UnitTestRegistry::registerSerialTest("Neighbors search (octree, 1 level)", testNeighborsOctreeOneLevel, "core/neighbor");
-  UnitTestRegistry::registerSerialTest("Neighbors search (octree, deep)", testNeighborsOctreeDeep, "core/neighbor");
-}
 
 namespace core::neighbor {
 template<int Nx, int Ny, int Nz>
@@ -75,7 +68,7 @@ void initialize_tree_cells_limits(std::shared_ptr<CellType> cell) {
 //                ├─┼─┼─┼─┤│   ├─┼─┤
 //                └─┴─┴─┴─┘└───┴─┴─┘
 //
-bool testNeighborLeafsQuadtree() {
+TEST_CASE("[core][neighbor] Neighbor leafs search (quadtree)") {
   static constexpr int Nx = 2, Ny = 2, Nz = 0;
   using Cell2D = Cell<Nx,Ny,Nz, core::neighbor::TestCellData<Nx, Ny, Nz>>;
   // Create 4 root cells
@@ -128,6 +121,7 @@ bool testNeighborLeafsQuadtree() {
             passed &= (dir!=5) || (cell_data.imax==2*Nx*Nx) || (cell_data.jmin==0);
             passed &= (dir!=6) || (cell_data.imin==0      ) || (cell_data.jmax==Ny*Ny);
             passed &= (dir!=7) || (cell_data.imax==2*Nx*Nx) || (cell_data.jmax==Ny*Ny);
+            CHECK(passed);
             return;
           }
 
@@ -154,7 +148,7 @@ bool testNeighborLeafsQuadtree() {
             // case 1                       case 2                            case 3
             //                      ────┬───┐    ────┬───┐            ┌───┬────    ┌───┬────
             // ┌───┬───┐                │   │        │ C │            │   │        │ N │    
-            // │ N │ C │     OR       N ├───┤ OR   N ├───┤     OR     ├───┤ C   OR ├───┤ C  
+            // │ N │ C │     OR       N ├───┤ OR   N ├───┤     OR     ├───┼ C   OR ├───┼ C  
             // └───┴───┘                │ C │        │   │            │ N │        │   │    
             //                      ────┴───┘    ────┴───┘            └───┴────    └───┴────
             passed &= ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmin) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == n->getLevel()) ) // case 1
@@ -164,7 +158,7 @@ bool testNeighborLeafsQuadtree() {
             // case 1                       case 2                            case 3
             //                      ┌───┬────    ┌───┬────            ────┬───┐    ────┬───┐
             // ┌───┬───┐            │   │        │ C │                    │   │        │ N │
-            // │ C │ N │     OR     ├───┤ N   OR ├───┤ N       OR       C ├───┤ OR   C ├───┤
+            // │ C │ N │     OR     ├───┼ N   OR ├───┼ N       OR       C ├───┤ OR   C ├───┤
             // └───┴───┘            │ C │        │   │                    │ N │        │   │
             //                      └───┴────    └───┴────            ────┴───┘    ────┴───┘
             passed &= ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmin == neighbor_data.jmin) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == n->getLevel()) ) // case 1
@@ -230,12 +224,12 @@ bool testNeighborLeafsQuadtree() {
             passed &= ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmax == neighbor_data.jmin) && (c->getLevel() <= (n->getLevel()+2)) && ((c->getLevel()+2) >= n->getLevel()) ) // case 1
                     || ( (cell_data.imax == neighbor_data.imin) && (cell_data.jmin == neighbor_data.jmin) && (c->getLevel() == (n->getLevel()+1)) ) // case 2
                     || ( (cell_data.jmax == neighbor_data.jmin) && (cell_data.imin == neighbor_data.imin) && (c->getLevel() == (n->getLevel()+1)) ); // case 3
+          CHECK(passed);
         },
         false, false, { 0, 1, 2, 3, 4, 5, 6, 7 }
       );
     }
   );
-  return passed;
 }
 
 // Check octree cell neighbors
@@ -623,7 +617,7 @@ bool check_octree_cell(const std::shared_ptr<CellType> &cell, const unsigned ima
 // - root B, child 2
 // - root B, child 5
 // - root B, child 7
-bool testNeighborsOctreeOneLevel() {
+TEST_CASE("[core][neighbor] Neighbors search (octree, 1 level)") {
   static constexpr int Nx = 2, Ny = 2, Nz = 2;
   using Cell3D = Cell<Nx,Ny,Nz, core::neighbor::TestCellData<Nx, Ny, Nz>>;
   // Create 4 root cells
@@ -668,14 +662,11 @@ bool testNeighborsOctreeOneLevel() {
   auto c = A->getChildCell(0)->getChildCell(5);
 
   // Check neighbors in all directions
-  bool passed = true;
   tree.applyToOwnedLeaves(
-    [&passed](const std::shared_ptr<Cell3D> &cell, unsigned) mutable {
-      if (!passed) return;
-      passed &= check_octree_cell<Cell3D>(cell, 2*Nx*Nx, Ny*Ny, Nz*Nz);
+    [](const std::shared_ptr<Cell3D> &cell, unsigned) mutable {
+      CHECK(check_octree_cell<Cell3D>(cell, 2*Nx*Nx, Ny*Ny, Nz*Nz));
     }
   );
-  return passed;
 }
 
 // Neighbors leaf search (3D)
@@ -699,7 +690,7 @@ bool testNeighborsOctreeOneLevel() {
 // - root B, child 2
 // - root B, child 5
 // - root B, child 7
-bool testNeighborsOctreeDeep() {
+TEST_CASE("[core][neighbor] Neighbors search (octree, deep)") {
   static constexpr int Nx = 2, Ny = 2, Nz = 2;
   using Cell3D = Cell<Nx,Ny,Nz, core::neighbor::TestCellData<Nx, Ny, Nz>>;
   // Create 4 root cells
@@ -750,12 +741,9 @@ bool testNeighborsOctreeDeep() {
   auto c = A->getChildCell(0)->getChildCell(5);
 
   // Check neighbors in all directions
-  bool passed = true;
   tree.applyToOwnedLeaves(
-    [&passed](const std::shared_ptr<Cell3D> &cell, unsigned) mutable {
-      if (!passed) return;
-      passed &= check_octree_cell<Cell3D>(cell, 2*Nx*Nx*Nx*Nx, Ny*Ny*Ny*Ny, Nz*Nz*Nz*Nz);
+    [](const std::shared_ptr<Cell3D> &cell, unsigned) mutable {
+      CHECK(check_octree_cell<Cell3D>(cell, 2*Nx*Nx*Nx*Nx, Ny*Ny*Ny*Ny, Nz*Nz*Nz*Nz));
     }
   );
-  return passed;
 }

@@ -2,21 +2,22 @@
 #include <test_macros.h>
 
 #include <iostream>
+#include <vector>
+
 #include <linear_algebra/jacobi.h>
 #include <parallel/allreduce.h>
 #include <parallel/wrapper.h>
 #include <UnitTestRegistry.h>
-#include <vector>
 
 // Jacobi parallel (no overlap, 100 iter)
 //
-//     [ 2 1           ]       [ 2 ]        [ 0 ]         [ -1 ]
-//     [ 1 1      (0)  ]       [ 1 ]        [ | ]         [  3 ]
-//     [     .         ]       [ : ]        [ | ]         [  : ]
-// A = [       .       ] , b = [ : ] , x0 = [ | ] , sol = [  : ]
-//     [         .     ]       [ : ]        [ | ]         [  : ]
-//     [  (0)      2 1 ]       [ 2 ]        [ | ]         [ -1 ]
-//     [           1 1 ]       [ 1 ]        [ 0 ]         [  3 ]
+//     ┌ 2 1           ┐       ┌ 2 ┐        ┌ 0 ┐         ┌ -1 ┐
+//     │ 1 1      (0)  │       │ 1 │        │ | │         │  3 │
+//     │     .         │       │ : │        │ | │         │  : │
+// A = │       .       │ , b = │ : │ , x0 = │ | │ , sol = │  : │
+//     │         .     │       │ : │        │ | │         │  : │
+//     │  (0)      2 1 │       │ 2 │        │ | │         │ -1 │
+//     └           1 1 ┘       └ 1 ┘        └ 0 ┘         └  3 ┘
 //
 // dim(A) = (2*size) x (2*size)
 TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (no overlap, 100 iter)") {
@@ -48,14 +49,14 @@ TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (no overlap, 100 iter)") {
 
 // Jacobi parallel (no overlap, 100 iter)
 //
-//     [ 2       1   (0) ]       [ 2 ]        [ 0 ]         [ -1 ]
-//     [   \       \     ]       [ | ]        [ | ]         [  | ]
-//     [     \       \   ]       [ | ]        [ | ]         [  | ]
-// A = [       2  (0)  1 ] , b = [ 2 ] , x0 = [ | ] , sol = [ -1 ]
-//     [ 1  (0)  1       ]       [ 1 ]        [ | ]         [  3 ]
-//     [   \       \     ]       [ | ]        [ | ]         [  | ]
-//     [     \       \   ]       [ | ]        [ | ]         [  | ]
-//     [ (0)   1       1 ]       [ 1 ]        [ 0 ]         [  3 ]
+//     ┌ 2       1   (0) ┐       ┌ 2 ┐        ┌ 0 ┐         ┌ -1 ┐
+//     │   \       \     │       │ | │        │ | │         │  | │
+//     │     \       \   │       │ | │        │ | │         │  | │
+// A = │       2  (0)  1 │ , b = │ 2 │ , x0 = │ | │ , sol = │ -1 │
+//     │ 1  (0)  1       │       │ 1 │        │ | │         │  3 │
+//     │   \       \     │       │ | │        │ | │         │  | │
+//     │     \       \   │       │ | │        │ | │         │  | │
+//     └ (0)   1       1 ┘       └ 1 ┘        └ 0 ┘         └  3 ┘
 //
 // dim(A) = (2*size) x (2*size)
 TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (overlap, 100 iter)") {

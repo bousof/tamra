@@ -51,5 +51,3 @@ class CellData : public AbstractCellData {
   // Return cell data size
   unsigned getDataSize() const override;
 };
-
-#include"CellData.tpp"

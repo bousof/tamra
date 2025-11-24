@@ -1,6 +1,14 @@
 # Shared test sources (used in both serial + MPI test executables)
 set(TAMRA_TESTS_SRC
   # add test files here
+  core/tests/manager/serial_test_core_manager_cell_id.cpp
+  core/tests/manager/serial_test_core_manager_coarse.cpp
+  core/tests/manager/serial_test_core_manager_min_level.cpp
+  core/tests/manager/serial_test_core_manager_refine.cpp
+  core/tests/serial_test_core_cell_oct.cpp
+  core/tests/serial_test_core_neighbor.cpp
+  core/tests/serial_test_core_tree.cpp
+  core/tests/serial_test_core_tree_iterator.cpp
   linear_algebra/tests/serial_test_jacobi.cpp
 )
 
@@ -23,6 +31,11 @@ if(USE_MPI)
     test_main_mpi.cpp        # serial doctest main
     ${TAMRA_TESTS_SRC}       # shared tests
     # add MPI test files here
+    communications/tests/mpi_test_communications_alltoall.cpp
+    communications/tests/mpi_test_communications_bcast.cpp
+    core/tests/manager/mpi_test_core_manager_balance.cpp
+    core/tests/manager/mpi_test_core_manager_ghost.cpp
+    core/tests/manager/mpi_test_core_manager_min_level.cpp
     linear_algebra/tests/mpi_test_jacobi.cpp
   )
 
