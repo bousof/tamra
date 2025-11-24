@@ -1,5 +1,4 @@
 #include <doctest.h>
-#include <test_macros.h>
 
 #include <iostream>
 #include <vector>

@@ -1,4 +1,4 @@
-#include"ChildAndDirectionTables.h"
+#include "ChildAndDirectionTables.h"
 
 //***********************************************************//
 //  STATIC METHODS                                           //

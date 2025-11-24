@@ -16,7 +16,7 @@
 #include <iostream>
 #include <numeric>
 #include <vector>
-#include"ParallelData.h"
+#include "ParallelData.h"
 
 #ifdef USE_MPI
 

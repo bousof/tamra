@@ -171,4 +171,4 @@ auto compute_dir_sibling_numbers() {
   return directional_sibling_numbers;
 }
 
-#include"ChildAndDirectionTables.tpp"
+#include "ChildAndDirectionTables.tpp"

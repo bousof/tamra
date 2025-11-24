@@ -19,7 +19,7 @@
 #include <set>
 #include <unordered_map>
 #include <vector>
-#include"../parallel/alltoallv.h"
+#include "../parallel/alltoallv.h"
 
 std::vector<double> jacobiIteration(const Eigen::SparseMatrix<double, Eigen::RowMajor> &A_local,
                                     const std::vector<double> &b_local,

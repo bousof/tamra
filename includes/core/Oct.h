@@ -13,7 +13,7 @@
 
 template<typename CellType> class Oct;
 
-#include"Cell.h"
+#include "Cell.h"
 
 template<typename CellType>
 class Oct {

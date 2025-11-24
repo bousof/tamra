@@ -15,9 +15,9 @@
 #include <functional>
 #include <numeric>
 #include <vector>
-#include"ParallelData.h"
-#include"./allgather.h"
-#include"../utils/array_utils.h"
+#include "ParallelData.h"
+#include "./allgather.h"
+#include "../utils/array_utils.h"
 
 std::vector<int> vectorDoubleAllgatherv(const std::vector<double> &send_buffer, std::vector<double> &recv_buffer, const unsigned size);
 

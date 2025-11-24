@@ -16,9 +16,9 @@
 #include <numeric>
 #include <vector>
 
-#include"../utils/array_utils.h"
-#include"./alltoall.h"
-#include"ParallelData.h"
+#include "../utils/array_utils.h"
+#include "./alltoall.h"
+#include "ParallelData.h"
 
 std::vector<int> vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<unsigned> &recv_buffer);
 

@@ -1,5 +1,4 @@
 #include <doctest.h>
-#include <test_macros.h>
 
 #include <cmath>
 #include <memory>
