@@ -105,7 +105,7 @@ TEST_CASE("[core][neighbor] Neighbor leafs search (quadtree)") {
   // Check neighbors in all directions
   bool passed = true;
   tree.applyToOwnedLeaves(
-    [&passed](const std::shared_ptr<Cell2D> &cell, unsigned) mutable {
+    [&passed](const std::shared_ptr<Cell2D> &cell, const unsigned) mutable {
       cell->applyToNeighborLeafCells(
         [&passed](const std::shared_ptr<Cell2D> &c, const std::shared_ptr<Cell2D> &n, const unsigned &dir) {
           // If no neighbor, then cooredinates corresponds to boundaries
@@ -661,7 +661,7 @@ TEST_CASE("[core][neighbor] Neighbors search (octree, 1 level)") {
 
   // Check neighbors in all directions
   tree.applyToOwnedLeaves(
-    [](const std::shared_ptr<Cell3D> &cell, unsigned) mutable {
+    [](const std::shared_ptr<Cell3D> &cell, const unsigned) mutable {
       CHECK(check_octree_cell<Cell3D>(cell, 2*Nx*Nx, Ny*Ny, Nz*Nz));
     }
   );
@@ -740,7 +740,7 @@ TEST_CASE("[core][neighbor] Neighbors search (octree, deep)") {
 
   // Check neighbors in all directions
   tree.applyToOwnedLeaves(
-    [](const std::shared_ptr<Cell3D> &cell, unsigned) mutable {
+    [](const std::shared_ptr<Cell3D> &cell, const unsigned) mutable {
       CHECK(check_octree_cell<Cell3D>(cell, 2*Nx*Nx*Nx*Nx, Ny*Ny*Ny*Ny, Nz*Nz*Nz*Nz));
     }
   );

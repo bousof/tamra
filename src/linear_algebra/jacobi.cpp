@@ -12,7 +12,7 @@ std::vector<double> jacobiIteration(const Eigen::SparseMatrix<double, Eigen::Row
   const int col_max = col_offset + nb_local_rows;
   std::vector<double> x_next(nb_local_rows);
   for (long i{0}; i<A_local.rows(); ++i) {
-    double diag = 0.0, sum = 0.0;
+    double diag{0.}, sum{0.};
 
     for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(A_local, i); it; ++it) {
       if (it.col() == i+col_offset) // Modified
@@ -26,7 +26,7 @@ std::vector<double> jacobiIteration(const Eigen::SparseMatrix<double, Eigen::Row
 
     if (diag == 0.0) {
       std::cerr << "Zero diagonal detected at row " << i << " on rank " << rank << std::endl;
-      std::terminate();  // or throw
+      throw std::runtime_error("Zero diagonal detected in Jacobi iteration.");
     }
 
     x_next[i] = (b_local[i] - sum) / diag; // Issue here

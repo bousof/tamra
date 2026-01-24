@@ -1,48 +1,48 @@
 #include "../../includes/parallel/alltoallv.h"
 
-std::vector<int> vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<unsigned> &recv_buffer) {
+std::vector<int> vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<unsigned> &recv_buffer, std::vector<int> recv_counts) {
 #ifdef USE_MPI
-	return vectorAlltoallv(send_buffers, recv_buffer, MPI_UNSIGNED);
+	return vectorAlltoallv(send_buffers, recv_buffer, recv_counts, MPI_UNSIGNED);
 #else
   return vectorAlltoallv(send_buffers, recv_buffer);
 #endif // USE_MPI
 }
 
-std::vector<int> vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<int> &recv_buffer) {
+std::vector<int> vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<int> &recv_buffer, std::vector<int> recv_counts) {
 #ifdef USE_MPI
-	return vectorAlltoallv(send_buffers, recv_buffer, MPI_INT);
+	return vectorAlltoallv(send_buffers, recv_buffer, recv_counts, MPI_INT);
 #else
   return vectorAlltoallv(send_buffers, recv_buffer);
 #endif // USE_MPI
 }
 
-std::vector<int> vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<double> &recv_buffer) {
+std::vector<int> vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<double> &recv_buffer, std::vector<int> recv_counts) {
 #ifdef USE_MPI
-	return vectorAlltoallv(send_buffers, recv_buffer, MPI_DOUBLE);
+	return vectorAlltoallv(send_buffers, recv_buffer, recv_counts, MPI_DOUBLE);
 #else
   return vectorAlltoallv(send_buffers, recv_buffer);
 #endif // USE_MPI
 }
 
-void vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers) {
+void vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffers, std::vector<int> recv_counts) {
 #ifdef USE_MPI
-  vectorAlltoallv(send_buffers, recv_buffers, MPI_UNSIGNED);
+  vectorAlltoallv(send_buffers, recv_buffers, recv_counts, MPI_UNSIGNED);
 #else
   vectorAlltoallv(send_buffers, recv_buffers);
 #endif // USE_MPI
 }
 
-void vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<std::vector<int>> &recv_buffers) {
+void vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<std::vector<int>> &recv_buffers, std::vector<int> recv_counts) {
 #ifdef USE_MPI
-  vectorAlltoallv(send_buffers, recv_buffers, MPI_INT);
+  vectorAlltoallv(send_buffers, recv_buffers, recv_counts, MPI_INT);
 #else
   vectorAlltoallv(send_buffers, recv_buffers);
 #endif // USE_MPI
 }
 
-void vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<std::vector<double>> &recv_buffers) {
+void vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<std::vector<double>> &recv_buffers, std::vector<int> recv_counts) {
 #ifdef USE_MPI
-  vectorAlltoallv(send_buffers, recv_buffers, MPI_DOUBLE);
+  vectorAlltoallv(send_buffers, recv_buffers, recv_counts, MPI_DOUBLE);
 #else
   vectorAlltoallv(send_buffers, recv_buffers);
 #endif // USE_MPI

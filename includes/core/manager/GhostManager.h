@@ -82,9 +82,9 @@ class GhostManager {
 	void updateGhostLayer(GhostManagerTaskType &task, TreeIteratorType &iterator) const;
   // Exchange ghost cell values
 	void exchangeGhostValues(GhostManagerTaskType &task, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }) const;
- private:
   // Share the partitions start and end cells
   void sharePartitions(std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids, TreeIteratorType &iterator) const;
+ private:
   // Loop on owned cells and check if neighbors belong to another process
   void findCellsToSend(const std::vector<std::vector<unsigned>> &begin_ids, const std::vector<std::vector<unsigned>> &end_ids, std::vector<std::vector<std::shared_ptr<CellType>>> &cells_to_send, TreeIteratorType &iterator, const std::vector<int> &directions) const;
   // Set all ghost cells to coarse

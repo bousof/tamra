@@ -165,6 +165,21 @@ unsigned Cell<Nx, Ny, Nz, DataType>::countOwnedLeaves() const {
   return nb_owned_leaves;
 }
 
+// Count the number of ghost leaf cells
+template<int Nx, int Ny, int Nz, typename DataType>
+unsigned Cell<Nx, Ny, Nz, DataType>::countGhostLeaves() const {
+  if (!this->belongToThisProc())
+    return 0;
+
+  if (isLeaf())
+    return 1;
+
+  unsigned nb_ghost_leaves = 0;
+  for (const auto &child : getChildCells())
+    nb_ghost_leaves += child->countGhostLeaves();
+  return nb_ghost_leaves;
+}
+
 // Split a root cell (a pointer to the root is needed for back reference in child oct)
 template<int Nx, int Ny, int Nz, typename DataType>
 const std::array<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>, Cell<Nx, Ny, Nz, DataType>::number_children>& Cell<Nx, Ny, Nz, DataType>::splitRoot(const unsigned max_level, std::shared_ptr<Cell> root_cell, ExtrapolationFunctionType extrapolation_function) {

@@ -18,6 +18,7 @@ add_library(tamra_core STATIC
 target_include_directories(tamra_core
   PUBLIC
     ${CMAKE_SOURCE_DIR}/tamra/includes
+  SYSTEM PUBLIC
     ${CMAKE_SOURCE_DIR}/third_party/eigen-3.4.0
 )
 

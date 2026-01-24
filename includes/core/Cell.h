@@ -162,6 +162,8 @@ class Cell {
   unsigned countLeaves() const;
   // Count the number of owned leaf cells
   unsigned countOwnedLeaves() const;
+  // Count the number of ghost leaf cells
+  unsigned countGhostLeaves() const;
   // Split a root cell (a pointer to the root is needed for back reference in child oct)
   const std::array<std::shared_ptr<Cell>, number_children>& splitRoot(const unsigned max_level, std::shared_ptr<Cell> root_cell, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<Cell> &cell) { (void)cell; });
   // Split a cell and it's direct neighbors if needed for mesh conformity

@@ -185,7 +185,7 @@ void AbstractTreeIterator<CellType>::toEnd(const unsigned sweep_level) {
 template<typename CellType>
 bool AbstractTreeIterator<CellType>::toOwnedEnd(const unsigned sweep_level) {
   // Find last owned root
-  unsigned i;
+  long int i;
   bool found = false;
   for (i=root_cells.size()-1; i>=0; --i)
     if (root_cells[i]->belongToThisProc()) {
@@ -217,7 +217,7 @@ void AbstractTreeIterator<CellType>::toLeaf(const unsigned sweep_level, const bo
 template<typename CellType>
 void AbstractTreeIterator<CellType>::toOwnedLeaf(const unsigned sweep_level, const bool reverse) {
   while (!current_cell->isLeaf() && order_path.size()<=sweep_level) {
-    unsigned order;
+    long int order;
     if (reverse)
       for (order=CellType::number_children-1; order>=0; --order) {
         if (getChildCellFromOrder(current_cell, order, true)->belongToThisProc())

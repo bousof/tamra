@@ -15,22 +15,23 @@
 #include <functional>
 #include <numeric>
 #include <vector>
+#include <iostream>
 
 #include "../utils/array_utils.h"
 #include "./alltoall.h"
 #include "ParallelData.h"
 
-std::vector<int> vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<unsigned> &recv_buffer);
+std::vector<int> vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<unsigned> &recv_buffer, std::vector<int> recv_counts = {});
 
-std::vector<int> vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<int> &recv_buffer);
+std::vector<int> vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<int> &recv_buffer, std::vector<int> recv_counts = {});
 
-std::vector<int> vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<double> &recv_buffer);
+std::vector<int> vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<double> &recv_buffer, std::vector<int> recv_counts = {});
 
-void vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffer);
+void vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffer, std::vector<int> recv_counts = {});
 
-void vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<std::vector<int>> &recv_buffer);
+void vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<std::vector<int>> &recv_buffer, std::vector<int> recv_counts = {});
 
-void vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<std::vector<double>> &recv_buffer);
+void vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<std::vector<double>> &recv_buffer, std::vector<int> recv_counts = {});
 
 void matrixUnsignedAlltoallv(const std::vector<std::vector<std::vector<unsigned>>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffer, const unsigned colCount);
 
@@ -42,7 +43,7 @@ void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelD
 #ifdef USE_MPI
 
 template<typename T>
-std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer, const MPI_Datatype data_type) {
+std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer, const std::vector<int> &recv_counts_in, const MPI_Datatype data_type) {
   static_assert(
     std::is_same<T, unsigned>::value || std::is_same<T, int>::value || std::is_same<T, double>::value,
     "vectorAllToAll only supports T = unsigned, int, or double"
@@ -56,8 +57,13 @@ std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers
 		send_counts[p] = send_buffers[p].size();
 
 	// Number of values to receive from the other processes
-	std::vector<int> recv_counts(size);
-	intAlltoall(send_counts, recv_counts);
+	std::vector<int> recv_counts;
+  if (recv_counts_in.size() == size)
+    recv_counts = recv_counts_in;
+  else {
+    recv_counts.resize(size);
+    intAlltoall(send_counts, recv_counts);
+  }
 
 	// Total number of cells to send and receive
   std::vector<int> send_displacements, recv_displacements;
@@ -79,10 +85,10 @@ std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers
 }
 
 template<typename T>
-void vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const MPI_Datatype data_type) {
+void vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const std::vector<int> &recv_counts, const MPI_Datatype data_type) {
   // Call the merging all to all function
 	std::vector<T> recv_buffer;
-  std::vector<int> recv_displacements = vectorAlltoallv(send_buffers, recv_buffer, data_type);
+  std::vector<int> recv_displacements = vectorAlltoallv(send_buffers, recv_buffer, recv_counts, data_type);
 
   // Split received data from each processor
   split(recv_buffer, recv_buffers, recv_displacements);
@@ -102,7 +108,8 @@ std::vector<int> matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> 
 
   // Call the vector all to all function
 	std::vector<T> vector_recv_buffer;
-  std::vector<int> recv_displacements = vectorAlltoallv(vector_send_buffers, vector_recv_buffer, data_type);
+  std::vector<int> recv_counts;
+  std::vector<int> recv_displacements = vectorAlltoallv(vector_send_buffers, vector_recv_buffer, recv_counts, data_type);
 
   // Transform back to a matrix (known colCounts)
   recv_buffer.resize(vector_recv_buffer.size() / colCount);

@@ -124,8 +124,24 @@ class Tree {
   // Count the number of owned leaf cells
   unsigned countOwnedLeaves() const;
 
+  // Count the number of ghost leaf cells
+  unsigned countGhostLeaves() const;
+
   // Apply a function to owned leaf cells
-  void applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, unsigned)> &f) const;
+  void applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, const unsigned)> &f) const;
+
+  // Share the partitions start and end cells
+ public:
+  void sharePartitions(std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids) const;
+ private:
+  void sharePartitions(std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids, TreeIteratorType &iterator) const;
+
+  // Apply a function to ghost leaf cells
+ public:
+  void applyToGhostLeavesRanks(const std::function<void(const std::shared_ptr<CellType>&, const unsigned, const unsigned)> &f) const;
+ private:
+  void applyToGhostLeavesRanks(const std::function<void(const std::shared_ptr<CellType>&, const unsigned, const unsigned)> &f, TreeIteratorType &iterator) const;
+  void applyToGhostLeaves(const std::function<void(const std::shared_ptr<CellType>&, const unsigned, const unsigned)> &f, std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids, unsigned &index, TreeIteratorType &iterator) const;
 };
 
 #include "Tree.tpp"

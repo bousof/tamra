@@ -39,7 +39,7 @@ class AbstractTreeIterator {
   // Current cell pointed by iterator
   std::shared_ptr<CellType> current_cell;
   // Size of partition for each level
-  std::vector<int> level_partition_sizes;
+  std::vector<size_t> level_partition_sizes;
   // Partition of the current cell
   std::pair<int, int> current_cell_partition;
   // Partition of the current cell
@@ -105,13 +105,13 @@ class AbstractTreeIterator {
   // Move iterator to a specific cell ID (can also create it with a flag)
   void toCellId(const std::vector<unsigned> &cell_id, const bool create = false, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; });
   // Check if a cell ID is greater than
-  bool cellIdGt(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdGt(current_cell_id, cell_id); }
+  bool cellIdGt(const std::vector<unsigned> &cell_id) const { return cell_id_manager.cellIdGt(current_cell_id, cell_id); }
   // Check if a cell ID is greater than or equal another ID
-  bool cellIdGte(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdGte(current_cell_id, cell_id); }
+  bool cellIdGte(const std::vector<unsigned> &cell_id) const { return cell_id_manager.cellIdGte(current_cell_id, cell_id); }
   // Check if a cell ID is smaller than
-  bool cellIdLt(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdLt(current_cell_id, cell_id); }
+  bool cellIdLt(const std::vector<unsigned> &cell_id) const { return cell_id_manager.cellIdLt(current_cell_id, cell_id); }
   // Check if a cell ID is smaller than or equal another ID
-  bool cellIdLte(const std::vector<unsigned> &cell_id) { return cell_id_manager.cellIdLte(current_cell_id, cell_id); }
+  bool cellIdLte(const std::vector<unsigned> &cell_id) const { return cell_id_manager.cellIdLte(current_cell_id, cell_id); }
   // Generate an ID from the genealogy of a cell
   std::vector<unsigned> indexPathToId(const std::vector<unsigned> &index_path) const;
   // Generate an ID from the genealogy of a cell

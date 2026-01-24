@@ -1,4 +1,5 @@
 #include "Tree.h"
+#include "../utils/display_vector.h"
 
 //***********************************************************//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -141,9 +142,20 @@ unsigned Tree<CellType, TreeIteratorType>::countOwnedLeaves() const {
   return nb_owned_leaves;
 }
 
+// Count the number of owned leaf cells
+template<typename CellType, typename TreeIteratorType>
+unsigned Tree<CellType, TreeIteratorType>::countGhostLeaves() const {
+  unsigned nb_ghost_leaves = 0;
+
+  for (const auto &root_cell : root_cells)
+    if (root_cell->belongToOtherProc())
+      nb_ghost_leaves += root_cell->countGhostLeaves();
+  return nb_ghost_leaves;
+}
+
 // Apply a function to owned leaf cells
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, unsigned)> &f) const {
+void Tree<CellType, TreeIteratorType>::applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, const unsigned)> &f) const {
   TreeIteratorType iterator(getRootCells(), getMaxLevel());
 
   unsigned index{0};
@@ -152,4 +164,87 @@ void Tree<CellType, TreeIteratorType>::applyToOwnedLeaves(const std::function<vo
   do {
     f(iterator.getCell(), index++);
   } while (iterator.ownedNext());
+}
+
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::sharePartitions(std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids) const {
+  TreeIteratorType iterator(root_cells, max_level);
+  sharePartitions(begin_ids, end_ids, iterator);
+}
+
+// Share the partiion start and end cells
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::sharePartitions(std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids, TreeIteratorType &iterator) const {
+  ghostManager.sharePartitions(begin_ids, end_ids, iterator);
+}
+
+// Share the partiion start and end cells
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::applyToGhostLeavesRanks(const std::function<void(const std::shared_ptr<CellType>&, const unsigned, const unsigned)> &f) const {
+  TreeIteratorType iterator(root_cells, max_level);
+  applyToGhostLeavesRanks(f, iterator);
+}
+
+// Apply a function to owned leaf cells
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::applyToGhostLeavesRanks(const std::function<void(const std::shared_ptr<CellType>&, const unsigned, const unsigned)> &f, TreeIteratorType &iterator) const {
+  std::vector<std::vector<unsigned>> partitions_begin_ids, partitions_end_ids;
+  sharePartitions(partitions_begin_ids, partitions_end_ids, iterator);
+
+  // Process has no ghost cells
+  unsigned index{0};
+  if (!iterator.toOwnedBegin()) {
+    iterator.toBegin();
+    applyToGhostLeaves(f, partitions_begin_ids, partitions_end_ids, index, iterator);
+    return;
+  }
+
+  // Determine if there is any rank lower that have ghost cells and loop through them
+  {
+    iterator.toOwnedBegin();
+    std::shared_ptr<CellType> owned_begin_cell = iterator.getCell();
+    iterator.toBegin();
+    if (iterator.getCell() != owned_begin_cell)
+      applyToGhostLeaves(f, partitions_begin_ids, partitions_end_ids, index, iterator); // Loop through ghost from begin to owned begin - 1
+  }
+
+  // Determine if there is any rank higher that have ghost cells and loop through them
+  {
+    iterator.toEnd();
+    std::shared_ptr<CellType> end_cell = iterator.getCell();
+    iterator.toOwnedEnd();
+    if (iterator.getCell() != end_cell) {
+      iterator.next();
+      applyToGhostLeaves(f, partitions_begin_ids, partitions_end_ids, index, iterator); // Loop through ghost from owned end + 1 to end
+    }
+  }
+}
+
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::applyToGhostLeaves(const std::function<void(const std::shared_ptr<CellType>&, const unsigned, const unsigned)> &f, std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids, unsigned &index, TreeIteratorType &iterator) const {
+  unsigned other_rank = 0;
+  auto cell_id_manager = iterator.getCellIdManager();
+  bool loop{true};
+  do {
+    // If empty partition skip
+    if (!cell_id_manager.cellIdLte(begin_ids[other_rank], end_ids[other_rank])) {
+      other_rank++;
+      continue;
+    }
+
+    std::shared_ptr<CellType> cell = iterator.getCell();
+
+    if (iterator.cellIdLte(end_ids[other_rank])) // Cell is in the proc partition -> callback + next cell (no next rank)
+      f(cell, index++, other_rank);
+    else if (!iterator.cellIdGt(end_ids[other_rank])) { // Cell may be shared between partitions -> callback + next rank (no next cell)
+      f(cell, index++, other_rank);
+      other_rank++;
+      continue;
+    } else { // Cell is in the proc partition -> no callback + next rank
+      other_rank++;
+      continue;
+    }
+    // Move iterator and check if still in partition
+    loop = iterator.next() && iterator.getCell()->belongToOtherProc();
+  } while (loop);
 }
