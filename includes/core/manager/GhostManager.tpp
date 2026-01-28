@@ -1,4 +1,4 @@
-#include "./GhostManager.h"
+#include "GhostManager.h"
 //#include "../../utils/display_vector.h"
 
 //***********************************************************//
@@ -109,7 +109,7 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
 
   const unsigned cell_id_size = iterator.getCellIdManager().getCellIdSize();
   std::vector<std::vector<unsigned>> recv_cell_ids;
-  matrixUnsignedAlltoallv(cell_ids_to_send, recv_cell_ids, cell_id_size);
+  matrixAlltoallv<unsigned>(cell_ids_to_send, recv_cell_ids, cell_id_size);
 
   //std::cout << "P_" << rank << ": recv cell ids ";
   //displayVector(std::cout, recv_cell_ids) << std::endl;
@@ -147,7 +147,7 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
 
   // Check if all process have finished
   bool is_finished = extrapolate_owned_cells.size()==0 && extrapolate_ghost_cells.size()==0;
-  boolAndAllReduce(is_finished, is_finished);
+  boolAndAllreduce(is_finished, is_finished);
 
   // Create an task (keep a copy of arrays needed for exchanging ghost values)
   GhostManagerTaskType task = GhostManagerTaskType(this, is_finished, std::move(cells_to_send), std::move(cells_to_recv), std::move(extrapolate_owned_cells), std::move(extrapolate_ghost_cells), std::move(begin_ids), std::move(end_ids));
@@ -228,7 +228,7 @@ void GhostManager<CellType, TreeIteratorType>::sharePartitions(std::vector<std::
 
   // All gather the start and end of each process partition
   std::vector<std::vector<unsigned>> send_partition_ids= { begin_id, end_id }, all_partition_ids;
-  matrixUnsignedAllgather(send_partition_ids, all_partition_ids, size);
+  matrixAllgather<unsigned>(send_partition_ids, all_partition_ids, size);
 
   // Format outputs
   begin_ids.resize(size);

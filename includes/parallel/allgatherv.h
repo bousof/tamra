@@ -9,30 +9,43 @@
 #pragma once
 
 #ifdef USE_MPI
-  #include <mpi.h>
+
+#include <mpi.h>
+#include "mpitypes.h"
+
 #endif // USE_MPI
 
 #include <functional>
 #include <numeric>
 #include <vector>
-#include "ParallelData.h"
-#include "./allgather.h"
+
 #include "../utils/array_utils.h"
+#include "allgather.h"
+#include "ParallelData.h"
 
-std::vector<int> vectorDoubleAllgatherv(const std::vector<double> &send_buffer, std::vector<double> &recv_buffer, const unsigned size);
+//-----------------------------------------------------------//
+//  PROTOTYPES                                               //
+//-----------------------------------------------------------//
 
-std::vector<int> vectorUnsignedAllgatherv(const std::vector<unsigned> &send_buffer, std::vector<unsigned> &recv_buffer, const unsigned size);
+template<typename T>
+std::vector<int> vectorAllgatherv(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned size);
 
 using ParallelDataFactory = std::function<std::unique_ptr<ParallelData>()>;
 void vectorDataAllgatherv(const std::vector<std::unique_ptr<ParallelData>> &send_buffer, std::vector<std::unique_ptr<ParallelData>> &recv_buffer, const unsigned size, const ParallelDataFactory createData);
 
+//-----------------------------------------------------------//
+//  LOWER LEVEL METHODS                                      //
+//-----------------------------------------------------------//
+
+namespace allgatherv::detail {
+
 #ifdef USE_MPI
 
 template<typename T>
-std::vector<int> vectorAllgatherv(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned size, const MPI_Datatype data_type) {
+std::vector<int> vectorAllgathervT(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned size, const MPI_Datatype data_type) {
   static_assert(
     std::is_same<T, unsigned>::value || std::is_same<T, double>::value,
-    "vectorAllgatherv only supports T = unsigned, or double"
+    "vectorAllgathervT only supports T = unsigned, or double"
   );
 
 	// Number of elements to send to from this process
@@ -40,7 +53,7 @@ std::vector<int> vectorAllgatherv(const std::vector<T> &send_buffer, std::vector
 
 	// Number of values to receive from the other processes
 	std::vector<int> recv_counts(size);
-	intAllgather(send_count, recv_counts, size);
+	scalarAllgather<int>(send_count, recv_counts, size);
 
 	// Total number of cells to send and receive
   std::vector<int> recv_displacements;
@@ -55,10 +68,10 @@ std::vector<int> vectorAllgatherv(const std::vector<T> &send_buffer, std::vector
 }
 
 template<typename T>
-void vectorAllgatherv(const std::vector<T> &send_buffer, std::vector<std::vector<T>> &recv_buffers, const unsigned size, const MPI_Datatype data_type) {
+void vectorAllgathervT(const std::vector<T> &send_buffer, std::vector<std::vector<T>> &recv_buffers, const unsigned size, const MPI_Datatype data_type) {
   // Call the merging all to all function
 	std::vector<T> recv_buffer;
-  std::vector<int> recv_displacements = vectorAllgatherv(send_buffer, recv_buffer, size, data_type);
+  std::vector<int> recv_displacements = vectorAllgathervT(send_buffer, recv_buffer, size, data_type);
 
   // Split received data from each processor
   split(recv_buffer, recv_buffers, recv_displacements);
@@ -67,10 +80,10 @@ void vectorAllgatherv(const std::vector<T> &send_buffer, std::vector<std::vector
 #else
 
 template<typename T>
-std::vector<int> vectorAllgatherv(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned) {
+std::vector<int> vectorAllgathervT(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned) {
   static_assert(
     std::is_same<T, unsigned>::value || std::is_same<T, double>::value,
-    "vectorAllgatherv only supports T = unsigned, or double"
+    "vectorAllgathervT only supports T = unsigned, or double"
   );
 
   // No MPI, so one proc then only gather from itself
@@ -80,13 +93,33 @@ std::vector<int> vectorAllgatherv(const std::vector<T> &send_buffer, std::vector
 }
 
 template<typename T>
-void vectorAllgatherv(const std::vector<T> &send_buffer, std::vector<std::vector<T>> &recv_buffers, const unsigned) {
+void vectorAllgathervT(const std::vector<T> &send_buffer, std::vector<std::vector<T>> &recv_buffers, const unsigned) {
   // Call the merging all to all function
 	std::vector<T> recv_buffer;
-  std::vector<int> recv_displacements = vectorAllgatherv(send_buffer, recv_buffer);
+  std::vector<int> recv_displacements = vectorAllgathervT(send_buffer, recv_buffer);
 
   // Split received data from each processor
   split(recv_buffer, recv_buffers, recv_displacements);
 }
 
 #endif // USE_MPI
+
+} // namespace allgatherv::detail
+
+//-----------------------------------------------------------//
+//  IMPLEMENTATIONS                                          //
+//-----------------------------------------------------------//
+
+template<typename T>
+std::vector<int> vectorAllgatherv(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned size) {
+  static_assert(
+    std::is_same<T, double>::value || std::is_same<T, unsigned>::value,
+    "vectorAllgatherv only supports T = double, and unsigned"
+  );
+
+#ifdef USE_MPI
+  return allgatherv::detail::vectorAllgathervT(send_buffer, recv_buffer, size, mpi_type<T>());
+#else
+  return allgatherv::detail::vectorAllgathervT(send_buffer, recv_buffer, size);
+#endif // USE_MPI
+}

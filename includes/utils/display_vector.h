@@ -15,7 +15,7 @@ template<typename T>
 std::ostream& displayVector(std::ostream &os, const std::vector<T> &c) {
   //static_assert(
   //  std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
-  //  "vectorAllToAll only supports T = bool, double, int, or unsigned"
+  //  "displayVector only supports T = bool, double, int, or unsigned"
   //);
 
   os << "[ ";

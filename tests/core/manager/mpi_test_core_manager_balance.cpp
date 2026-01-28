@@ -48,7 +48,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions)") {
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
-  unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
+  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
 
   // Also the number of cells should be equally distributed
   bool passed = number_leaf_cells >= total_leaf_cells/size-1;
@@ -56,7 +56,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -124,7 +124,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, data 
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
-  unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
+  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
 
   // Also the number of cells should be equally distributed
   bool passed = number_leaf_cells >= total_leaf_cells/size-1;
@@ -138,7 +138,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, data 
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -227,7 +227,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, custo
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
-  unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
+  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
 
   // Also the number of cells should be equally distributed
   bool passed = number_leaf_cells >= total_leaf_cells/size-1;
@@ -243,7 +243,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, custo
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -309,7 +309,7 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (one root)") {
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
-  unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
+  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
 
   //std::cout << rank << " " << number_leaf_cells << " " << total_leaf_cells << std::endl;
 
@@ -319,7 +319,7 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (one root)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -413,7 +413,7 @@ TEST_CASE("[core][manager][balance][mpi] Big load balancing (one root)") {
 
   // Compute the sum of all the leaf cells owned
   unsigned sum_area;
-  unsignedSumAllReduce(area, sum_area);
+  scalarSumAllreduce<unsigned>(area, sum_area);
 
   // Compute the number of cells on each process
   unsigned total_area = (unsigned)(pow(Cell2D::number_children, max_level));
@@ -425,7 +425,7 @@ TEST_CASE("[core][manager][balance][mpi] Big load balancing (one root)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -472,7 +472,7 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (two roots)") {
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
-  unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
+  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
 
   //std::cout << rank << " " << number_leaf_cells << " " << total_leaf_cells << std::endl;
 
@@ -482,7 +482,7 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (two roots)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);

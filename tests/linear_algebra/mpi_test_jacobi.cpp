@@ -39,7 +39,7 @@ TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (no overlap, 100 iter)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -87,7 +87,7 @@ TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (overlap, 100 iter)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);

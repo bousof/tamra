@@ -1,4 +1,4 @@
-#include "./RefineManager.h"
+#include "RefineManager.h"
 
 //***********************************************************//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //

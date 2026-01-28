@@ -16,7 +16,7 @@ TEST_CASE("[communications][alltoall] Int AllToAll") {
   // Send rank to all others
   std::vector<int> send_buffer(size, rank),
                    recv_buffer(size, 0);
-  intAlltoall(send_buffer, recv_buffer);
+  scalarAlltoall<int>(send_buffer, recv_buffer);
 
   // Should receive ranks from all others
   bool passed = true;
@@ -25,7 +25,7 @@ TEST_CASE("[communications][alltoall] Int AllToAll") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -41,7 +41,7 @@ TEST_CASE("[communications][alltoall] Vector Int AllToAll") {
     send_buffers.at(p).push_back(rank * 10 + p);
 
   std::vector<unsigned> recv_buffer;
-  vectorUnsignedAlltoallv(send_buffers, recv_buffer);
+  vectorAlltoallv<unsigned>(send_buffers, recv_buffer);
 
   bool passed = recv_buffer.size() == size;
   for (unsigned i{0}; i<size && passed; ++i)
@@ -49,7 +49,7 @@ TEST_CASE("[communications][alltoall] Vector Int AllToAll") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -65,7 +65,7 @@ TEST_CASE("[communications][alltoall] Vector Double AllToAll (flat)") {
     send_buffers.at(p).push_back(static_cast<double>(rank + p) + 0.5);
 
   std::vector<double> recv_buffer;
-  vectorDoubleAlltoallv(send_buffers, recv_buffer);
+  vectorAlltoallv<double>(send_buffers, recv_buffer);
 
   bool passed = recv_buffer.size() == size;
   for (unsigned i{0}; i<size && passed; ++i)
@@ -73,7 +73,7 @@ TEST_CASE("[communications][alltoall] Vector Double AllToAll (flat)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -89,7 +89,7 @@ TEST_CASE("[communications][alltoall] Vector Double AllToAll (split)") {
     send_buffers.at(p).assign(size-1-p, static_cast<double>(rank + p) + 0.5);
 
   std::vector<std::vector<double>> recv_buffers;
-  vectorDoubleAlltoallv(send_buffers, recv_buffers);
+  vectorAlltoallv<double>(send_buffers, recv_buffers);
 
   bool passed = recv_buffers.size() == size;
   for (unsigned p{0}; p<size && passed; ++p) {
@@ -100,7 +100,7 @@ TEST_CASE("[communications][alltoall] Vector Double AllToAll (split)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -159,7 +159,7 @@ TEST_CASE("[communications][alltoall] Vector Data AllToAll (fixed size)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -195,7 +195,7 @@ TEST_CASE("[communications][alltoall] Vector Data AllToAll (dynamic size)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);

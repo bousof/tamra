@@ -16,7 +16,7 @@
 
 template<typename CellTypeT, typename TreeIteratorType> class GhostManager;
 
-#include "./GhostManagerTask.h"
+#include "GhostManagerTask.h"
 
 template<typename CellTypeT, typename TreeIteratorTypeT>
 class GhostManager {
@@ -91,4 +91,4 @@ class GhostManager {
   void setGhostToCoarseRecurs(const std::shared_ptr<CellType> &cell) const;
 };
 
-#include "./GhostManager.tpp"
+#include "GhostManager.tpp"

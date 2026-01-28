@@ -48,4 +48,4 @@ class RefineManager {
   bool refineRecurs(const std::shared_ptr<CellType> &cell, ExtrapolationFunctionType extrapolation_function) const;
 };
 
-#include "./RefineManager.tpp"
+#include "RefineManager.tpp"

@@ -1,4 +1,4 @@
-#include "./MinLevelMeshManager.h"
+#include "MinLevelMeshManager.h"
 //#include "../../utils/display_vector.h"
 
 //***********************************************************//
@@ -67,7 +67,7 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::parallelMeshAtMinLevel(con
   if (rank == 0)
     partitions = iterator.getCellIdManager().getEqualPartitions(min_level, size);;
   unsigned rowCount=size, colCount=iterator.getCellIdManager().getCellIdSize();
-  matrixUnsignedBcast(partitions, 0, rank, rowCount, colCount);
+  matrixBcast<unsigned>(partitions, 0, rank, rowCount, colCount);
 
   // Create the first partition cell
   iterator.toCellId(partitions[rank], true);

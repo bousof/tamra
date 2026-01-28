@@ -9,18 +9,34 @@
 #pragma once
 
 #ifdef USE_MPI
-  #include <mpi.h>
+
+#include <mpi.h>
+#include "mpitypes.h"
+
 #endif // USE_MPI
 
 #include <vector>
 
+//-----------------------------------------------------------//
+//  PROTOTYPES                                               //
+//-----------------------------------------------------------//
+
+template<typename T>
+void scalarAlltoall(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer);
+
+//-----------------------------------------------------------//
+//  LOWER LEVEL METHODS                                      //
+//-----------------------------------------------------------//
+
+namespace alltoall::detail {
+
 #ifdef USE_MPI
 
 template<typename T>
-void scalarAlltoall(const std::vector<int> &send_buffer, std::vector<T> &recv_buffer, const MPI_Datatype data_type) {
+void scalarAlltoallT(const std::vector<int> &send_buffer, std::vector<T> &recv_buffer, const MPI_Datatype data_type) {
   static_assert(
     std::is_same<T, int>::value,
-    "scalarAlltoall only supports T = int"
+    "scalarAlltoallT only supports T = int"
   );
 
 	// Sharing of values between all processors
@@ -30,10 +46,10 @@ void scalarAlltoall(const std::vector<int> &send_buffer, std::vector<T> &recv_bu
 #else
 
 template<typename T>
-void scalarAlltoall(const std::vector<int> &send_buffer, std::vector<T> &recv_buffer) {
+void scalarAlltoallT(const std::vector<int> &send_buffer, std::vector<T> &recv_buffer) {
   static_assert(
     std::is_same<T, int>::value,
-    "scalarAlltoall only supports T = int"
+    "scalarAlltoallT only supports T = int"
   );
 
 	// No MPI, so one proc then only receive from itself
@@ -42,4 +58,22 @@ void scalarAlltoall(const std::vector<int> &send_buffer, std::vector<T> &recv_bu
 
 #endif // USE_MPI
 
-void intAlltoall(const std::vector<int> &send_buffer, std::vector<int> &recv_buffer);
+} // namespace alltoall::detail
+
+//-----------------------------------------------------------//
+//  IMPLEMENTATIONS                                          //
+//-----------------------------------------------------------//
+
+template<typename T>
+void scalarAlltoall(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer) {
+  static_assert(
+    std::is_same<T, int>::value,
+    "scalarAlltoall only supports T = int"
+  );
+
+#ifdef USE_MPI
+  alltoall::detail::scalarAlltoallT(send_buffer, recv_buffer, mpi_type<T>());
+#else
+  alltoall::detail::scalarAlltoallT(send_buffer, recv_buffer);
+#endif // USE_MPI
+}

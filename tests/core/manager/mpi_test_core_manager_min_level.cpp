@@ -50,7 +50,7 @@ TEST_CASE("[core][manager][min_level][mpi] Meshing at min level (one root, paral
 
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
-  unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
+  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
   bool passed = total_leaf_cells == total_cells_min_level;
 
   // Also the number of cells should be equally distributed
@@ -59,7 +59,7 @@ TEST_CASE("[core][manager][min_level][mpi] Meshing at min level (one root, paral
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -127,7 +127,7 @@ TEST_CASE("[core][manager][min_level][mpi] Meshing at min level (two roots, para
 
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
-  unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
+  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
   bool passed = total_leaf_cells == total_cells_min_level;
 
   // Also the number of cells should be equally distributed
@@ -136,7 +136,7 @@ TEST_CASE("[core][manager][min_level][mpi] Meshing at min level (two roots, para
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -182,7 +182,7 @@ TEST_CASE("[core][manager][min_level][mpi] Mesh at min level (1 root per process
 
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
-  unsignedSumAllReduce(number_leaf_cells, total_leaf_cells);
+  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
   bool passed = total_leaf_cells == total_cells_min_level;
 
   // Also the number of cells should be equally distributed
@@ -191,7 +191,7 @@ TEST_CASE("[core][manager][min_level][mpi] Mesh at min level (1 root per process
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);

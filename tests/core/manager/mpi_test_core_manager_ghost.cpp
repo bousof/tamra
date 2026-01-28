@@ -69,7 +69,7 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells creation (one root, 1D)") 
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -172,7 +172,7 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells leading to extrapolate con
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllReduce(passed, all_passed);
+  boolAndAllreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);

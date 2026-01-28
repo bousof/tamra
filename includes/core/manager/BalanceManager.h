@@ -66,4 +66,4 @@ class BalanceManager {
   bool backPropagateFlags(const std::shared_ptr<CellType> &cell) const;
 };
 
-#include "./BalanceManager.tpp"
+#include "BalanceManager.tpp"

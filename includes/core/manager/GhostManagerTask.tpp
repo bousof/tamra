@@ -1,4 +1,4 @@
-#include "./GhostManagerTask.h"
+#include "GhostManagerTask.h"
 //#include "../../utils/display_vector.h"
 
 //***********************************************************//
@@ -129,7 +129,7 @@ std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskOwned(TreeIter
           break;
         case OwnedConflictResolutionStrategy::THROW:
           bool throw_error = !all(resolution_flags);
-          boolAndAllReduce(throw_error, throw_error);
+          boolAndAllreduce(throw_error, throw_error);
           if (throw_error)
             throw std::runtime_error("Error thrown in GhostManagerTask::continueTaskOwned()");
           break;
@@ -165,7 +165,7 @@ std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskGhost(TreeIter
           break;
         case GhostConflictResolutionStrategy::THROW:
           bool throw_error = !all(resolution_flags);
-          boolAndAllReduce(throw_error, throw_error);
+          boolAndAllreduce(throw_error, throw_error);
           if (throw_error)
             throw std::runtime_error("Error thrown in GhostManagerTask::continueTaskGhost()");
           break;

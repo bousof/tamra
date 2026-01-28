@@ -3,13 +3,16 @@
  *  Copyright (c) 2025 Sofiane BOUSABAA
  *  Licensed under the MIT License (see LICENSE file in project root)
  *
- *  Description: Simplifies MPI Allgather operations to hanlde STL vectors.
+ *  Description: Simplifies MPI gather operations to hanlde STL vectors.
  */
 
 #pragma once
 
 #ifdef USE_MPI
-  #include <mpi.h>
+
+#include <mpi.h>
+#include "mpitypes.h"
+
 #endif // USE_MPI
 
 #include <functional>
@@ -18,15 +21,23 @@
 #include <vector>
 #include "ParallelData.h"
 
+//-----------------------------------------------------------//
+//  PROTOTYPES                                               //
+//-----------------------------------------------------------//
+
+template<typename T>
+void scalarGather(T &value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size);
+
+//-----------------------------------------------------------//
+//  LOWER LEVEL METHODS                                      //
+//-----------------------------------------------------------//
+
+namespace gather::detail {
+
 #ifdef USE_MPI
 
 template<typename T>
-void gather(const T value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size, const MPI_Datatype data_type) {
-  static_assert(
-    std::is_same<T, double>::value,
-    "gather only supports T = double"
-  );
-
+void scalarGatherT(const T value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size, const MPI_Datatype data_type) {
 	// Communication of cells IDs between all processors
   if (rank == root)
 	  buffer.resize(size);
@@ -36,15 +47,28 @@ void gather(const T value, std::vector<T> &buffer, const unsigned root, const un
 #else
 
 template<typename T>
-void gather(const T value, std::vector<T> &buffer, const unsigned, const unsigned, const unsigned) {
-  static_assert(
-    std::is_same<T, double>::value,
-    "gather only supports T = double"
-  );
-
-	buffer = { value };
+void scalarGatherT(const T value, std::vector<T> &buffer, const unsigned, const unsigned, const unsigned) {
+  buffer = { value };
 }
 
 #endif // USE_MPI
 
-void doubleGather(double &value, std::vector<double> &buffer, const unsigned root, const unsigned rank, const unsigned size);
+} // namespace gather::detail
+
+//-----------------------------------------------------------//
+//  IMPLEMENTATIONS                                          //
+//-----------------------------------------------------------//
+
+template<typename T>
+void scalarGather(T &value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size) {
+  static_assert(
+    std::is_same<T, double>::value,
+    "scalarGather only supports T = double"
+  );
+
+#ifdef USE_MPI
+  gather::detail::scalarGatherT(value, buffer, root, rank, size, mpi_type<T>());
+#else
+  gather::detail::scalarGatherT(value, buffer, root, rank, size);
+#endif // USE_MPI
+}

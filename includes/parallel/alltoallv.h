@@ -9,7 +9,10 @@
 #pragma once
 
 #ifdef USE_MPI
-  #include <mpi.h>
+
+#include <mpi.h>
+#include "mpitypes.h"
+
 #endif // USE_MPI
 
 #include <functional>
@@ -18,35 +21,38 @@
 #include <iostream>
 
 #include "../utils/array_utils.h"
-#include "./alltoall.h"
+#include "alltoall.h"
 #include "ParallelData.h"
 
-std::vector<int> vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<unsigned> &recv_buffer, std::vector<int> recv_counts = {});
+//-----------------------------------------------------------//
+//  PROTOTYPES                                               //
+//-----------------------------------------------------------//
 
-std::vector<int> vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<int> &recv_buffer, std::vector<int> recv_counts = {});
+template<typename T>
+std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer, std::vector<int> recv_counts = {});
 
-std::vector<int> vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<double> &recv_buffer, std::vector<int> recv_counts = {});
+template<typename T>
+void vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, std::vector<int> recv_counts = {});
 
-void vectorUnsignedAlltoallv(const std::vector<std::vector<unsigned>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffer, std::vector<int> recv_counts = {});
-
-void vectorIntAlltoallv(const std::vector<std::vector<int>> &send_buffers, std::vector<std::vector<int>> &recv_buffer, std::vector<int> recv_counts = {});
-
-void vectorDoubleAlltoallv(const std::vector<std::vector<double>> &send_buffers, std::vector<std::vector<double>> &recv_buffer, std::vector<int> recv_counts = {});
-
-void matrixUnsignedAlltoallv(const std::vector<std::vector<std::vector<unsigned>>> &send_buffers, std::vector<std::vector<unsigned>> &recv_buffer, const unsigned colCount);
-
-void matrixUnsignedAlltoallv(const std::vector<std::vector<std::vector<unsigned>>> &send_buffers, std::vector<std::vector<std::vector<unsigned>>> &recv_buffer, const unsigned colCount);
+template<typename T>
+void matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> &send_buffers, std::vector<std::vector<T>> &recv_buffer, const unsigned colCount);
 
 using ParallelDataFactory = std::function<std::unique_ptr<ParallelData>()>;
 void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelData>>> &send_buffers, std::vector<std::unique_ptr<ParallelData>> &recv_buffer, const ParallelDataFactory createData);
 
+//-----------------------------------------------------------//
+//  LOWER LEVEL METHODS                                      //
+//-----------------------------------------------------------//
+
+namespace alltoallv::detail {
+
 #ifdef USE_MPI
 
 template<typename T>
-std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer, const std::vector<int> &recv_counts_in, const MPI_Datatype data_type) {
+std::vector<int> vectorAlltoallvT(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer, const std::vector<int> &recv_counts_in, const MPI_Datatype data_type) {
   static_assert(
     std::is_same<T, unsigned>::value || std::is_same<T, int>::value || std::is_same<T, double>::value,
-    "vectorAllToAll only supports T = unsigned, int, or double"
+    "vectorAlltoallvT only supports T = unsigned, int, or double"
   );
 
   int size = send_buffers.size();
@@ -62,7 +68,7 @@ std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers
     recv_counts = recv_counts_in;
   else {
     recv_counts.resize(size);
-    intAlltoall(send_counts, recv_counts);
+    scalarAlltoall<int>(send_counts, recv_counts);
   }
 
 	// Total number of cells to send and receive
@@ -85,17 +91,17 @@ std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers
 }
 
 template<typename T>
-void vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const std::vector<int> &recv_counts, const MPI_Datatype data_type) {
+void vectorAlltoallvT(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const std::vector<int> &recv_counts, const MPI_Datatype data_type) {
   // Call the merging all to all function
 	std::vector<T> recv_buffer;
-  std::vector<int> recv_displacements = vectorAlltoallv(send_buffers, recv_buffer, recv_counts, data_type);
+  std::vector<int> recv_displacements = vectorAlltoallvT(send_buffers, recv_buffer, recv_counts, data_type);
 
   // Split received data from each processor
   split(recv_buffer, recv_buffers, recv_displacements);
 }
 
 template<typename T>
-std::vector<int> matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> &send_buffers, std::vector<std::vector<T>> &recv_buffer, const MPI_Datatype data_type, const unsigned colCount) {
+std::vector<int> matrixAlltoallvT(const std::vector<std::vector<std::vector<T>>> &send_buffers, std::vector<std::vector<T>> &recv_buffer, const MPI_Datatype data_type, const unsigned colCount) {
   unsigned size = send_buffers.size();
 
   // Transform vector of matrix to vector of vectors
@@ -109,7 +115,7 @@ std::vector<int> matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> 
   // Call the vector all to all function
 	std::vector<T> vector_recv_buffer;
   std::vector<int> recv_counts;
-  std::vector<int> recv_displacements = vectorAlltoallv(vector_send_buffers, vector_recv_buffer, recv_counts, data_type);
+  std::vector<int> recv_displacements = vectorAlltoallvT(vector_send_buffers, vector_recv_buffer, recv_counts, data_type);
 
   // Transform back to a matrix (known colCounts)
   recv_buffer.resize(vector_recv_buffer.size() / colCount);
@@ -120,10 +126,10 @@ std::vector<int> matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> 
 }
 
 template<typename T>
-void matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> &send_buffers, std::vector<std::vector<std::vector<T>>> &recv_buffers, const MPI_Datatype data_type, const unsigned colCount) {
+void matrixAlltoallvT(const std::vector<std::vector<std::vector<T>>> &send_buffers, std::vector<std::vector<std::vector<T>>> &recv_buffers, const MPI_Datatype data_type, const unsigned colCount) {
   // Call the vector all to all function
 	std::vector<std::vector<T>> recv_buffer;
-  std::vector<int> recv_displacements = matrixAlltoallv(send_buffers, recv_buffer, data_type, colCount);
+  std::vector<int> recv_displacements = matrixAlltoallvT(send_buffers, recv_buffer, data_type, colCount);
 
   // Split received data from each processor
   split(recv_buffer, recv_buffers, recv_displacements);
@@ -132,10 +138,10 @@ void matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> &send_buffer
 #else
 
 template<typename T>
-std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer) {
+std::vector<int> vectorAlltoallvT(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer) {
   static_assert(
     std::is_same<T, unsigned>::value || std::is_same<T, int>::value || std::is_same<T, double>::value,
-    "vectorAllToAll only supports T = unsigned, int, or double"
+    "vectorAlltoallvT only supports T = unsigned, int, or double"
   );
 
   // No MPI, so one proc then only receive from itself
@@ -145,17 +151,17 @@ std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers
 }
 
 template<typename T>
-void vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers) {
+void vectorAlltoallvT(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers) {
   // Call the merging all to all function
 	std::vector<T> recv_buffer;
-  std::vector<int> recv_displacements = vectorAlltoallv(send_buffers, recv_buffer);
+  std::vector<int> recv_displacements = vectorAlltoallvT(send_buffers, recv_buffer);
 
   // Split received data from each processor
   split(recv_buffer, recv_buffers, recv_displacements);
 }
 
 template<typename T>
-std::vector<int> matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> &send_buffers, std::vector<std::vector<T>> &recv_buffer, const unsigned colCount) {
+std::vector<int> matrixAlltoallvT(const std::vector<std::vector<std::vector<T>>> &send_buffers, std::vector<std::vector<T>> &recv_buffer, const unsigned colCount) {
   unsigned size = send_buffers.size();
 
   // Transform vector of matrix to vector of vectors
@@ -168,7 +174,7 @@ std::vector<int> matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> 
 
   // Call the vector all to all function
 	std::vector<T> vector_recv_buffer;
-  std::vector<int> recv_displacements = vectorAlltoallv(vector_send_buffers, vector_recv_buffer);
+  std::vector<int> recv_displacements = vectorAlltoallvT(vector_send_buffers, vector_recv_buffer);
 
   // Transform back to a matrix (known colCounts)
   recv_buffer.resize(vector_recv_buffer.size() / colCount);
@@ -179,13 +185,61 @@ std::vector<int> matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> 
 }
 
 template<typename T>
-void matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> &send_buffers, std::vector<std::vector<std::vector<T>>> &recv_buffers, const unsigned colCount) {
+void matrixAlltoallvT(const std::vector<std::vector<std::vector<T>>> &send_buffers, std::vector<std::vector<std::vector<T>>> &recv_buffers, const unsigned colCount) {
   // Call the vector all to all function
 	std::vector<std::vector<T>> recv_buffer;
-  std::vector<int> recv_displacements = matrixAlltoallv(send_buffers, recv_buffer, colCount);
+  std::vector<int> recv_displacements = matrixAlltoallvT(send_buffers, recv_buffer, colCount);
 
   // Split received data from each processor
   split(recv_buffer, recv_buffers, recv_displacements);
 }
 
 #endif // USE_MPI
+
+} // namespace alltoallv::detail
+
+//-----------------------------------------------------------//
+//  IMPLEMENTATIONS                                          //
+//-----------------------------------------------------------//
+
+template<typename T>
+std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer, std::vector<int> recv_counts) {
+  static_assert(
+    std::is_same<T, double>::value || std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
+    "vectorAlltoallv only supports T = double, int, and unsigned"
+  );
+
+#ifdef USE_MPI
+  return alltoallv::detail::vectorAlltoallvT(send_buffers, recv_buffer, recv_counts, mpi_type<T>());
+#else
+  return alltoallv::detail::vectorAlltoallvT(send_buffers, recv_buffer);
+#endif // USE_MPI
+}
+
+template<typename T>
+void vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, std::vector<int> recv_counts) {
+  static_assert(
+    std::is_same<T, double>::value || std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
+    "vectorAlltoallv only supports T = double, int, and unsigned"
+  );
+
+#ifdef USE_MPI
+  alltoallv::detail::vectorAlltoallvT(send_buffers, recv_buffers, recv_counts, mpi_type<T>());
+#else
+  alltoallv::detail::vectorAlltoallvT(send_buffers, recv_buffers);
+#endif // USE_MPI
+}
+
+template<typename T>
+void matrixAlltoallv(const std::vector<std::vector<std::vector<T>>> &send_buffers, std::vector<std::vector<T>> &recv_buffer, const unsigned colCount) {
+  static_assert(
+    std::is_same<T, unsigned>::value,
+    "vectorAlltoallv only supports T = unsigned"
+  );
+
+#ifdef USE_MPI
+  alltoallv::detail::matrixAlltoallvT(send_buffers, recv_buffer, mpi_type<T>(), colCount);
+#else
+  alltoallv::detail::matrixAlltoallvT(send_buffers, recv_buffer, colCount);
+#endif // USE_MPI
+}

@@ -48,4 +48,4 @@ class CoarseManager {
   bool coarsenToLevelRecurs(const std::shared_ptr<CellType> &cell, const unsigned coarse_level, InterpolationFunctionType interpolation_function) const;
 };
 
-#include "./CoarseManager.tpp"
+#include "CoarseManager.tpp"

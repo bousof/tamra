@@ -54,4 +54,4 @@ class MinLevelMeshManager {
   bool backPropagateToThisProc(const std::shared_ptr<CellType> &cell) const;
 };
 
-#include "./MinLevelMeshManager.tpp"
+#include "MinLevelMeshManager.tpp"

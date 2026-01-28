@@ -133,4 +133,4 @@ class GhostManagerTask {
   bool applyExtrapolationFunctionRecurs(const std::shared_ptr<CellType> &cell, const ExtrapolationFunctionType &extrapolation_function);
 };
 
-#include "./GhostManagerTask.tpp"
+#include "GhostManagerTask.tpp"

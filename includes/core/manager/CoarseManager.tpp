@@ -1,4 +1,4 @@
-#include "./CoarseManager.h"
+#include "CoarseManager.h"
 
 //***********************************************************//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //

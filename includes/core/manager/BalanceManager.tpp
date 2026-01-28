@@ -1,4 +1,4 @@
-#include "./BalanceManager.h"
+#include "BalanceManager.h"
 //#include "../../utils/display_vector.h"
 
 //***********************************************************//
@@ -34,7 +34,7 @@ std::pair<bool, std::vector<double>> BalanceManager<CellType, TreeIteratorType>:
 
   // Share load between all processors
   std::vector<double> loads;
-  doubleGather(load, loads, root, rank, size);
+  scalarGather<double>(load, loads, root, rank, size);
 
   // Compute the max and mean load and compare load unbalance with max_pct_unbalance
   bool balancing_needed;
@@ -48,7 +48,7 @@ std::pair<bool, std::vector<double>> BalanceManager<CellType, TreeIteratorType>:
   }
 
   // Broadcast decision to all processes
-  boolBcast(balancing_needed, root);
+  scalarBcast<bool>(balancing_needed, root);
 
   return std::make_pair(balancing_needed, loads);
 }
@@ -82,7 +82,7 @@ void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector<s
     std::vector<double> cumulative_loads_vectors;
     if (rank == root)
       cumulative_loads_vectors = concatenate(cumulative_loads, target_cumulative_loads);
-    vectorDoubleBcast(cumulative_loads_vectors, root, rank, 2*(size+1));
+    vectorBcast<double>(cumulative_loads_vectors, root, rank, 2*(size+1));
     if (rank != root) {
       cumulative_loads.insert(cumulative_loads.end(), cumulative_loads_vectors.begin(), cumulative_loads_vectors.begin()+size+1);
       target_cumulative_loads.insert(target_cumulative_loads.end(), cumulative_loads_vectors.begin()+size+1, cumulative_loads_vectors.end());
@@ -232,7 +232,7 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
 
   // Exchange tree structure
   std::vector<std::vector<unsigned>> cells_structure_recv(size);
-  vectorUnsignedAlltoallv(cells_structure_to_send, cells_structure_recv);
+  vectorAlltoallv<unsigned>(cells_structure_to_send, cells_structure_recv);
 
   // Exchange cell data
   std::vector<std::unique_ptr<ParallelData>> all_cell_data_recv;
