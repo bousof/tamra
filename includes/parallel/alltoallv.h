@@ -51,8 +51,8 @@ namespace alltoallv::detail {
 template<typename T>
 std::vector<int> vectorAlltoallvT(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer, const std::vector<int> &recv_counts_in, const MPI_Datatype data_type) {
   static_assert(
-    std::is_same<T, unsigned>::value || std::is_same<T, int>::value || std::is_same<T, double>::value,
-    "vectorAlltoallvT only supports T = unsigned, int, or double"
+    std::is_same<T, float>::value || std::is_same<T, unsigned>::value || std::is_same<T, int>::value || std::is_same<T, double>::value,
+    "vectorAlltoallvT only supports T = float, unsigned, int, or double"
   );
 
   int size = send_buffers.size();
@@ -140,8 +140,8 @@ void matrixAlltoallvT(const std::vector<std::vector<std::vector<T>>> &send_buffe
 template<typename T>
 std::vector<int> vectorAlltoallvT(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer) {
   static_assert(
-    std::is_same<T, unsigned>::value || std::is_same<T, int>::value || std::is_same<T, double>::value,
-    "vectorAlltoallvT only supports T = unsigned, int, or double"
+    std::is_same<T, float>::value || std::is_same<T, unsigned>::value || std::is_same<T, int>::value || std::is_same<T, double>::value,
+    "vectorAlltoallvT only supports T = float, unsigned, int, or double"
   );
 
   // No MPI, so one proc then only receive from itself
@@ -205,8 +205,8 @@ void matrixAlltoallvT(const std::vector<std::vector<std::vector<T>>> &send_buffe
 template<typename T>
 std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<T> &recv_buffer, std::vector<int> recv_counts) {
   static_assert(
-    std::is_same<T, double>::value || std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
-    "vectorAlltoallv only supports T = double, int, and unsigned"
+    std::is_same<T, float>::value || std::is_same<T, double>::value || std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
+    "vectorAlltoallv only supports T = float, double, int, and unsigned"
   );
 
 #ifdef USE_MPI
@@ -219,8 +219,8 @@ std::vector<int> vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers
 template<typename T>
 void vectorAlltoallv(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, std::vector<int> recv_counts) {
   static_assert(
-    std::is_same<T, double>::value || std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
-    "vectorAlltoallv only supports T = double, int, and unsigned"
+    std::is_same<T, float>::value || std::is_same<T, double>::value || std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
+    "vectorAlltoallv only supports T = float, double, int, and unsigned"
   );
 
 #ifdef USE_MPI
