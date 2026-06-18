@@ -147,7 +147,7 @@ std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, Tre
       current_cell_load = iterator.getCell()->getLoad();
 
       // Either increment target proc if cells is not in its partition or add cell to send to it
-      if (target_cumulative_loads[target_proc+1] < (previous_load+current_cell_load)) {
+      if (target_cumulative_loads[target_proc+1] <= (previous_load+current_cell_load)) {
         ++target_proc;
         continue;
       } else {
@@ -171,7 +171,7 @@ std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, Tre
       current_cell_load = iterator.getCell()->getLoad();
 
       // Either decrement target proc if cells is not in its partition or add cell to send to it
-      if (target_cumulative_loads[target_proc] > (next_load-current_cell_load)) {
+      if (target_cumulative_loads[target_proc] >= (next_load-current_cell_load)) {
         --target_proc;
         continue;
       } else
