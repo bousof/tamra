@@ -9,9 +9,9 @@ template <typename CellType>
 HilbertIterator<CellType>::HilbertIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const unsigned max_level)
 : AbstractTreeIterator<CellType>(root_cells, max_level),
   possible_leaf_orientations(HilbertTables<CellType>::get_possible_leaf_orientations()),
-  child_orderings(HilbertTables<CellType>::child_orderings()),
-  child_orientations(HilbertTables<CellType>::child_orientations()),
-  reverse_child_orderings(HilbertTables<CellType>::reverse_child_orderings()),
+  child_orderings(HilbertTables<CellType>::get_child_orderings()),
+  child_orientations(HilbertTables<CellType>::get_child_orientations()),
+  reverse_child_orderings(HilbertTables<CellType>::get_reverse_child_orderings()),
   default_leaf_orientation(possible_leaf_orientations[0]) {
 
   root_cell_orientations = std::vector<unsigned>(root_cells.size(), default_leaf_orientation);

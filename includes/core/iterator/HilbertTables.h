@@ -56,7 +56,7 @@ struct HilbertTables {
   static const auto& get_possible_leaf_orientations() { return std::get<0>(get_orderings()); }
   static const auto& get_child_orderings()            { return std::get<1>(get_orderings()); }
   static const auto& get_child_orientations()         { return std::get<2>(get_orderings()); }
-  static const auto& get_reverse_child_orderings()    { static const auto t = reverse_orderings<number_of_corners, number_of_orientations>(get_orderings()); return t; }
+  static const auto& get_reverse_child_orderings()    { static const auto t = reverse_orderings<number_of_corners, number_of_orientations>(std::get<1>(get_orderings())); return t; }
 };
 
 
