@@ -22,6 +22,12 @@
 template<typename CellType, short MORTON_ORIENTATION = 123>
 class MortonIterator : public AbstractTreeIterator<CellType> {
  public:
+  static constexpr std::array<char, 4> CONFIG_SELECTION_NAME{
+    'M',
+    char('0' + (MORTON_ORIENTATION / 100) % 10),
+    char('0' + (MORTON_ORIENTATION / 10) % 10),
+    char('0' + MORTON_ORIENTATION % 10)
+  };
   using CellIdManagerType = typename AbstractTreeIterator<CellType>::CellIdManagerType;
   using ExtrapolationFunctionType = typename AbstractTreeIterator<CellType>::ExtrapolationFunctionType;
 

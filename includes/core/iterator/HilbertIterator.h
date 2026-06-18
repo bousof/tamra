@@ -23,6 +23,9 @@
 template<typename CellType>
 class HilbertIterator : public AbstractTreeIterator<CellType> {
  public:
+  static constexpr std::array<char, 4> CONFIG_SELECTION_NAME{
+    'H', '0', '0', '0'
+  };
   using CellIdManagerType = typename AbstractTreeIterator<CellType>::CellIdManagerType;
   using ExtrapolationFunctionType = typename AbstractTreeIterator<CellType>::ExtrapolationFunctionType;
   static constexpr unsigned number_of_corners = 1u << CellType::number_split_dimensions;
