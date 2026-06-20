@@ -41,8 +41,8 @@ namespace allgather::detail {
 template<typename T>
 void scalarAllgatherT(const T &value, std::vector<T> &recv_buffer, const unsigned size, const MPI_Datatype data_type) {
   static_assert(
-    std::is_same<T, int>::value,
-    "scalarAllgatherT only supports T = int"
+    std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
+    "scalarAllgatherT only supports T = int, or unsigned"
   );
 
 	// Communication of between all processors
@@ -55,8 +55,8 @@ void scalarAllgatherT(const T &value, std::vector<T> &recv_buffer, const unsigne
 template<typename T>
 void scalarAllgatherT(const T &value, std::vector<T> &recv_buffer, const unsigned) {
   static_assert(
-    std::is_same<T, int>::value,
-    "scalarAllgatherT only supports T = int"
+    std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
+    "scalarAllgatherT only supports T = int, or unsigned"
   );
 
 	// No MPI, so one proc then only gather from itself
@@ -137,8 +137,8 @@ void matrixAllgatherT(const std::vector<std::vector<T>> &send_buffers, std::vect
 template<typename T>
 void scalarAllgather(const T &value, std::vector<T> &recv_buffer, const unsigned size) {
   static_assert(
-    std::is_same<T, int>::value,
-    "scalarAllgather only supports T = int"
+    std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
+    "scalarAllgather only supports T = int or unsigned"
   );
 
 #ifdef USE_MPI

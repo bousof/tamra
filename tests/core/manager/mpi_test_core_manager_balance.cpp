@@ -173,6 +173,8 @@ class TestCellData : public AbstractCellData {
   unsigned getDataSize() const override {
     return 2;
   }
+  void dump(std::ostream& os, const bool binary) const override {} // Not needed here
+  void restore(std::istream& is, const bool binary) override {} // Not needed here
 };
 }
 

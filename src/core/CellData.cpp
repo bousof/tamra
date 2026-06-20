@@ -52,3 +52,19 @@ std::vector<double> CellData::toVectorOfData() const {
 unsigned CellData::getDataSize() const {
   return 1;
 }
+
+// Dump the cell data to an output stream
+void CellData::dump(std::ostream& os, const bool binary) const {
+  if (!binary)
+    os << " " << value;
+  else
+    os.write(reinterpret_cast<const char*>(&value), sizeof(double));
+}
+
+// Restore the cell data from an input stream
+void CellData::restore(std::istream& is, const bool binary) {
+  if (!binary)
+    is >> value;
+  else
+    is.read(reinterpret_cast<char*>(&value), sizeof(double));
+}

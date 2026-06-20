@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include <istream>
+#include <ostream>
+
 #include "../parallel/ParallelData.h"
 
 class AbstractCellData : public ParallelData {
@@ -35,4 +38,8 @@ class AbstractCellData : public ParallelData {
   virtual std::vector<double> toVectorOfData() const = 0;
   // Return cell data size
   virtual unsigned getDataSize() const = 0;
+  // Dump the cell data to an output stream
+  virtual void dump(std::ostream& os, const bool binary=false) const = 0;
+  // Restore the cell data from an input stream
+  virtual void restore(std::istream& is, const bool binary=false) = 0;
 };

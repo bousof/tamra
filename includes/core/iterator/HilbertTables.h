@@ -77,14 +77,14 @@ auto compute_orderings() {
   // Cast child orderings to array of arrays for faster access
   std::array<std::array<unsigned, number_of_corners>, number_of_orientations> child_orderings;
   std::vector<std::vector<unsigned>> child_orderings_vec = std::get<1>(orderings);
-  for (int i{0}; i<number_of_orientations; ++i)
-    for (int j{0}; j<number_of_corners; ++j)
+  for (unsigned i{0}; i<number_of_orientations; ++i)
+    for (unsigned j{0}; j<number_of_corners; ++j)
       child_orderings[i][j] = child_orderings_vec[i][j];
   // Cast child orientations to array of arrays for faster access
   std::array<std::array<unsigned, number_of_corners>, number_of_orientations> child_orientations;
   std::vector<std::vector<unsigned>> child_orientations_vec = std::get<2>(orderings);
-  for (int i{0}; i<number_of_orientations; ++i)
-    for (int j{0}; j<number_of_corners; ++j)
+  for (unsigned i{0}; i<number_of_orientations; ++i)
+    for (unsigned j{0}; j<number_of_corners; ++j)
       child_orientations[i][j] = child_orientations_vec[i][j];
 
   return std::make_tuple(possible_leaf_orientations, child_orderings, child_orientations);
@@ -240,8 +240,8 @@ std::tuple<std::vector<unsigned>,
 template<unsigned NUMBER_CORNERS, unsigned NUMBER_ORIENTATIONS>
 std::array<std::array<unsigned, NUMBER_CORNERS>, NUMBER_ORIENTATIONS> reverse_orderings(const std::array<std::array<unsigned, NUMBER_CORNERS>, NUMBER_ORIENTATIONS> &orderings) {
   std::array<std::array<unsigned, NUMBER_CORNERS>, NUMBER_ORIENTATIONS> reverse_orderings;
-  for (int i{0}; i<NUMBER_ORIENTATIONS; ++i) {
-    for (int j{0}; j<NUMBER_CORNERS; ++j)
+  for (unsigned i{0}; i<NUMBER_ORIENTATIONS; ++i) {
+    for (unsigned j{0}; j<NUMBER_CORNERS; ++j)
       reverse_orderings[i][orderings[i][j]] = j;
   }
   return reverse_orderings;

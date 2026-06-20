@@ -50,4 +50,8 @@ class CellData : public AbstractCellData {
   std::vector<double> toVectorOfData() const override;
   // Return cell data size
   unsigned getDataSize() const override;
+  // Dump the cell data to an output stream
+  void dump(std::ostream& os, const bool binary=false) const override;
+  // Restore the cell data from an input stream
+  void restore(std::istream& is, const bool binary=false) override;
 };
