@@ -23,21 +23,21 @@
 template<typename CellType>
 auto compute_orderings();
 
-std::tuple<std::vector<unsigned>,
-          std::vector<std::vector<unsigned>>,
-          std::vector<std::vector<unsigned>>> compute_orderings_vec(const unsigned number_split_dimensions, const unsigned Nx, const unsigned Ny, const unsigned Nz);
+inline std::tuple<std::vector<unsigned>,
+                  std::vector<std::vector<unsigned>>,
+                  std::vector<std::vector<unsigned>>> compute_orderings_vec(const unsigned number_split_dimensions, const unsigned Nx, const unsigned Ny, const unsigned Nz);
 
-std::tuple<std::vector<unsigned>,
-          std::vector<std::vector<unsigned>>,
-          std::vector<std::vector<unsigned>>> compute_orderings_1d(const unsigned Ni);
+inline std::tuple<std::vector<unsigned>,
+                  std::vector<std::vector<unsigned>>,
+                  std::vector<std::vector<unsigned>>> compute_orderings_1d(const unsigned Ni);
 
-std::tuple<std::vector<unsigned>,
-           std::vector<std::vector<unsigned>>,
-           std::vector<std::vector<unsigned>>> compute_orderings_quad_tree();
+inline std::tuple<std::vector<unsigned>,
+                  std::vector<std::vector<unsigned>>,
+                  std::vector<std::vector<unsigned>>> compute_orderings_quad_tree();
 
-std::tuple<std::vector<unsigned>,
-          std::vector<std::vector<unsigned>>,
-          std::vector<std::vector<unsigned>>> compute_orderings_oct_tree();
+inline std::tuple<std::vector<unsigned>,
+                  std::vector<std::vector<unsigned>>,
+                  std::vector<std::vector<unsigned>>> compute_orderings_oct_tree();
 
 template<unsigned NUMBER_CORNERS, unsigned NUMBER_ORIENTATIONS>
 std::array<std::array<unsigned, NUMBER_CORNERS>, NUMBER_ORIENTATIONS> reverse_orderings(const std::array<std::array<unsigned, NUMBER_CORNERS>, NUMBER_ORIENTATIONS> &orderings);
@@ -90,9 +90,9 @@ auto compute_orderings() {
   return std::make_tuple(possible_leaf_orientations, child_orderings, child_orientations);
 }
 
-std::tuple<std::vector<unsigned>,
-          std::vector<std::vector<unsigned>>,
-          std::vector<std::vector<unsigned>>> compute_orderings_vec(const unsigned number_split_dimensions, const unsigned Nx, const unsigned Ny, const unsigned Nz) {
+inline std::tuple<std::vector<unsigned>,
+                  std::vector<std::vector<unsigned>>,
+                  std::vector<std::vector<unsigned>>> compute_orderings_vec(const unsigned number_split_dimensions, const unsigned Nx, const unsigned Ny, const unsigned Nz) {
   const unsigned Nx1 = Nx > 1 ? Nx : 1,
                  Ny1 = Ny > 1 ? Ny : 1,
                  Nz1 = Nz > 1 ? Nz : 1,
@@ -113,9 +113,9 @@ std::tuple<std::vector<unsigned>,
   );
 }
 
-std::tuple<std::vector<unsigned>,
-          std::vector<std::vector<unsigned>>,
-          std::vector<std::vector<unsigned>>> compute_orderings_1d(const unsigned Ni) {
+inline std::tuple<std::vector<unsigned>,
+                  std::vector<std::vector<unsigned>>,
+                  std::vector<std::vector<unsigned>>> compute_orderings_1d(const unsigned Ni) {
   std::vector<unsigned> increasing(Ni), decreasing(Ni);
   std::iota(increasing.begin(), increasing.end(), 0);  // 0, 1, 2, ..., Ni-1
   std::iota(decreasing.rbegin(), decreasing.rend(), 0); // Ni-1, ..., 2, 1, 0
@@ -151,9 +151,9 @@ std::tuple<std::vector<unsigned>,
 //  O6 : C3 -> C1     ───┐   │  ^   ┌───   ^  │
 //  O7 : C3 -> C2     <──┘   └──┘   └──>   └──┘
 //
-std::tuple<std::vector<unsigned>,
-          std::vector<std::vector<unsigned>>,
-          std::vector<std::vector<unsigned>>> compute_orderings_quad_tree() {
+inline std::tuple<std::vector<unsigned>,
+                  std::vector<std::vector<unsigned>>,
+                  std::vector<std::vector<unsigned>>> compute_orderings_quad_tree() {
   return std::make_tuple<std::vector<unsigned>, std::vector<std::vector<unsigned>>, std::vector<std::vector<unsigned>>>({
       0, 1, 2, 3, 4, 5, 6, 7
     }, {
@@ -178,9 +178,9 @@ std::tuple<std::vector<unsigned>,
   );
 }
 
-std::tuple<std::vector<unsigned>,
-          std::vector<std::vector<unsigned>>,
-          std::vector<std::vector<unsigned>>> compute_orderings_oct_tree() {
+inline std::tuple<std::vector<unsigned>,
+                  std::vector<std::vector<unsigned>>,
+                  std::vector<std::vector<unsigned>>> compute_orderings_oct_tree() {
   return std::make_tuple<std::vector<unsigned>, std::vector<std::vector<unsigned>>, std::vector<std::vector<unsigned>>>({
       0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
     }, {

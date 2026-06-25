@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
+#include <numeric>
 #include <vector>
 
 #include "Cell.h"
@@ -18,6 +20,7 @@
 #include "manager/GhostManager.h"
 #include "manager/MinLevelMeshManager.h"
 #include "manager/RefineManager.h"
+#include "manager/SnapshotManager.h"
 #include "RootCellEntry.h"
 
 template<typename CellTypeT, typename TreeIteratorTypeT = MortonIterator<CellTypeT>>
@@ -32,6 +35,7 @@ class Tree {
   using GhostManagerTaskType = typename GhostManager<CellType, TreeIteratorTypeT>::GhostManagerTaskType;
   using MinLevelMeshManagerType = MinLevelMeshManager<CellType, TreeIteratorTypeT>;
   using RefineManagerType = RefineManager<CellType>;
+  using SnapshotManagerType = SnapshotManager<Tree>;
   using RootCellEntryType = RootCellEntry<CellType>;
   using TreeIteratorType = TreeIteratorTypeT;
 
@@ -59,6 +63,9 @@ class Tree {
 	MinLevelMeshManagerType minLevelMeshManager;
   // Mesh refinement manager
 	RefineManagerType refineManager;
+ public:
+  // Snapshot manager
+	SnapshotManagerType snapshotManager;
 
   //***********************************************************//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -124,11 +131,17 @@ class Tree {
   // Count the number of owned leaf cells
   unsigned countOwnedLeaves() const;
 
+  // Count the number of cells
+  unsigned countCells(const std::shared_ptr<CellType> &cell = nullptr) const;
+
   // Count the number of ghost leaf cells
   unsigned countGhostLeaves() const;
 
   // Apply a function to owned leaf cells
   void applyToOwnedLeaves(const std::function<void(const std::shared_ptr<CellType>&, const unsigned)> &f) const;
+
+  // Apply a function to all cells
+  void applyToAllCells(const std::function<void(const std::shared_ptr<CellType>&, const unsigned)> &f) const;
 
   // Share the partitions start and end cells
  public:
@@ -142,6 +155,7 @@ class Tree {
  private:
   void applyToGhostLeavesRanks(const std::function<void(const std::shared_ptr<CellType>&, const unsigned, const unsigned)> &f, TreeIteratorType &iterator) const;
   void applyToGhostLeaves(const std::function<void(const std::shared_ptr<CellType>&, const unsigned, const unsigned)> &f, std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids, unsigned &index, TreeIteratorType &iterator) const;
+  void applyToAllCellsRecurs(const std::shared_ptr<CellType> &cell, const std::function<void(const std::shared_ptr<CellType>&, const unsigned)> &f, unsigned &index) const;
 };
 
 #include "Tree.tpp"

@@ -5,6 +5,7 @@ set(TAMRA_TESTS_SRC
   core/manager/serial_test_core_manager_coarse.cpp
   core/manager/serial_test_core_manager_min_level.cpp
   core/manager/serial_test_core_manager_refine.cpp
+  core/manager/serial_test_core_manager_snapshot.cpp
   core/serial_test_core_cell_oct.cpp
   core/serial_test_core_neighbor.cpp
   core/serial_test_core_tree_iterator.cpp

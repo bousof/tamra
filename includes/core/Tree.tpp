@@ -1,5 +1,5 @@
 #include "Tree.h"
-#include "../utils/display_vector.h"
+//#include "../utils/display_vector.h"
 
 //***********************************************************//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -16,7 +16,8 @@ Tree<CellType, TreeIteratorType>::Tree(const unsigned min_level, const unsigned 
   coarseManager(min_level, max_level, rank, size),
   ghostManager(min_level, max_level, rank, size),
   minLevelMeshManager(min_level, max_level, rank, size),
-  refineManager(min_level, max_level, rank, size) {}
+  refineManager(min_level, max_level, rank, size),
+  snapshotManager(min_level, max_level, rank, size) {}
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>
@@ -142,6 +143,25 @@ unsigned Tree<CellType, TreeIteratorType>::countOwnedLeaves() const {
   return nb_owned_leaves;
 }
 
+// Count the number of cells
+template<typename CellType, typename TreeIteratorType>
+unsigned Tree<CellType, TreeIteratorType>::countCells(const std::shared_ptr<CellType> &cell) const {
+  if (cell) {
+    unsigned nb_cells = 1;
+    if (!cell->isLeaf())
+      for (const auto &child_cell : cell->getChildCells())
+        nb_cells += countCells(child_cell);
+    return nb_cells;
+  }
+
+  unsigned nb_cells = root_cells.size();
+
+  for (const auto &root_cell : root_cells)
+    nb_cells += countCells(root_cell);
+
+  return nb_cells;
+}
+
 // Count the number of owned leaf cells
 template<typename CellType, typename TreeIteratorType>
 unsigned Tree<CellType, TreeIteratorType>::countGhostLeaves() const {
@@ -164,6 +184,16 @@ void Tree<CellType, TreeIteratorType>::applyToOwnedLeaves(const std::function<vo
   do {
     f(iterator.getCell(), index++);
   } while (iterator.ownedNext());
+}
+
+// Apply a function to all cells
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::applyToAllCells(const std::function<void(const std::shared_ptr<CellType>&, const unsigned)> &f) const {
+  unsigned index{0};
+  for (const auto &root_cell : root_cells) {
+    f(root_cell, index++);
+    applyToAllCellsRecurs(root_cell, f, index);
+  }
 }
 
 template<typename CellType, typename TreeIteratorType>
@@ -247,4 +277,14 @@ void Tree<CellType, TreeIteratorType>::applyToGhostLeaves(const std::function<vo
     // Move iterator and check if still in partition
     loop = iterator.next() && iterator.getCell()->belongToOtherProc();
   } while (loop);
+}
+
+// Recursively apply a function to all child cells
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::applyToAllCellsRecurs(const std::shared_ptr<CellType> &cell, const std::function<void(const std::shared_ptr<CellType>&, const unsigned)> &f, unsigned &index) const {
+  if (!cell->isLeaf())
+    for (auto &child : cell->getChildCells()) {
+      f(child, index++);
+      applyToAllCellsRecurs(child, f, index);
+    }
 }

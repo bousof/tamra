@@ -250,6 +250,12 @@ void AbstractTreeIterator<CellType>::toCellId(const std::vector<unsigned> &cell_
   }
 }
 
+// Move iterator to a specific cell index path (can also create it with a flag)
+template<typename CellType>
+void AbstractTreeIterator<CellType>::toIndexPath(const std::vector<unsigned> &index_path, const bool create, ExtrapolationFunctionType extrapolation_function) {
+  return this->toCellId(this->indexPathToId(index_path), create, extrapolation_function);
+}
+
 // Generate an ID from the genealogy of a cell.
 template<typename CellType>
 std::vector<unsigned> AbstractTreeIterator<CellType>::indexPathToId(const std::vector<unsigned> &index_path) const {
