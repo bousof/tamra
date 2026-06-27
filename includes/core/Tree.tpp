@@ -16,8 +16,7 @@ Tree<CellType, TreeIteratorType>::Tree(const unsigned min_level, const unsigned 
   coarseManager(min_level, max_level, rank, size),
   ghostManager(min_level, max_level, rank, size),
   minLevelMeshManager(min_level, max_level, rank, size),
-  refineManager(min_level, max_level, rank, size),
-  snapshotManager(min_level, max_level, rank, size) {}
+  refineManager(min_level, max_level, rank, size) {}
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>

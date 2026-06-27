@@ -20,7 +20,6 @@
 #include "manager/GhostManager.h"
 #include "manager/MinLevelMeshManager.h"
 #include "manager/RefineManager.h"
-#include "manager/SnapshotManager.h"
 #include "RootCellEntry.h"
 
 template<typename CellTypeT, typename TreeIteratorTypeT = MortonIterator<CellTypeT>>
@@ -35,7 +34,6 @@ class Tree {
   using GhostManagerTaskType = typename GhostManager<CellType, TreeIteratorTypeT>::GhostManagerTaskType;
   using MinLevelMeshManagerType = MinLevelMeshManager<CellType, TreeIteratorTypeT>;
   using RefineManagerType = RefineManager<CellType>;
-  using SnapshotManagerType = SnapshotManager<Tree>;
   using RootCellEntryType = RootCellEntry<CellType>;
   using TreeIteratorType = TreeIteratorTypeT;
 
@@ -63,9 +61,6 @@ class Tree {
 	MinLevelMeshManagerType minLevelMeshManager;
   // Mesh refinement manager
 	RefineManagerType refineManager;
- public:
-  // Snapshot manager
-	SnapshotManagerType snapshotManager;
 
   //***********************************************************//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
