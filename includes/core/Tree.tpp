@@ -154,7 +154,7 @@ unsigned Tree<CellType, TreeIteratorType>::countCells(const std::shared_ptr<Cell
     return nb_cells;
   }
 
-  unsigned nb_cells = root_cells.size();
+  unsigned nb_cells{0};
 
   for (const auto &root_cell : root_cells)
     nb_cells += countCells(root_cell);
