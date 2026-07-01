@@ -63,7 +63,7 @@ class BalanceManager {
   // Uncompress the structure of cells (1 cell ID + other cell levels)
   void uncompressCellStructure(const std::vector<unsigned> &cell_structure, std::vector<unsigned> &first_cell_id, std::vector<unsigned> &cell_levels, const unsigned cell_id_size) const;
   // Set a parent to belong to this proc if any of its child do else set to other proc
-  bool backPropagateFlags(const std::shared_ptr<CellType> &cell) const;
+  bool backPropagateOwnershipFlags(const std::shared_ptr<CellType> &cell) const;
 };
 
 #include "BalanceManager.tpp"

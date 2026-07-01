@@ -49,16 +49,13 @@ class SnapshotMetadata {
 
 template<typename TreeType>
 class SnapshotManager {
+  using CellType = typename TreeType::CellType;
   static constexpr unsigned VERSION_NUMBER = 1;
   static constexpr unsigned SUBVERSION_NUMBER = 0;
 
   //***********************************************************//
   //  VARIABLES                                                //
   //***********************************************************//
-  // Minimum mesh level
-  const unsigned min_level;
-  // Maximum mesh level
-  const unsigned max_level;
   // Process rank
   const unsigned rank;
   // Number of process
@@ -73,7 +70,7 @@ class SnapshotManager {
   //***********************************************************//
  public :
   // Constructor
-  SnapshotManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size, const bool binary = false);
+  SnapshotManager(const unsigned rank, const unsigned size, const bool binary = false);
   // Destructor
   ~SnapshotManager() = default;
 
@@ -81,6 +78,10 @@ class SnapshotManager {
   //  METHODS                                                  //
   //***********************************************************//
  public:
+  // Dump the tree metadata to an output stream
+  void dumpMetaAndTree(const TreeType& tree, std::ostream& os);
+  // Read the tree metadata from an input stream
+  TreeType readMetaAndRestore(std::istream& is);
   // Dump the tree metadata and data to a string representation
   std::string dumpMetaAndTreeToString(const TreeType& tree);
   // Dump the tree metadata and data to a file
@@ -91,20 +92,12 @@ class SnapshotManager {
   TreeType readMetaAndRestoreFromFile(const std::string& filename);
   // Dump the tree metadata to a string representation
   std::string dumpMetaToString(const TreeType& tree);
-  // Dump the tree metadata to a file
-  void dumpMetaToFile(const TreeType& tree, const std::string& filename);
   // Read the tree metadata from a string representation
   void readMetaFromString(const std::string& snapshot_string);
-  // Restore the tree metadata from a file
-  void readMetaFromFile(const std::string& filename);
   // Dump the tree data to a string representation
   std::string dumpToString(const TreeType& tree);
-  // Dump the tree data to a file
-  void dumpToFile(const TreeType& tree, const std::string& filename);
   // Restore the tree data from a string representation
   TreeType restoreFromString(const std::string& snapshot_string);
-  // Restore the tree data from a file
-  TreeType restoreFromFile(const std::string& filename);
  private:
   // Dump the tree metadata to an output stream
   void dumpMeta(const TreeType& tree, std::ostream& os);
@@ -129,6 +122,8 @@ class SnapshotManager {
   void dumpCellData(const TreeType& tree, std::ostream& os);
   // Restore the tree cells data from an input stream
   void restoreCellData(TreeType& tree, std::istream& is);
+  // Set a parent to belong to this proc if any of its child do else set to other proc
+  bool backPropagateOwnershipFlags(const std::shared_ptr<CellType> &cell) const;
 };
 
 #include "SnapshotManager.tpp"

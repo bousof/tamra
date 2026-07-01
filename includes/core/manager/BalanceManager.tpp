@@ -108,7 +108,7 @@ void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector<s
 
   // Backpropagate flags from leaf to all cells
   for (const auto &root_cell : root_cells)
-    backPropagateFlags(root_cell);
+    backPropagateOwnershipFlags(root_cell);
 }
 
 // Determine the local load for this process
@@ -307,13 +307,13 @@ void BalanceManager<CellType, TreeIteratorType>::uncompressCellStructure(const s
 
 // Set a parent to belong to this proc if any of its child do else set to other proc
 template<typename CellType, typename TreeIteratorType>
-bool BalanceManager<CellType, TreeIteratorType>::backPropagateFlags(const std::shared_ptr<CellType> &cell) const {
+bool BalanceManager<CellType, TreeIteratorType>::backPropagateOwnershipFlags(const std::shared_ptr<CellType> &cell) const {
   if (cell->isLeaf())
     return cell->belongToThisProc();
 
   bool to_this_proc = false;
   for (const auto &child : cell->getChildCells())
-    if (backPropagateFlags(child))
+    if (backPropagateOwnershipFlags(child))
       to_this_proc = true;
 
   if (to_this_proc)

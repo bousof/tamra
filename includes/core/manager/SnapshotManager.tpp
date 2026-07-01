@@ -7,10 +7,8 @@
 
 // Constructor
 template<typename TreeType>
-SnapshotManager<TreeType>::SnapshotManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size, const bool binary)
-: min_level(min_level),
-  max_level(max_level),
-  rank(rank),
+SnapshotManager<TreeType>::SnapshotManager(const unsigned rank, const unsigned size, const bool binary)
+: rank(rank),
   size(size),
   binary(binary),
   metadata() {}
@@ -19,6 +17,20 @@ SnapshotManager<TreeType>::SnapshotManager(const unsigned min_level, const unsig
 //***********************************************************//
 //  METHODS                                                  //
 //***********************************************************//
+
+// Dump the tree metadata and data to an output stream
+template<typename TreeType>
+void SnapshotManager<TreeType>::dumpMetaAndTree(const TreeType& tree, std::ostream& os) {
+  dumpMeta(tree, os);
+  dump(tree, os);
+}
+
+// Read the tree metadata and data from an input stream
+template<typename TreeType>
+TreeType SnapshotManager<TreeType>::readMetaAndRestore(std::istream& is) {
+  readMeta(is);
+  return restore(is);
+}
 
 // Dump the tree metadata and data to a string representation
 template<typename TreeType>
@@ -65,29 +77,11 @@ std::string SnapshotManager<TreeType>::dumpMetaToString(const TreeType& tree) {
   return oss.str();
 }
 
-// Dump the tree metadata to a file
-template<typename TreeType>
-void SnapshotManager<TreeType>::dumpMetaToFile(const TreeType& tree, const std::string &filename) {
-  std::ofstream ofs(filename, std::ios::binary);
-  if (!ofs)
-    throw std::runtime_error("SnapshotManager::dumpMetaToFile: cannot open file " + filename);
-  dumpMeta(tree, ofs);
-}
-
 // Read the tree metadata from a string representation
 template<typename TreeType>
 void SnapshotManager<TreeType>::readMetaFromString(const std::string &snapshot_string) {
   std::istringstream iss(snapshot_string, std::ios::binary);
   return readMeta(iss);
-}
-
-// Read the tree metadata from a file
-template<typename TreeType>
-void SnapshotManager<TreeType>::readMetaFromFile(const std::string &filename) {
-  std::ifstream ifs(filename, std::ios::binary);
-  if (!ifs)
-    throw std::runtime_error("SnapshotManager::readMetaFromFile: cannot open file " + filename);
-  return readMeta(ifs);
 }
 
 // Dump the tree data to a string representation
@@ -98,31 +92,11 @@ std::string SnapshotManager<TreeType>::dumpToString(const TreeType& tree) {
   return oss.str();
 }
 
-// Dump the tree data to a file
-template<typename TreeType>
-void SnapshotManager<TreeType>::dumpToFile(const TreeType& tree, const std::string &filename) {
-  std::ofstream ofs(filename, std::ios::binary);
-  if (!ofs)
-    throw std::runtime_error("SnapshotManager::dumpToFile: cannot open file " + filename);
-  dump(tree, ofs);
-}
-
 // Restore the tree data from a string representation
 template<typename TreeType>
 TreeType SnapshotManager<TreeType>::restoreFromString(const std::string &snapshot_string) {
   std::istringstream iss(snapshot_string, std::ios::binary);
   return restore(iss);
-}
-
-// Restore the tree data from a file
-template<typename TreeType>
-TreeType SnapshotManager<TreeType>::restoreFromFile(const std::string &filename) {
-  std::ifstream ifs(filename, std::ios::binary);
-
-  if (!ifs)
-    throw std::runtime_error("SnapshotManager::restoreFromFile: cannot open file " + filename);
-
-  return restore(ifs);
 }
 
 // Dump the tree metadata to a string representation
@@ -215,7 +189,7 @@ TreeType SnapshotManager<TreeType>::restore(std::istream& is) {
   }
   // Create a new tree with the snapshot's max levels to ensure cell Ids are compatible.
   // The tree will be cast to the correct max level after the snapshot is restored.
-  TreeType tree(std::min(min_level, metadata.min_level), std::max(max_level, metadata.max_level), rank, size);
+  TreeType tree(metadata.min_level, metadata.max_level, rank, size);
   restoreRootCells(tree, is);
   restoreLeafCells(tree, is, metadata.iterator_str_tag);
   restoreCellData(tree, is);
@@ -301,24 +275,40 @@ template<typename TreeType>
 void SnapshotManager<TreeType>::dumpLeafCells(const TreeType& tree, std::ostream& os) {
   using TreeIteratorType = typename TreeType::TreeIteratorType;
 
-  // Dump the index path of the first leaf cell of the partition
+  // Dump the index path of the first leaf cell of the tree
   TreeIteratorType iterator(tree.getRootCells(), tree.getMaxLevel());
-  if (iterator.toOwnedBegin()) {
-    // Go to the first owned cell
-    os << "FIRST_LEAF_CELL " << iterator.getIndexPath().size();
-    for (unsigned i: iterator.getIndexPath())
-      os << " " << i;
-    os << "\n";
-    os << "LEAF_LEVELS";
-    os << " " << tree.countOwnedLeaves();
-    do {
-      os << " " << iterator.getCell()->getLevel();
-    } while (iterator.ownedNext());
-    os << "\n";
-  } else {
+  if (tree.getRootCells().empty()) {
     os << "FIRST_LEAF_CELL 0\n";
+    os << "PARTITION -1 -1\n";
     os << "LEAF_LEVELS 0\n";
+    return;
   }
+
+  iterator.toBegin();
+  os << "FIRST_LEAF_CELL " << iterator.getIndexPath().size();
+  for (unsigned i: iterator.getIndexPath())
+    os << " " << i;
+  os << "\n";
+
+  int first_owned_leaf = -1;
+  int last_owned_leaf = -1;
+  unsigned number_leaf_cells = 0;
+  std::vector<unsigned> leaf_levels;
+  do {
+    if (iterator.getCell()->belongToThisProc()) {
+      if (first_owned_leaf < 0)
+        first_owned_leaf = static_cast<int>(number_leaf_cells);
+      last_owned_leaf = static_cast<int>(number_leaf_cells);
+    }
+    leaf_levels.push_back(iterator.getCell()->getLevel());
+    ++number_leaf_cells;
+  } while (iterator.next());
+
+  os << "PARTITION " << first_owned_leaf << " " << last_owned_leaf << "\n";
+  os << "LEAF_LEVELS " << number_leaf_cells;
+  for (unsigned leaf_level : leaf_levels)
+    os << " " << leaf_level;
+  os << "\n";
 }
 
 // Restore the tree leaf cells structure from an input stream using a specific iterator type
@@ -340,17 +330,20 @@ void SnapshotManager<TreeType>::restoreLeafCells(TreeType& tree, std::istream& i
 template<typename TreeType>
 template<typename IteratorType>
 void SnapshotManager<TreeType>::restoreLeafCellsWithIterator(TreeType& tree, std::istream& is) {
-  const auto snapshot_iterator_tag = IteratorType::CONFIG_SELECTION_NAME;
-  const auto restore_iterator_tag = TreeType::TreeIteratorType::CONFIG_SELECTION_NAME;
-
   // Create an iterator instance for the tree
   IteratorType iterator(tree.getRootCells(), tree.getMaxLevel());
+
+  // Initialize all cells to belong to other process
+  for (const auto &root_cell : tree.getRootCells())
+    root_cell->setToOtherProcRecurs();
 
   // Get the index path of the first leaf cell of the partition
   expect(is, "FIRST_LEAF_CELL");
   const unsigned first_leaf_cell_index_path_size = get<unsigned>(is);
   if (first_leaf_cell_index_path_size == 0) {
-    // No leaf cells to restore
+    expect(is, "PARTITION");
+    expect(is, "-1");
+    expect(is, "-1");
     expect(is, "LEAF_LEVELS");
     expect(is, "0");
     return;
@@ -359,6 +352,10 @@ void SnapshotManager<TreeType>::restoreLeafCellsWithIterator(TreeType& tree, std
   for (unsigned i = 0; i < first_leaf_cell_index_path_size; ++i)
     first_leaf_cell_index_path[i] = get<unsigned>(is);
   iterator.toIndexPath(first_leaf_cell_index_path, true);
+
+  expect(is, "PARTITION");
+  const int first_owned_leaf = get<int>(is);
+  const int last_owned_leaf = get<int>(is);
 
   // Get the levels of the leaf cells
   expect(is, "LEAF_LEVELS");
@@ -369,61 +366,52 @@ void SnapshotManager<TreeType>::restoreLeafCellsWithIterator(TreeType& tree, std
     // Split cell until reaching correct leaf level, and set the cell to belong to this process
     while (iterator.getCell()->getLevel()<leaf_level) {
       if (iterator.getCell()->isLeaf())
-        iterator.getCell()->split(max_level);
+        iterator.getCell()->split(metadata.max_level);
       iterator.toLeaf(leaf_level);
     }
-    iterator.getCell()->setToThisProcRecurs();
+
+    if (first_owned_leaf >= 0 &&
+        static_cast<int>(i) >= first_owned_leaf &&
+        static_cast<int>(i) <= last_owned_leaf)
+      iterator.getCell()->setToThisProcRecurs();
 
     if (!iterator.getCell()->isLeaf())
-      // The cell is supposed to be a leaf cell but is found to be a non-leaf cell.
-      // This can happen when a cell was split in order to respect the 1 level difference rule.
-      // If the process loads multiple partitions, it can happen that the rule is not fully respected
-      // between two neighbor cells belonging to different partitions.
-      // In that case the user can either provide a extrapolation function to ensure child cells are correctly initialized.
-      // The main problem will happen when restoring cells data from the snapshot here it is not an issue.
-      continue;
-
-    iterator.next();
+      // Conformity-driven splits can turn the current location into a non-leaf.
+      // Always advance to avoid stalling traversal.
+      iterator.next();
+    else
+      iterator.next();
   }
 
+  // Backpropagate flags from leaf to all cells
   for (const auto &root_cell : tree.getRootCells())
-    root_cell->setToThisProcRecurs();
+    backPropagateOwnershipFlags(root_cell);
 }
 
 // Dump the tree cells data to an output stream
 template<typename TreeType>
 void SnapshotManager<TreeType>::dumpCellData(const TreeType& tree, std::ostream& os) {
   using CellType = typename TreeType::CellType;
-  using TreeIteratorType = typename TreeType::TreeIteratorType;
 
-  // Dump the index path of the first leaf cell of the partition
-  TreeIteratorType iterator(tree.getRootCells(), tree.getMaxLevel());
-  if (iterator.toOwnedBegin()) {
-    // Go to the first owned cell
-    os << "CELL_DATA " << tree.countCells() << "\n";
-    // Write the data of the tree cells
-    if (this->binary) {
-      tree.applyToAllCells(
-        [&os](const std::shared_ptr<CellType> &cell, unsigned) mutable {
-          // Saving the values of the cells
-          cell->getCellData().dump(os, true);
-        }
-      );
-    } else {
-      unsigned counter{0};
-      tree.applyToAllCells(
-        [&os, &counter, this](const std::shared_ptr<CellType> &cell, unsigned) mutable {
-          // Saving the values of the cells
-          cell->getCellData().dump(os, false);
-          if (++counter%10==0)
-            os << "\n";
-        }
-      );
-      if (counter%10!=0)
-        os << "\n";
-    }
-  } else
-    os << "CELL_DATA 0\n";
+  os << "CELL_DATA " << tree.countCells() << "\n";
+  if (this->binary) {
+    tree.applyToAllCells(
+      [&os](const std::shared_ptr<CellType> &cell, unsigned) mutable {
+        cell->getCellData().dump(os, true);
+      }
+    );
+  } else {
+    unsigned counter{0};
+    tree.applyToAllCells(
+      [&os, &counter](const std::shared_ptr<CellType> &cell, unsigned) mutable {
+        cell->getCellData().dump(os, false);
+        if (++counter%10==0)
+          os << "\n";
+      }
+    );
+    if (counter%10!=0)
+      os << "\n";
+  }
 }
 
 // Restore the tree cells data from an input stream
@@ -439,13 +427,31 @@ void SnapshotManager<TreeType>::restoreCellData(TreeType& tree, std::istream& is
     throw std::runtime_error("SnapshotManager::restoreCellData: cell count mismatch");
   if (number_cells > 0) {
     // Restore the tree cells
-    unsigned counter{0};
     const bool binary = this->metadata.binary;
     tree.applyToAllCells(
-      [&is, &counter, &binary](const std::shared_ptr<CellType> &cell, unsigned) mutable {
+      [&is, &binary](const std::shared_ptr<CellType> &cell, unsigned) mutable {
         // Restoring the values of the cells
         cell->getCellData().restore(is, binary);
       }
     );
   }
+}
+
+// Set a parent to belong to this proc if any of its child do else set to other proc
+template<typename TreeType>
+bool SnapshotManager<TreeType>::backPropagateOwnershipFlags(const std::shared_ptr<CellType> &cell) const {
+  if (cell->isLeaf())
+    return cell->belongToThisProc();
+
+  bool to_this_proc = false;
+  for (const auto &child : cell->getChildCells())
+    if (backPropagateOwnershipFlags(child))
+      to_this_proc = true;
+
+  if (to_this_proc)
+    cell->setToThisProc();
+  else
+    cell->setToOtherProc();
+
+  return to_this_proc;
 }

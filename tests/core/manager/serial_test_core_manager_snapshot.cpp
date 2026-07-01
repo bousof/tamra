@@ -1,5 +1,6 @@
 #include <doctest.h>
 
+#include <iomanip>
 #include <memory>
 #include <vector>
 
@@ -221,11 +222,11 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a binary tree with 1 root cell 
   CHECK(number_leaf_cells == 2);
 
   // Create a snapshot manager
-  SnapshotManager<BinaryTree> snapshot_manager(tree.getMinLevel(), tree.getMaxLevel(), 0, 1);
+  SnapshotManager<BinaryTree> snapshot_manager(0, 1);
   // Dump the tree to a string representation
   std::string snapshot_string = snapshot_manager.dumpMetaAndTreeToString(tree);
   // Restore the tree from the snapshot string
-  SnapshotManager<BinaryTree> restore_manager(tree.getMinLevel(), tree.getMaxLevel(), 0, 1);
+  SnapshotManager<BinaryTree> restore_manager(0, 1);
   BinaryTree restored_tree = restore_manager.readMetaAndRestoreFromString(snapshot_string);
 
   CHECK(tree.getRootCells().size() == restored_tree.getRootCells().size());
@@ -268,11 +269,11 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with 1 root cell and
   CHECK(number_leaf_cells == 10);
 
   // Create a snapshot manager
-  SnapshotManager<QuadTree> snapshot_manager(tree.getMinLevel(), tree.getMaxLevel(), 0, 1);
+  SnapshotManager<QuadTree> snapshot_manager(0, 1);
   // Dump the tree to a string representation
   std::string snapshot_string = snapshot_manager.dumpMetaAndTreeToString(tree);
   // Restore the tree from the snapshot string
-  SnapshotManager<QuadTree> restore_manager(tree.getMinLevel(), tree.getMaxLevel(), 0, 1);
+  SnapshotManager<QuadTree> restore_manager(0, 1);
   QuadTree restored_tree = restore_manager.readMetaAndRestoreFromString(snapshot_string);
 
   CHECK(number_leaf_cells == restored_tree.countOwnedLeaves());
@@ -322,11 +323,11 @@ TEST_CASE("[core][manager][snapshot] Restore a snapshot from a different tree it
   CHECK(number_leaf_cells == 16);
 
   // Create a snapshot manager
-  SnapshotManager<ExportQuadTree> snapshot_manager(tree.getMinLevel(), tree.getMaxLevel(), 0, 1);
+  SnapshotManager<ExportQuadTree> snapshot_manager(0, 1, true);
   // Dump the tree to a string representation
   std::string snapshot_string = snapshot_manager.dumpMetaAndTreeToString(tree);
   // Restore the tree from the snapshot string
-  SnapshotManager<ImportQuadTree> restore_manager(tree.getMinLevel(), tree.getMaxLevel(), 0, 1);
+  SnapshotManager<ImportQuadTree> restore_manager(0, 1, true);
   ImportQuadTree restored_tree = restore_manager.readMetaAndRestoreFromString(snapshot_string);
 
   CHECK(number_leaf_cells == restored_tree.countOwnedLeaves());
@@ -341,7 +342,7 @@ TEST_CASE("[core][manager][snapshot] Restore a snapshot from a different tree it
   CHECK( A_restored->getChildCell(2)->getChildCell(0)->isLeaf());
 }
 
-// Snapshot of a quadtree with 4 root cells
+// Snapshot of a quadtree with 4 root cells (binary mode)
 //                ┌───┬───┬───┬───┐
 //                │   │   │   │   │
 //                ├── C ──┼── D ──┤
@@ -351,7 +352,7 @@ TEST_CASE("[core][manager][snapshot] Restore a snapshot from a different tree it
 //                ├── A ──┼── B ──┤
 //                │   │   │   │   │
 //                └───┴───┴───┴───┘
-TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with 4 root cells") {
+TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with 4 root cells (binary mode)") {
   using Cell2D = Cell<2,2>;
   using QuadTree = Tree<Cell2D>;
 
@@ -377,11 +378,11 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with 4 root cells") 
   tree.createRootCells(entries);
 
   // Create a snapshot manager
-  SnapshotManager<QuadTree> snapshot_manager(tree.getMinLevel(), tree.getMaxLevel(), 0, 1);
+  SnapshotManager<QuadTree> snapshot_manager(0, 1, true);
   // Dump the tree to a string representation
   std::string snapshot_string = snapshot_manager.dumpMetaAndTreeToString(tree);
   // Restore the tree from the snapshot string
-  SnapshotManager<QuadTree> restore_manager(tree.getMinLevel(), tree.getMaxLevel(), 0, 1);
+  SnapshotManager<QuadTree> restore_manager(0, 1, true);
   QuadTree restored_tree = restore_manager.readMetaAndRestoreFromString(snapshot_string);
 
   CHECK(16 == restored_tree.countOwnedLeaves());
@@ -399,7 +400,7 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with 4 root cells") 
   CHECK(D_restored->getNeighborCell(2) == B_restored);
 }
 
-// Snapshot of a quadtree with cell data
+// Snapshot of a quadtree with cell data (restore from string)
 //                 root A   root B
 //                ┌───┬─┬─┐┌─┬─┬───┐
 //                │   ├─┼─┤├─┼─┤   │
@@ -407,7 +408,7 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with 4 root cells") 
 //                ├─┼─┼─┼─┤│   ├─┼─┤
 //                └─┴─┴─┴─┘└───┴─┴─┘
 // The cell data is composed of the positions i, j, k
-TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with cell data") {
+TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with cell data (restore from string)") {
   static constexpr int Nx = 2, Ny = 2, Nz = 0;
   using Cell2D = Cell<Nx,Ny,Nz, core::manager::snapshot::TestCellData<Nx, Ny, Nz>>;
   using QuadTree = Tree<Cell2D>;
@@ -444,14 +445,43 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with cell data") {
   core::manager::snapshot::initialize_tree_cells_limits(A);
   core::manager::snapshot::initialize_tree_cells_limits(B);
 
-  // Create a snapshot manager
-  SnapshotManager<QuadTree> snapshot_manager(tree.getMinLevel(), tree.getMaxLevel(), 0, 1, true); // Switch false <=> true here
-  // Dump the tree to a string representation
-  std::string snapshot_string = snapshot_manager.dumpMetaAndTreeToString(tree);
-  std::cout << "Snapshot string:\n";
-  core::manager::snapshot::printSnapshotDebug(snapshot_string);
+  std::string snapshot_string;
+  if (false) {
+    // This code generates the snapshot string below.
+    // It is not executed in the test because we restore from the string directly.
+    // Wee keep it here for reference and for future modifications of the test.
+
+    // Create a snapshot manager
+    SnapshotManager<QuadTree> snapshot_manager(0, 1);
+    // Dump the tree to a string representation
+    snapshot_string = snapshot_manager.dumpMetaAndTreeToString(tree);
+    // Print the snapshot string for debugging
+    std::cout << "Snapshot string:\n";
+    core::manager::snapshot::printSnapshotDebug(snapshot_string);
+  } else {
+    // String representation of the snapshot of the tree with cell data
+    snapshot_string =
+      "TAMRA_SNAPSHOT_METADATA\n"
+      "VERSION 1 0\n"
+      "BINARY 0\n"
+      "MPI_SIZE 1\n"
+      "LEVELS 1 2\n"
+      "ITERATOR M123\n"
+      "TAMRA_SNAPSHOT_DATA\n"
+      "ROOT_CELLS 2\n"
+      "ROOT_CELL 0 NEIGHBORS -1 1 -1 -1\n"
+      "ROOT_CELL 1 NEIGHBORS 0 -1 -1 -1\n"
+      "FIRST_LEAF_CELL 3 0 0 0\n"
+      "PARTITION 0 22\n"
+      "LEAF_LEVELS 23 2 2 2 2 2 2 2 2 1 2 2 2 2 1 2 2 2 2 2 2 2 2 1\n"
+      "CELL_DATA 30\n"
+      " 0 4 0 4 0 2 0 2 0 1 0 1 1 2 0 1 0 1 1 2 1 2 1 2 2 4 0 2 2 3 0 1 3 4 0 1 2 3 1 2\n"
+      " 3 4 1 2 0 2 2 4 2 4 2 4 2 3 2 3 3 4 2 3 2 3 3 4 3 4 3 4 4 8 0 4 4 6 0 2 6 8 0 2\n"
+      " 6 7 0 1 7 8 0 1 6 7 1 2 7 8 1 2 4 6 2 4 4 5 2 3 5 6 2 3 4 5 3 4 5 6 3 4 6 8 2 4";
+  }
+
   // Restore the tree from the snapshot string
-  SnapshotManager<QuadTree> restore_manager(tree.getMinLevel(), tree.getMaxLevel(), 0, 1);
+  SnapshotManager<QuadTree> restore_manager(0, 1);
   QuadTree restored_tree = restore_manager.readMetaAndRestoreFromString(snapshot_string);
 
   CHECK(23 == restored_tree.countOwnedLeaves());
