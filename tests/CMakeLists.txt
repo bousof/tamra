@@ -1,6 +1,6 @@
-# Shared test sources (used in both serial + MPI test executables)
-set(TAMRA_TESTS_SRC
-  # add test files here
+# Serial-only test sources
+set(TAMRA_SERIAL_TESTS_SRC
+  # add serial tests here
   core/manager/serial_test_core_manager_cell_id.cpp
   core/manager/serial_test_core_manager_coarse.cpp
   core/manager/serial_test_core_manager_min_level.cpp
@@ -15,7 +15,7 @@ set(TAMRA_TESTS_SRC
 
 add_executable(tamra_tests
   test_main.cpp              # serial doctest main
-  ${TAMRA_TESTS_SRC}         # shared tests
+  ${TAMRA_SERIAL_TESTS_SRC}
 )
 
 target_include_directories(tamra_tests PRIVATE
@@ -28,16 +28,21 @@ target_link_libraries(tamra_tests PRIVATE tamra_core)
 add_test(NAME tamra_serial_tests COMMAND tamra_tests)
 
 if(USE_MPI)
-  add_executable(tamra_mpi_tests
-    test_main_mpi.cpp        # serial doctest main
-    ${TAMRA_TESTS_SRC}       # shared tests
-    # add MPI test files here
+  set(TAMRA_MPI_TESTS_SRC
+    # add mpi tests here
     communications/mpi_test_communications_alltoall.cpp
     communications/mpi_test_communications_bcast.cpp
     core/manager/mpi_test_core_manager_balance.cpp
     core/manager/mpi_test_core_manager_ghost.cpp
     core/manager/mpi_test_core_manager_min_level.cpp
+    core/manager/mpi_test_core_manager_snapshot.cpp
     linear_algebra/mpi_test_jacobi.cpp
+  )
+
+  add_executable(tamra_mpi_tests
+    test_main_mpi.cpp        # MPI doctest main
+    ${TAMRA_SERIAL_TESTS_SRC}
+    ${TAMRA_MPI_TESTS_SRC}
   )
 
   target_include_directories(tamra_mpi_tests PRIVATE

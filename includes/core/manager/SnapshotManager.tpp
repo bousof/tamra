@@ -134,8 +134,6 @@ void SnapshotManager<TreeType>::readMeta(std::istream& is) {
   {
     expect(is, "MPI_SIZE");
     metadata.size = get<unsigned>(is);
-    if (metadata.size > 1)
-      throw std::runtime_error("Cannot dump partitioned tree yet");
   }
   {
     expect(is, "LEVELS");
@@ -173,8 +171,9 @@ TreeType SnapshotManager<TreeType>::restore(std::istream& is) {
   { // Verify size
     // - if the size for restorE is bigger, the last processes have empty partitions
     // - if size for restore is smaller, throw an error
-    if (metadata.size > 1)
-      throw std::runtime_error("Cannot restore partitioned tree yet");
+    if (metadata.size != size)
+      throw std::runtime_error("Cannot restore tree snapshot: snapshot MPI size (" + std::to_string(metadata.size) +
+                               ") differs from current MPI size (" + std::to_string(size) + ")");
     if (metadata.size > size)
       throw std::runtime_error("Cannot restore from a snapshot taken with a higher number of processes");
   }
