@@ -25,6 +25,13 @@ void SnapshotManager<TreeType>::dumpMetaAndTree(const TreeType& tree, std::ostre
   dump(tree, os);
 }
 
+// Dump the tree metadata and empty partition tree to an output stream
+template<typename TreeType>
+void SnapshotManager<TreeType>::dumpMetaAndEmptyPartitionTree(const TreeType& tree, std::ostream& os) {
+  dumpMeta(tree, os);
+  dumpEmptyPartitionTree(tree, os);
+}
+
 // Read the tree metadata and data from an input stream
 template<typename TreeType>
 TreeType SnapshotManager<TreeType>::readMetaAndRestore(std::istream& is) {
@@ -99,7 +106,7 @@ TreeType SnapshotManager<TreeType>::restoreFromString(const std::string &snapsho
   return restore(iss);
 }
 
-// Dump the tree metadata to a string representation
+// Dump the snapshot metadata to an output stream
 template<typename TreeType>
 void SnapshotManager<TreeType>::dumpMeta(const TreeType& tree, std::ostream& os) {
   // Metadata for the snapshot
@@ -169,13 +176,10 @@ TreeType SnapshotManager<TreeType>::restore(std::istream& is) {
                                ", but got \"" + std::to_string(metadata.version) + "." + std::to_string(metadata.subversion) + "\"");
   }
   { // Verify size
-    // - if the size for restorE is bigger, the last processes have empty partitions
-    // - if size for restore is smaller, throw an error
-    if (metadata.size != size)
-      throw std::runtime_error("Cannot restore tree snapshot: snapshot MPI size (" + std::to_string(metadata.size) +
-                               ") differs from current MPI size (" + std::to_string(size) + ")");
+    // Restoring with a smaller MPI size is not allowed because it would require merging data from multiple processes into one, which is not implemented
     if (metadata.size > size)
-      throw std::runtime_error("Cannot restore from a snapshot taken with a higher number of processes");
+      throw std::runtime_error("Cannot restore tree snapshot: snapshot MPI size (" + std::to_string(metadata.size) +
+                               ") is larger than current MPI size (" + std::to_string(size) + ")");
   }
   { // Verify snapshot iterator compatibility.
     // One can either:
@@ -274,7 +278,7 @@ template<typename TreeType>
 void SnapshotManager<TreeType>::dumpLeafCells(const TreeType& tree, std::ostream& os) {
   using TreeIteratorType = typename TreeType::TreeIteratorType;
 
-  // Dump the index path of the first leaf cell of the tree
+  // Dump the global leaf traversal and record the contiguous owned interval on it
   TreeIteratorType iterator(tree.getRootCells(), tree.getMaxLevel());
   if (tree.getRootCells().empty()) {
     os << "FIRST_LEAF_CELL 0\n";
@@ -336,7 +340,7 @@ void SnapshotManager<TreeType>::restoreLeafCellsWithIterator(TreeType& tree, std
   for (const auto &root_cell : tree.getRootCells())
     root_cell->setToOtherProcRecurs();
 
-  // Get the index path of the first leaf cell of the partition
+  // Get the index path of the first leaf cell in the serialized traversal
   expect(is, "FIRST_LEAF_CELL");
   const unsigned first_leaf_cell_index_path_size = get<unsigned>(is);
   if (first_leaf_cell_index_path_size == 0) {
@@ -356,7 +360,7 @@ void SnapshotManager<TreeType>::restoreLeafCellsWithIterator(TreeType& tree, std
   const int first_owned_leaf = get<int>(is);
   const int last_owned_leaf = get<int>(is);
 
-  // Get the levels of the leaf cells
+  // Restore the serialized leaf levels and recover ownership from the partition interval.
   expect(is, "LEAF_LEVELS");
   const unsigned number_leaf_cells = get<unsigned>(is);
   for (unsigned i{0}; i < number_leaf_cells; ++i) {
@@ -374,12 +378,7 @@ void SnapshotManager<TreeType>::restoreLeafCellsWithIterator(TreeType& tree, std
         static_cast<int>(i) <= last_owned_leaf)
       iterator.getCell()->setToThisProcRecurs();
 
-    if (!iterator.getCell()->isLeaf())
-      // Conformity-driven splits can turn the current location into a non-leaf.
-      // Always advance to avoid stalling traversal.
-      iterator.next();
-    else
-      iterator.next();
+    iterator.next();
   }
 
   // Backpropagate flags from leaf to all cells
@@ -436,7 +435,7 @@ void SnapshotManager<TreeType>::restoreCellData(TreeType& tree, std::istream& is
   }
 }
 
-// Set a parent to belong to this proc if any of its child do else set to other proc
+// Set a parent to belong to this rank if any child does, otherwise mark it as non-owned
 template<typename TreeType>
 bool SnapshotManager<TreeType>::backPropagateOwnershipFlags(const std::shared_ptr<CellType> &cell) const {
   if (cell->isLeaf())
@@ -453,4 +452,86 @@ bool SnapshotManager<TreeType>::backPropagateOwnershipFlags(const std::shared_pt
     cell->setToOtherProc();
 
   return to_this_proc;
+}
+
+// Dump a canonical empty-partition payload that matches the regular snapshot format.
+template<typename TreeType>
+void SnapshotManager<TreeType>::dumpEmptyPartitionTree(const TreeType& tree, std::ostream& os) {
+  os << "TAMRA_SNAPSHOT_DATA\n";
+  dumpRootCells(tree, os);
+  dumpEmptyPartitionLeafCells(tree, os);
+  dumpEmptyPartitionCellData(tree, os);
+}
+
+// Dump the empty partition tree leaf cells structure to an output stream
+template<typename TreeType>
+void SnapshotManager<TreeType>::dumpEmptyPartitionLeafCells(const TreeType& tree, std::ostream& os) {
+  using TreeIteratorType = typename TreeType::TreeIteratorType;
+
+  // Serialize the level-1 topology needed to reconstruct root neighborhoods on empty ranks.
+  TreeIteratorType iterator(tree.getRootCells(), tree.getMaxLevel());
+  if (tree.getRootCells().empty()) {
+    os << "FIRST_LEAF_CELL 0\n";
+    os << "PARTITION -1 -1\n";
+    os << "LEAF_LEVELS 0\n";
+    return;
+  }
+
+  iterator.toBegin(1);
+  os << "FIRST_LEAF_CELL " << iterator.getIndexPath().size();
+  for (unsigned i: iterator.getIndexPath())
+    os << " " << i;
+  os << "\n";
+
+  unsigned number_leaf_cells = 0;
+  std::vector<unsigned> leaf_levels;
+  do {
+    leaf_levels.push_back(iterator.getCell()->getLevel());
+    ++number_leaf_cells;
+  } while (iterator.next(1));
+
+  os << "PARTITION -1 -1\n";
+  os << "LEAF_LEVELS " << number_leaf_cells;
+  for (unsigned leaf_level : leaf_levels)
+    os << " " << leaf_level;
+  os << "\n";
+}
+
+// Dump the empty partition tree cells data to an output stream
+template<typename TreeType>
+void SnapshotManager<TreeType>::dumpEmptyPartitionCellData(const TreeType& tree, std::ostream& os) {
+  using CellType = typename TreeType::CellType;
+
+  // Count cells up to level 1, which is the structural subset restored on empty partitions.
+  unsigned nb_level_1_cells = 0;
+  tree.applyToAllCells(
+    [&nb_level_1_cells](const std::shared_ptr<CellType> &cell, unsigned) mutable {
+      if (cell->getLevel() <= 1)
+        nb_level_1_cells++;
+    }
+  );
+
+  // Dump the data associated with that structural subset.
+  os << "CELL_DATA " << nb_level_1_cells << "\n";
+  if (this->binary) {
+    tree.applyToAllCells(
+      [&os](const std::shared_ptr<CellType> &cell, unsigned) mutable {
+        if (cell->getLevel() <= 1)
+          cell->getCellData().dump(os, true);
+      }
+    );
+  } else {
+    unsigned counter{0};
+    tree.applyToAllCells(
+      [&os, &counter](const std::shared_ptr<CellType> &cell, unsigned) mutable {
+        if (cell->getLevel() <= 1) {
+          cell->getCellData().dump(os, false);
+          if (++counter%10==0)
+            os << "\n";
+        }
+      }
+    );
+    if (counter%10!=0)
+      os << "\n";
+  }
 }

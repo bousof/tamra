@@ -3,7 +3,7 @@
  *  Copyright (c) 2025 Sofiane BOUSABAA
  *  Licensed under the MIT License (see LICENSE file in project root)
  *
- *  Description: Class that handles tree swnapshot and restore.
+ *  Description: Class that handles tree snapshot and restore.
  */
 
 #pragma once
@@ -25,7 +25,7 @@
 #include <core/iterator/tree_iterator_types.h>
 #include "../../utils/inout_utils.h"
 
-// Enumeration for strategies on how to handle conflicts for owned cells.
+// Enumeration for snapshot portability strategies.
 // Possible values are:
 // - `SFC_COMPRESSED`:    Assumes restart uses the same SFC (efficient in storage, I/O, and repartitioning)
 // - `PORTABLE_EXPLICIT`: More compatible (larger files and potentially more expensive redistribution, because cells from one old partition may be scattered across many new partitions)
@@ -78,9 +78,11 @@ class SnapshotManager {
   //  METHODS                                                  //
   //***********************************************************//
  public:
-  // Dump the tree metadata to an output stream
+  // Dump the snapshot metadata to an output stream
   void dumpMetaAndTree(const TreeType& tree, std::ostream& os);
-  // Read the tree metadata from an input stream
+  // Dump the snapshot metadata and a canonical empty-partition tree to an output stream
+  void dumpMetaAndEmptyPartitionTree(const TreeType& tree, std::ostream& os);
+  // Read the snapshot metadata and restore the tree from an input stream
   TreeType readMetaAndRestore(std::istream& is);
   // Dump the tree metadata and data to a string representation
   std::string dumpMetaAndTreeToString(const TreeType& tree);
@@ -99,9 +101,9 @@ class SnapshotManager {
   // Restore the tree data from a string representation
   TreeType restoreFromString(const std::string& snapshot_string);
  private:
-  // Dump the tree metadata to an output stream
+  // Dump the snapshot metadata to an output stream
   void dumpMeta(const TreeType& tree, std::ostream& os);
-  // Read the tree metadata from an input stream
+  // Read the snapshot metadata from an input stream
   void readMeta(std::istream& is);
   // Dump the tree data to an output stream
   void dump(const TreeType& tree, std::ostream& os);
@@ -122,8 +124,14 @@ class SnapshotManager {
   void dumpCellData(const TreeType& tree, std::ostream& os);
   // Restore the tree cells data from an input stream
   void restoreCellData(TreeType& tree, std::istream& is);
-  // Set a parent to belong to this proc if any of its child do else set to other proc
+  // Set a parent to belong to this rank if any child does, otherwise mark it as non-owned
   bool backPropagateOwnershipFlags(const std::shared_ptr<CellType> &cell) const;
+  // Dump a canonical empty-partition tree payload to an output stream
+  void dumpEmptyPartitionTree(const TreeType& tree, std::ostream& os);
+  // Dump the canonical empty-partition leaf topology to an output stream
+  void dumpEmptyPartitionLeafCells(const TreeType& tree, std::ostream& os);
+  // Dump the canonical empty-partition cell data to an output stream
+  void dumpEmptyPartitionCellData(const TreeType& tree, std::ostream& os);
 };
 
 #include "SnapshotManager.tpp"
