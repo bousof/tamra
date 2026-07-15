@@ -77,6 +77,17 @@ typename Tree<CellType, TreeIteratorType>::GhostManagerType Tree<CellType, TreeI
   return ghostManager;
 }
 
+// Get ghost manager
+template<typename CellType, typename TreeIteratorType>
+bool Tree<CellType, TreeIteratorType>::isEmpty() const {
+  if (root_cells.empty())
+    return true;
+  
+  // Go to first owned cell and return true if it is not in this proc partition
+  TreeIteratorType iterator(getRootCells(), getMaxLevel());
+  return !iterator.toOwnedBegin();
+}
+
 
 //***********************************************************//
 //  METHODS                                                  //
@@ -286,4 +297,60 @@ void Tree<CellType, TreeIteratorType>::applyToAllCellsRecurs(const std::shared_p
       f(child, index++);
       applyToAllCellsRecurs(child, f, index);
     }
+}
+
+// Merge the tree with another one with partition following the same SFC
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::mergeWith(const Tree &other_tree, ExtrapolationFunctionType extrapolation_function, MergeFunctionType merge_function) {
+  // If the other tree is empty, there is nothing to merge
+  if (other_tree.isEmpty())
+    return;
+
+  // The tree should have the same max level because we use cell IDs to check if partitions are following each other
+  if (getMaxLevel() != other_tree.getMaxLevel())
+    throw std::runtime_error("Tree::mergeWith: Cannot merge trees with different max levels: " + std::to_string(getMaxLevel()) + " vs " + std::to_string(other_tree.getMaxLevel()));
+
+  // If the tree calling the merge is not empty, we need to verify that the two partitions are compatible
+  if (!isEmpty()) {
+    TreeIteratorType this_end_iterator(getRootCells(), getMaxLevel());
+    this_end_iterator.toOwnedEnd();
+
+    TreeIteratorType other_start_iterator(other_tree.getRootCells(), getMaxLevel());
+    other_start_iterator.toOwnedBegin();
+
+    if (!this_end_iterator.cellIdLt(other_start_iterator.getCellId()))
+      throw std::runtime_error("Tree::mergeWith: Cannot merge trees with non-contiguous partitions");
+
+    // We move hte iterators one cell step and they should be in reverse order in the SFC
+    this_end_iterator.next();
+    other_start_iterator.prev();
+    if (!this_end_iterator.cellIdGt(other_start_iterator.getCellId()))
+      throw std::runtime_error("Tree::mergeWith: Cannot merge trees with non-contiguous partitions");
+  }
+
+  // Merge the root cells of the two trees
+  for (unsigned i{0}; i<other_tree.getRootCells().size(); ++i)
+    mergeCellRecurs(root_cells[i], other_tree.getRootCells()[i], extrapolation_function, merge_function);
+}
+
+// Merge the tree with another one with partition following the same SFC
+template<typename CellType, typename TreeIteratorType>
+void Tree<CellType, TreeIteratorType>::mergeCellRecurs(const std::shared_ptr<CellType> &cell, const std::shared_ptr<CellType> &other_cell, ExtrapolationFunctionType extrapolation_function, MergeFunctionType merge_function) {
+  // Merge the data of the two corresponding cells
+  merge_function(cell, other_cell);
+
+  // If one of the cells is a leaf and the other is not, we need to split the leaf cell to ensure that both cells have the same structure before merging their children
+  if (cell->isLeaf() && !other_cell->isLeaf())
+    cell->split(max_level, extrapolation_function);
+  if (!cell->isLeaf() && other_cell->isLeaf())
+    other_cell->split(max_level, extrapolation_function);
+
+  // Recursive call at deeper tree levels
+  if (!other_cell->isLeaf())
+    for (unsigned i{0}; i<CellType::number_children; ++i)
+      mergeCellRecurs(cell->getChildCell(i), other_cell->getChildCell(i), extrapolation_function, merge_function);
+
+  // Add the cell to the destination partition after merging its children so newly split cells keep their previous ownership while their data is merged.
+  if (other_cell->belongToThisProc())
+    cell->setToThisProc();
 }

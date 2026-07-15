@@ -30,6 +30,7 @@ class Tree {
   using CoarseManagerType = CoarseManager<CellType>;
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
   using InterpolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
+  using MergeFunctionType = std::function<void(const std::shared_ptr<CellType>&, const std::shared_ptr<CellType>&)>;
   using GhostManagerType = GhostManager<CellType, TreeIteratorTypeT>;
   using GhostManagerTaskType = typename GhostManager<CellType, TreeIteratorTypeT>::GhostManagerTaskType;
   using MinLevelMeshManagerType = MinLevelMeshManager<CellType, TreeIteratorTypeT>;
@@ -94,6 +95,8 @@ class Tree {
     }();
     return dirs;
   }
+  // Check if the tree is empty
+  bool isEmpty() const;
 
   //***********************************************************//
   //  METHODS                                                  //
@@ -104,21 +107,34 @@ class Tree {
   void meshAtMinLevel(TreeIteratorType &iterator);
 
   // Split all the leaf cells belonging to this proc that need to be refined and are not at max level
-  bool refine(ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; });
+  bool refine(
+    ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }
+  );
 
   // Creation of ghost cells
-  GhostManagerTaskType buildGhostLayer(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }, const std::vector<int> &directions = defaultDirections());
+  GhostManagerTaskType buildGhostLayer(
+    InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; },
+    const std::vector<int> &directions = defaultDirections()
+  );
   // Exchange ghost cell values
-  void exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; });
+  void exchangeGhostValues(
+    GhostManagerTaskType &task,
+    InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }
+  );
 
   // Redistribute cells among processes to balance computation load
-  void loadBalance(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }, const double max_pct_unbalance = 0.1);
+  void loadBalance(
+    InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; },
+    const double max_pct_unbalance = 0.1
+  );
 
   //--- Propagating -------------------------------------------//
   void propagate() {};
 
   //--- Coarsening --------------------------------------------//
-  bool coarsen(InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; });
+  bool coarsen(
+    InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }
+  );
 
   //--- Computing SFC indices ---------------------------------//
   void boundaryConditions() {};
@@ -151,6 +167,18 @@ class Tree {
   void applyToGhostLeavesRanks(const std::function<void(const std::shared_ptr<CellType>&, const unsigned, const unsigned)> &f, TreeIteratorType &iterator) const;
   void applyToGhostLeaves(const std::function<void(const std::shared_ptr<CellType>&, const unsigned, const unsigned)> &f, std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids, unsigned &index, TreeIteratorType &iterator) const;
   void applyToAllCellsRecurs(const std::shared_ptr<CellType> &cell, const std::function<void(const std::shared_ptr<CellType>&, const unsigned)> &f, unsigned &index) const;
+
+  // Merge the tree with another one with partition following the same SFC
+ public:
+  void mergeWith(
+    const Tree &other_tree, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; },
+    MergeFunctionType merge_function = [](const std::shared_ptr<CellType> &cell, const std::shared_ptr<CellType> &other_cell) {
+      if (!cell->belongToThisProc() && other_cell->belongToThisProc()) {
+        cell->getCellData().fromVectorOfData(other_cell->getCellData().toVectorOfData());
+      }
+    }
+  );
+  void mergeCellRecurs(const std::shared_ptr<CellType> &cell, const std::shared_ptr<CellType> &other_cell, ExtrapolationFunctionType extrapolation_function, MergeFunctionType merge_function);
 };
 
 #include "Tree.tpp"
