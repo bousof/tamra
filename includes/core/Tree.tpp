@@ -310,6 +310,23 @@ void Tree<CellType, TreeIteratorType>::mergeWith(const Tree &other_tree, Extrapo
   if (getMaxLevel() != other_tree.getMaxLevel())
     throw std::runtime_error("Tree::mergeWith: Cannot merge trees with different max levels: " + std::to_string(getMaxLevel()) + " vs " + std::to_string(other_tree.getMaxLevel()));
 
+  if (root_cells.size() != other_tree.root_cells.size())
+    throw std::runtime_error("Tree::mergeWith: Cannot merge trees with different numbers of root cells");
+
+  for (size_t i{0}; i<root_cells.size(); ++i)
+    for (unsigned dir{0}; dir<CellType::number_neighbors; ++dir) {
+      const auto this_neighbor = root_cells[i]->getNeighborCell(dir);
+      const auto other_neighbor = other_tree.root_cells[i]->getNeighborCell(dir);
+      if (!this_neighbor != !other_neighbor)
+        throw std::runtime_error("Tree::mergeWith: Cannot merge trees with different root-cell topologies");
+      if (this_neighbor) {
+        const auto this_neighbor_index = std::find(root_cells.begin(), root_cells.end(), this_neighbor);
+        const auto other_neighbor_index = std::find(other_tree.root_cells.begin(), other_tree.root_cells.end(), other_neighbor);
+        if (this_neighbor_index - root_cells.begin() != other_neighbor_index - other_tree.root_cells.begin())
+          throw std::runtime_error("Tree::mergeWith: Cannot merge trees with different root-cell topologies");
+      }
+    }
+
   // If the tree calling the merge is not empty, we need to verify that the two partitions are compatible
   if (!isEmpty()) {
     TreeIteratorType this_end_iterator(getRootCells(), getMaxLevel());
