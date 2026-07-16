@@ -103,3 +103,131 @@ TEST_CASE("[core][tree] Simple Tree (2D)") {
   CHECK(D->getNeighborCell(0) == C);
   CHECK(D->getNeighborCell(2) == B);
 }
+// Merge two adjacent binary tree partitions at the maximum level.
+TEST_CASE("[core][tree] Merge adjacent binary partitions") {
+  using Cell1D = Cell<2>;
+  using BinaryTree = Tree<Cell1D>;
+
+  auto A0 = std::make_shared<Cell1D>(nullptr);
+  auto B0 = std::make_shared<Cell1D>(nullptr);
+  RootCellEntry<Cell1D> eA0{A0}, eB0{B0};
+  eA0.setNeighbor(1, B0);
+  eB0.setNeighbor(0, A0);
+  BinaryTree first_tree(1, 1, 0, 2);
+  first_tree.createRootCells({eA0, eB0});
+  A0->setToThisProcRecurs();
+  B0->setToOtherProcRecurs();
+  A0->getCellData().setValue(10.0);
+  B0->getCellData().setValue(20.0);
+
+  auto A1 = std::make_shared<Cell1D>(nullptr);
+  auto B1 = std::make_shared<Cell1D>(nullptr);
+  RootCellEntry<Cell1D> eA1{A1}, eB1{B1};
+  eA1.setNeighbor(1, B1);
+  eB1.setNeighbor(0, A1);
+  BinaryTree second_tree(1, 1, 1, 2);
+  second_tree.createRootCells({eA1, eB1});
+  A1->setToOtherProcRecurs();
+  B1->setToThisProcRecurs();
+  A1->getCellData().setValue(100.0);
+  B1->getCellData().setValue(200.0);
+
+  CHECK_THROWS(second_tree.mergeWith(first_tree));
+
+  first_tree.mergeWith(second_tree);
+
+  CHECK(A0->getCellData().getValue() == 10.0);
+  CHECK(B0->getCellData().getValue() == 200.0);
+  CHECK(first_tree.countOwnedLeaves() == 4);
+}
+
+// Reject a merge when an unowned SFC interval lies between the two partitions.
+TEST_CASE("[core][tree] Reject non-contiguous binary partitions") {
+  using Cell1D = Cell<2>;
+  using BinaryTree = Tree<Cell1D>;
+
+  auto A0 = std::make_shared<Cell1D>(nullptr);
+  auto B0 = std::make_shared<Cell1D>(nullptr);
+  RootCellEntry<Cell1D> eA0{A0}, eB0{B0};
+  eA0.setNeighbor(1, B0);
+  eB0.setNeighbor(0, A0);
+  BinaryTree first_tree(1, 1, 0, 2);
+  first_tree.createRootCells({eA0, eB0});
+  A0->setToThisProcRecurs();
+  B0->setToOtherProcRecurs();
+
+  auto A1 = std::make_shared<Cell1D>(nullptr);
+  auto B1 = std::make_shared<Cell1D>(nullptr);
+  RootCellEntry<Cell1D> eA1{A1}, eB1{B1};
+  eA1.setNeighbor(1, B1);
+  eB1.setNeighbor(0, A1);
+  BinaryTree second_tree(1, 1, 1, 2);
+  second_tree.createRootCells({eA1, eB1});
+  A1->setToOtherProcRecurs();
+  B1->setToThisProcRecurs();
+
+  // Create a gape between the two partitions by setting the first cell of the second partition to other proc.
+  MortonIterator<Cell1D> second_tree_iterator(second_tree.getRootCells(), second_tree.getMaxLevel());
+  REQUIRE(second_tree_iterator.toOwnedBegin());
+  second_tree_iterator.getCell()->setToOtherProc();
+  CHECK_THROWS(first_tree.mergeWith(second_tree));
+
+  // Create an intersection between the two partitions by setting the first cell of the second partition to other proc.
+  second_tree_iterator.getCell()->setToThisProc();
+  second_tree_iterator.prev();
+  second_tree_iterator.getCell()->setToThisProc();
+  A1->setToThisProc();
+  CHECK_THROWS(first_tree.mergeWith(second_tree));
+
+  // Remove the gap by setting the last cell of the first partition to other proc.
+  MortonIterator<Cell1D> first_tree_iterator(first_tree.getRootCells(), first_tree.getMaxLevel());
+  REQUIRE(first_tree_iterator.toOwnedEnd());
+  first_tree_iterator.getCell()->setToOtherProc();
+  first_tree.mergeWith(second_tree);
+  CHECK(first_tree.countOwnedLeaves() == 4);
+}
+
+// Merge a partition whose topology is more refined than the destination tree.
+TEST_CASE("[core][tree] Merge refined binary partition with extrapolation") {
+  using Cell1D = Cell<2>;
+  using BinaryTree = Tree<Cell1D>;
+
+  auto A0 = std::make_shared<Cell1D>(nullptr);
+  auto B0 = std::make_shared<Cell1D>(nullptr);
+  RootCellEntry<Cell1D> eA0{A0}, eB0{B0};
+  eA0.setNeighbor(1, B0);
+  eB0.setNeighbor(0, A0);
+  BinaryTree destination(1, 2, 0, 2);
+  destination.createRootCells({eA0, eB0});
+  A0->setToThisProcRecurs();
+  B0->setToOtherProcRecurs();
+  A0->getCellData().setValue(10.0);
+  B0->getCellData().setValue(20.0);
+
+  auto A1 = std::make_shared<Cell1D>(nullptr);
+  auto B1 = std::make_shared<Cell1D>(nullptr);
+  RootCellEntry<Cell1D> eA1{A1}, eB1{B1};
+  eA1.setNeighbor(1, B1);
+  eB1.setNeighbor(0, A1);
+  BinaryTree source(1, 2, 1, 2);
+  source.createRootCells({eA1, eB1});
+  A1->setToOtherProcRecurs();
+  B1->setToThisProcRecurs();
+  A1->getCellData().setValue(100.0);
+  B1->getCellData().setValue(200.0);
+  B1->getChildCell(0)->split(2);
+  B1->getChildCell(0)->getChildCell(0)->getCellData().setValue(210.0);
+  B1->getChildCell(0)->getChildCell(1)->getCellData().setValue(211.0);
+
+  unsigned extrapolated_cells = 0;
+  destination.mergeWith(
+    source,
+    [&extrapolated_cells](const std::shared_ptr<Cell1D> &) { ++extrapolated_cells; }
+  );
+
+  CHECK(A0->getCellData().getValue() == 10.0);
+  CHECK(B0->getChildCell(0)->isLeaf() == false);
+  CHECK(B0->getChildCell(0)->getChildCell(0)->getCellData().getValue() == 210.0);
+  CHECK(B0->getChildCell(0)->getChildCell(1)->getCellData().getValue() == 211.0);
+  CHECK(extrapolated_cells > 0);
+}
