@@ -233,6 +233,47 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a binary tree with 1 root cell 
   CHECK(tree.countOwnedLeaves() == restored_tree.countOwnedLeaves());
 }
 
+// Restore complementary partitions from two snapshot strings into one tree.
+TEST_CASE("[core][manager][snapshot] Restore and merge complementary binary partitions") {
+  using Cell1D = Cell<2>;
+  using BinaryTree = Tree<Cell1D>;
+
+  auto first_root = std::make_shared<Cell1D>(nullptr);
+  RootCellEntry<Cell1D> first_entry{first_root};
+  BinaryTree first_tree(1, 1, 0, 2);
+  first_tree.createRootCells({first_entry});
+  first_root->setToThisProcRecurs();
+  first_root->getChildCell(1)->setToOtherProcRecurs();
+  first_root->getChildCell(0)->getCellData().setValue(10.0);
+  first_root->getChildCell(1)->getCellData().setValue(20.0);
+
+  auto second_root = std::make_shared<Cell1D>(nullptr);
+  RootCellEntry<Cell1D> second_entry{second_root};
+  BinaryTree second_tree(1, 1, 1, 2);
+  second_tree.createRootCells({second_entry});
+  second_root->setToThisProcRecurs();
+  second_root->getChildCell(0)->setToOtherProcRecurs();
+  second_root->getChildCell(0)->getCellData().setValue(10.0);
+  second_root->getChildCell(1)->getCellData().setValue(20.0);
+
+  std::cout << second_root->belongToThisProc() << std::endl; // Should be true
+
+  SnapshotManager<BinaryTree> first_snapshot_manager(0, 2);
+  SnapshotManager<BinaryTree> second_snapshot_manager(1, 2);
+  const std::string first_snapshot = first_snapshot_manager.dumpMetaAndTreeToString(first_tree);
+  const std::string second_snapshot = second_snapshot_manager.dumpMetaAndTreeToString(second_tree);
+
+  SnapshotManager<BinaryTree> restore_manager(0, 1);
+  BinaryTree restored_tree = restore_manager.readMetaAndRestoreFromString(first_snapshot);
+
+  std::istringstream second_snapshot_stream(second_snapshot);
+  restore_manager.readMetaAndMerge(second_snapshot_stream, restored_tree);
+
+  CHECK(restored_tree.countOwnedLeaves() == 2);
+  CHECK(restored_tree.getRootCells()[0]->getChildCell(0)->getCellData().getValue() == 10.0);
+  CHECK(restored_tree.getRootCells()[0]->getChildCell(1)->getCellData().getValue() == 20.0);
+}
+
 // Snapshot of a quadtree with 1 root cell and 10 leaf cells
 //                ┌───┬───┬───────┐
 //                │   │   │       │
@@ -449,7 +490,7 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with cell data (rest
   if (false) {
     // This code generates the snapshot string below.
     // It is not executed in the test because we restore from the string directly.
-    // Wee keep it here for reference and for future modifications of the test.
+    // We keep it here for reference and for future modifications of the test.
 
     // Create a snapshot manager
     SnapshotManager<QuadTree> snapshot_manager(0, 1);
