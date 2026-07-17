@@ -84,6 +84,8 @@ class SnapshotManager {
   void dumpMetaAndEmptyPartitionTree(const TreeType& tree, std::ostream& os);
   // Read the snapshot metadata and restore the tree from an input stream
   TreeType readMetaAndRestore(std::istream& is);
+  // Read the snapshot metadata and merge the tree from an input stream
+  void readMetaAndMerge(std::istream& is, TreeType& tree);
   // Dump the tree metadata and data to a string representation
   std::string dumpMetaAndTreeToString(const TreeType& tree);
   // Dump the tree metadata and data to a file

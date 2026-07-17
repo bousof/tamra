@@ -39,6 +39,16 @@ TreeType SnapshotManager<TreeType>::readMetaAndRestore(std::istream& is) {
   return restore(is);
 }
 
+// Read the snapshot metadata and merge the tree from an input stream
+template<typename TreeType>
+void SnapshotManager<TreeType>::readMetaAndMerge(std::istream& is, TreeType& tree) {
+  readMeta(is);
+  // Restore the tree from the input file stream
+  auto tree_to_merge = restore(is);
+  // Merge the restored tree with the current tree
+  tree.mergeWith(tree_to_merge);
+}
+
 // Dump the tree metadata and data to a string representation
 template<typename TreeType>
 std::string SnapshotManager<TreeType>::dumpMetaAndTreeToString(const TreeType& tree) {
@@ -174,12 +184,6 @@ TreeType SnapshotManager<TreeType>::restore(std::istream& is) {
     if (metadata.version != VERSION_NUMBER || metadata.subversion != SUBVERSION_NUMBER)
       throw std::runtime_error("Expected version \"" + std::to_string(VERSION_NUMBER) + " " + std::to_string(SUBVERSION_NUMBER) + "\"" +
                                ", but got \"" + std::to_string(metadata.version) + "." + std::to_string(metadata.subversion) + "\"");
-  }
-  { // Verify size
-    // Restoring with a smaller MPI size is not allowed because it would require merging data from multiple processes into one, which is not implemented
-    if (metadata.size > size)
-      throw std::runtime_error("Cannot restore tree snapshot: snapshot MPI size (" + std::to_string(metadata.size) +
-                               ") is larger than current MPI size (" + std::to_string(size) + ")");
   }
   { // Verify snapshot iterator compatibility.
     // One can either:
