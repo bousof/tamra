@@ -16,9 +16,10 @@
 #endif // USE_MPI
 
 #include <functional>
+#include <iostream>
+#include <memory>
 #include <numeric>
 #include <vector>
-#include <iostream>
 
 #include "../utils/array_utils.h"
 #include "alltoall.h"

@@ -73,7 +73,7 @@ const std::vector<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>> Cell<Nx, Ny, Nz, 
   if (isLeaf())
     throw std::runtime_error("Cannot call on leaf in Cell::getDirChildCells()");
 
-  if ((dir >= 0) && (dir < number_volume_neighbors)) {
+  if (dir < number_volume_neighbors) {
     const auto &child_cells = getChildCells();
     const auto &dir_sibling_numbers = ChildAndDirectionTablesType::dir_sibling_numbers[dir];
     std::vector<std::shared_ptr<Cell<Nx, Ny, Nz, DataType>>> dir_child_cells(dir_sibling_numbers.size());

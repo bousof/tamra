@@ -1,5 +1,6 @@
 #include <doctest.h>
 
+#include <cmath>
 #include <iostream>
 #include <vector>
 

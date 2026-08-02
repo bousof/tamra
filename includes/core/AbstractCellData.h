@@ -9,6 +9,7 @@
 #pragma once
 
 #include <istream>
+#include <memory>
 #include <ostream>
 
 #include "../parallel/ParallelData.h"

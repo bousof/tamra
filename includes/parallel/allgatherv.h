@@ -16,6 +16,7 @@
 #endif // USE_MPI
 
 #include <functional>
+#include <memory>
 #include <numeric>
 #include <vector>
 

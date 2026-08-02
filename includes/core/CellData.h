@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "AbstractCellData.h"
 
 class CellData : public AbstractCellData {

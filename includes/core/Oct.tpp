@@ -90,7 +90,7 @@ void Oct<CellType>::setNeighborCell(const unsigned dir, std::shared_ptr<CellType
 // Set a specific child cell
 template<typename CellType>
 void Oct<CellType>::setChildCell(const unsigned sibling_number, std::shared_ptr<CellType> cell) {
-  if (sibling_number<0 || sibling_number>=number_children)
+  if (sibling_number>=number_children)
     throw std::runtime_error("Cannot set child in Oct::setChildCell()");
   child_cells[sibling_number] = cell;
 };
