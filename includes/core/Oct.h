@@ -11,9 +11,12 @@
 #include <array>
 #include <memory>
 
+
 template<typename CellType> class Oct;
 
+
 #include "Cell.h"
+
 
 template<typename CellType>
 class Oct {

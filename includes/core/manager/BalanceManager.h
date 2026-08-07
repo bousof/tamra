@@ -18,6 +18,7 @@
 #include "../../parallel/gather.h"
 #include "../../utils/array_utils.h"
 
+
 template<typename CellType, typename TreeIteratorType>
 class BalanceManager {
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;

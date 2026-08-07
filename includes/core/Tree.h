@@ -23,6 +23,7 @@
 #include "manager/RefineManager.h"
 #include "RootCellEntry.h"
 
+
 template<typename CellTypeT, typename TreeIteratorTypeT = MortonIterator<CellTypeT>>
 class Tree {
  public:

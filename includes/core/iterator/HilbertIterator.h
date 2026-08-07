@@ -20,6 +20,7 @@
 #include "AbstractTreeIterator.h"
 #include "HilbertTables.h"
 
+
 template<typename CellType>
 class HilbertIterator : public AbstractTreeIterator<CellType> {
  public:

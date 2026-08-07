@@ -16,10 +16,13 @@
 
 #include "ChildAndDirectionTables.h"
 
+
 template<int NX, int NY, int NZ, typename DataType> class Cell;
+
 
 #include "CellData.h"
 #include "Oct.h"
+
 
 template<int NX = 2, int NY = 0, int NZ = 0, typename DataType = CellData>
 class Cell {

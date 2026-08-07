@@ -72,6 +72,8 @@ struct ChildAndDirectionTables {
   static std::pair<bool, unsigned> directNeighborCellInfos(const unsigned sibling_number, const unsigned dir);
   // Convert two direct neighbor directions to a plane direction
   static unsigned directToPlaneDir(const unsigned dir1, const unsigned dir2);
+  // Convert two direct neighbor directions to a volume direction
+  static unsigned directToVolumeDir(const unsigned dir1, const unsigned dir2, const unsigned dir3);
   // Convert a plane direction to a pair of direct neighbor directions
   static std::pair<unsigned, unsigned> planeToDirectDirs(const unsigned dir);
   // Convert a volume direction to a triplet of direct neighbor directions

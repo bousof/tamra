@@ -74,6 +74,23 @@ unsigned ChildAndDirectionTables<Nx, Ny, Nz>::directToPlaneDir(const unsigned di
   return number_neighbors + dir;
 }
 
+// Convert two direct neighbor directions to a volume direction
+template<int Nx, int Ny, int Nz>
+unsigned ChildAndDirectionTables<Nx, Ny, Nz>::directToVolumeDir(const unsigned dir1, const unsigned dir2, const unsigned dir3) {
+  if (dir1 >= number_neighbors || dir2 >= number_neighbors || dir3 >= number_neighbors)
+    throw std::runtime_error("Invalid direct neighbor direction in Oct::directToVolumeDir()");
+  unsigned dir = number_neighbors;
+  if (dir1==0 && dir2==2 && dir3==4) dir = 0;
+  if (dir1==1 && dir2==2 && dir3==4) dir = 1;
+  if (dir1==0 && dir2==3 && dir3==4) dir = 2;
+  if (dir1==1 && dir2==3 && dir3==4) dir = 3;
+  if (dir1==0 && dir2==2 && dir3==5) dir = 4;
+  if (dir1==1 && dir2==2 && dir3==5) dir = 5;
+  if (dir1==0 && dir2==3 && dir3==5) dir = 6;
+  if (dir1==1 && dir2==3 && dir3==5) dir = 7;
+  return number_plane_neighbors + dir;
+}
+
 // Convert a plane direction to a pair of direct neighbor directions
 template<int Nx, int Ny, int Nz>
 std::pair<unsigned, unsigned> ChildAndDirectionTables<Nx, Ny, Nz>::planeToDirectDirs(const unsigned dir) {

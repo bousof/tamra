@@ -11,6 +11,7 @@
 #include <cmath>
 #include <memory>
 
+
 template<typename CellType>
 class RefineManager {
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;

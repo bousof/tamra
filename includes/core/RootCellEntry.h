@@ -11,6 +11,7 @@
 #include <array>
 #include <memory>
 
+
 template<typename CellType>
 struct RootCellEntry {
  public:

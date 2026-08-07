@@ -16,6 +16,7 @@
 
 #include "../manager/CellIdManager.h"
 
+
 template<typename CellType>
 class AbstractTreeIterator {
  public:

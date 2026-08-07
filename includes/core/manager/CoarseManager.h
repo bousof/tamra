@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 
+
 template<typename CellType>
 class CoarseManager {
   using InterpolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;

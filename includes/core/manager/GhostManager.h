@@ -14,9 +14,12 @@
 #include "../../parallel/allgather.h"
 #include "../../parallel/alltoallv.h"
 
+
 template<typename CellTypeT, typename TreeIteratorType> class GhostManager;
 
+
 #include "GhostManagerTask.h"
+
 
 template<typename CellTypeT, typename TreeIteratorTypeT>
 class GhostManager {

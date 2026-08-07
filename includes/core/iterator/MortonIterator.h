@@ -19,6 +19,7 @@
 #include "AbstractTreeIterator.h"
 #include "MortonTables.h"
 
+
 template<typename CellType, short MORTON_ORIENTATION = 123>
 class MortonIterator : public AbstractTreeIterator<CellType> {
  public:
