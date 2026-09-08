@@ -23,7 +23,7 @@ class TestCellData : public CellData {
 
   // Constructor
   TestCellData()
-  : imin(0), imax(0), jmin(0), jmax(0), kmin(0), kmax(0) {};
+  : imin(0), imax(0), jmin(0), jmax(0), kmin(0), kmax(0) {}
   // Destructor
   ~TestCellData() = default;
 
@@ -145,9 +145,9 @@ TEST_CASE("[core][neighbor] Neighbor leafs search (quadtree)") {
           if (dir == 0)
             // case 1                       case 2                            case 3
             //                      ────┬───┐    ────┬───┐            ┌───┬────    ┌───┬────
-            // ┌───┬───┐                │   │        │ C │            │   │        │ N │    
-            // │ N │ C │     OR       N ├───┤ OR   N ├───┤     OR     ├───┼ C   OR ├───┼ C  
-            // └───┴───┘                │ C │        │   │            │ N │        │   │    
+            // ┌───┬───┐                │   │        │ C │            │   │        │ N │
+            // │ N │ C │     OR       N ├───┤ OR   N ├───┤     OR     ├───┼ C   OR ├───┼ C
+            // └───┴───┘                │ C │        │   │            │ N │        │   │
             //                      ────┴───┘    ────┴───┘            └───┴────    └───┴────
             passed &= ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmin) && (cell_data.jmax == neighbor_data.jmax) && (c->getLevel() == n->getLevel()) ) // case 1
                     || ( (cell_data.imin == neighbor_data.imax) && (cell_data.jmin == neighbor_data.jmin || cell_data.jmax == neighbor_data.jmax) && ( (  c->getLevel()   == (n->getLevel()+1)) // case 2
@@ -373,7 +373,7 @@ bool check_octree_cell(const std::shared_ptr<CellType> &cell, const unsigned ima
     //       ___                   ___                   ___
     //     /__ /│            ___ /__ /│                /__ /│     ^
     //    │ C │ │               │ C │ │               │ C │ │     │
-    // ___│___│/      OR      N │___│/      OR     ___│___│/      │ AXES   
+    // ___│___│/      OR      N │___│/      OR     ___│___│/      │ AXES
     //  N │                     │                     N   |       └──────>
     //
     // Difference of levels should be smaller or equal to 2
@@ -592,7 +592,7 @@ bool check_octree_cell(const std::shared_ptr<CellType> &cell, const unsigned ima
       passed &= ( n_level <= c_level )
              && ( c_level <= (n_level+3) );
   }
- 
+
   return passed;
 }
 

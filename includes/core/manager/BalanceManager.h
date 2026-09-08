@@ -23,9 +23,9 @@ template<typename CellType, typename TreeIteratorType>
 class BalanceManager {
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  VARIABLES                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
   // Minimum mesh level
   const unsigned min_level;
   // Maximum mesh level
@@ -35,18 +35,18 @@ class BalanceManager {
   // Number of process
   const unsigned size;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public :
   // Constructor
   BalanceManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
   // Destructor
   ~BalanceManager();
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Determine if load balancing is needed
   std::pair<bool, std::vector<double>> isLoadBalancingNeeded(const std::vector<std::shared_ptr<CellType>> &root_cells, const double max_pct_unbalance) const;

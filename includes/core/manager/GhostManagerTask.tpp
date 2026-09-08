@@ -1,9 +1,9 @@
 #include "GhostManagerTask.h"
 //#include "../../utils/display_vector.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<typename GhostManagerType>
@@ -29,12 +29,12 @@ GhostManagerTask<GhostManagerType>::GhostManagerTask(const GhostManagerType *gho
 
 // Destructor
 template<typename GhostManagerType>
-GhostManagerTask<GhostManagerType>::~GhostManagerTask() {};
+GhostManagerTask<GhostManagerType>::~GhostManagerTask() {}
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  ACCESSORS                                                //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Get the cells to send
 template<typename GhostManagerType>
@@ -48,9 +48,9 @@ const std::vector<std::shared_ptr<typename GhostManagerType::CellType>>& GhostMa
   return cells_to_recv;
 }
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  MUTATORS                                                 //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Set the extrapolation function for owned cells
 template<typename GhostManagerType>
@@ -78,9 +78,9 @@ void GhostManagerTask<GhostManagerType>::setGhostConflictResolutionStrategy(cons
 }
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Continue the task following the specified resolution strategy
 template<typename GhostManagerType>

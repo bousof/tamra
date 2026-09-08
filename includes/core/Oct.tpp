@@ -1,8 +1,8 @@
 #include "Oct.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<typename CellType>
@@ -40,25 +40,25 @@ void Oct<CellType>::reset() {
 }
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  ACCESSORS                                                //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Get parent cell
 template<typename CellType>
-std::shared_ptr<CellType> Oct<CellType>::getParentCell() const { return parent_cell; };
+std::shared_ptr<CellType> Oct<CellType>::getParentCell() const { return parent_cell; }
 
 // Get level of the oct
 template<typename CellType>
-unsigned Oct<CellType>::getLevel() const { return level; };
+unsigned Oct<CellType>::getLevel() const { return level; }
 
 // Get neighbor cells
 template<typename CellType>
-const std::array<std::shared_ptr<CellType>, Oct<CellType>::number_neighbors>& Oct<CellType>::getNeighborCells() const { return neighbor_cells; };
+const std::array<std::shared_ptr<CellType>, Oct<CellType>::number_neighbors>& Oct<CellType>::getNeighborCells() const { return neighbor_cells; }
 
 // Get child cells
 template<typename CellType>
-const std::array<std::shared_ptr<CellType>, Oct<CellType>::number_children>& Oct<CellType>::getChildCells() const { return child_cells; };
+const std::array<std::shared_ptr<CellType>, Oct<CellType>::number_children>& Oct<CellType>::getChildCells() const { return child_cells; }
 
 // Get a specific child cell
 template<typename CellType>
@@ -69,9 +69,9 @@ std::shared_ptr<CellType> Oct<CellType>::getChildCell(const unsigned sibling_num
 };
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  MUTATORS                                                 //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Set the parent cell
 template<typename CellType>
@@ -96,9 +96,9 @@ void Oct<CellType>::setChildCell(const unsigned sibling_number, std::shared_ptr<
 };
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Get the sibling number (position of the cell in the child_cells array)
 template<typename CellType>

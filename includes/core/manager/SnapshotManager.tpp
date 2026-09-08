@@ -1,9 +1,9 @@
 #include "SnapshotManager.h"
 //#include "../../utils/display_vector.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<typename TreeType>
@@ -14,9 +14,9 @@ SnapshotManager<TreeType>::SnapshotManager(const unsigned rank, const unsigned s
   metadata() {}
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Dump the tree metadata and data to an output stream
 template<typename TreeType>

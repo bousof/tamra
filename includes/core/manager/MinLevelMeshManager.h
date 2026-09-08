@@ -16,9 +16,9 @@
 
 template<typename CellType, typename TreeIteratorType>
 class MinLevelMeshManager {
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  VARIABLES                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
   // Minimum mesh level
   const unsigned min_level;
   // Maximum mesh level
@@ -28,18 +28,18 @@ class MinLevelMeshManager {
   // Number of process
   const unsigned size;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public :
   // Constructor
   MinLevelMeshManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
   // Destructor
   ~MinLevelMeshManager();
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Serial meshing at min level
   void meshAtMinLevel(const std::vector<std::shared_ptr<CellType>> &root_cells) const;

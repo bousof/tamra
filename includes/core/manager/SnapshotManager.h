@@ -44,7 +44,7 @@ class SnapshotMetadata {
   unsigned max_level;
   std::string iterator_str_tag;
 
-  SnapshotMetadata() {};
+  SnapshotMetadata() {}
 };
 
 template<typename TreeType>
@@ -53,9 +53,9 @@ class SnapshotManager {
   static constexpr unsigned VERSION_NUMBER = 1;
   static constexpr unsigned SUBVERSION_NUMBER = 0;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  VARIABLES                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
   // Process rank
   const unsigned rank;
   // Number of process
@@ -65,18 +65,18 @@ class SnapshotManager {
   // Metadata
   SnapshotMetadata metadata;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public :
   // Constructor
   SnapshotManager(const unsigned rank, const unsigned size, const bool binary = false);
   // Destructor
   ~SnapshotManager() = default;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Dump the snapshot metadata to an output stream
   void dumpMetaAndTree(const TreeType& tree, std::ostream& os);

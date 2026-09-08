@@ -23,7 +23,7 @@ class TestCellData : public CellData {
 
   // Constructor
   TestCellData()
-  : imin(0), imax(0), jmin(0), jmax(0), kmin(0), kmax(0) {};
+  : imin(0), imax(0), jmin(0), jmax(0), kmin(0), kmax(0) {}
   // Destructor
   ~TestCellData() = default;
 

@@ -1,8 +1,8 @@
 #include "Cell.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<int Nx, int Ny, int Nz, typename DataType>
@@ -23,7 +23,7 @@ Cell<Nx, Ny, Nz, DataType>::Cell(std::shared_ptr<OctType> parent_oct, int indica
 
 // Destructor
 template<int Nx, int Ny, int Nz, typename DataType>
-Cell<Nx, Ny, Nz, DataType>::~Cell() {};
+Cell<Nx, Ny, Nz, DataType>::~Cell() {}
 
 // Clear Cell
 template<int Nx, int Ny, int Nz, typename DataType>
@@ -43,9 +43,9 @@ void Cell<Nx, Ny, Nz, DataType>::reset() {
 }
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  ACCESSORS                                                //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Get child oct
 template<int Nx, int Ny, int Nz, typename DataType>
@@ -122,9 +122,9 @@ std::shared_ptr<Cell<Nx, Ny, Nz, DataType>> Cell<Nx, Ny, Nz, DataType>::thisAsSm
 }
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // True if leaf cell (no child oct)
 template<int Nx, int Ny, int Nz, typename DataType>

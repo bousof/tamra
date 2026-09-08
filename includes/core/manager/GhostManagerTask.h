@@ -44,9 +44,9 @@ class GhostManagerTask {
   using ExtrapolationFunctionType = typename GhostManagerType::TaskExtrapolationFunctionType;
   using TreeIteratorType = typename GhostManagerType::TreeIteratorType;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  VARIABLES                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
   // Associated ghost manager
   const GhostManagerType *ghost_manager;
  public:
@@ -76,9 +76,9 @@ class GhostManagerTask {
   // Resend owned cells after solving conflicts
   bool resend_owned;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public :
   // Constructor
   GhostManagerTask();
@@ -87,16 +87,16 @@ class GhostManagerTask {
   // Destructor
   ~GhostManagerTask();
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
 	//  ACCESSORS                                                //
-	//***********************************************************//
+	//-----------------------------------------------------------//
  public:
   const std::vector<std::vector<std::shared_ptr<CellType>>>& getCellsToSend() const;
   const std::vector<std::shared_ptr<CellType>>& getCellsToRecv() const;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
 	//  MUTATORS                                                 //
-	//***********************************************************//
+	//-----------------------------------------------------------//
  public:
   // Set the extrapolation function for owned cells
   void setOwnedExtrapolationFunction(ExtrapolationFunctionType extrapolation_function);
@@ -112,9 +112,9 @@ class GhostManagerTask {
   // Default is `strategies={IGNORE}`.
   void setGhostConflictResolutionStrategy(const std::vector<GhostConflictResolutionStrategy> strategies);
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Continue the task following the specified resolution strategy
   void continueTask(TreeIteratorType &iterator);

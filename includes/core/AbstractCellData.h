@@ -16,23 +16,23 @@
 
 
 class AbstractCellData : public ParallelData {
-  //***********************************************************//
+  //-----------------------------------------------------------//
 	//  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-	//***********************************************************//
+	//-----------------------------------------------------------//
  public:
-  AbstractCellData() {};
+  AbstractCellData() {}
   ~AbstractCellData() = default;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  ACCESSORS                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Get the computation load of the cell
   virtual double getLoad(bool isLeaf, const std::shared_ptr<void> cell=nullptr) const = 0;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Set values from vector of double after data communication or backup
   virtual void fromVectorOfData(const std::vector<double> &buffer) = 0;

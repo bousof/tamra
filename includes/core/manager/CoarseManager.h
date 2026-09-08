@@ -16,9 +16,9 @@ template<typename CellType>
 class CoarseManager {
   using InterpolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  VARIABLES                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
   // Minimum mesh level
   const unsigned min_level;
   // Maximum mesh level
@@ -28,18 +28,18 @@ class CoarseManager {
   // Number of process
   const unsigned size;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public :
   // Constructor
   CoarseManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
   // Destructor
   ~CoarseManager();
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Go through all the parent cells and coarse them one time if needed
 	bool coarsen(const std::vector<std::shared_ptr<CellType>> &root_cells, InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }) const;

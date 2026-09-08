@@ -1,8 +1,8 @@
 #include "RefineManager.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<typename CellType>
@@ -14,12 +14,12 @@ RefineManager<CellType>::RefineManager(const unsigned min_level, const unsigned 
 
 // Destructor
 template<typename CellType>
-RefineManager<CellType>::~RefineManager() {};
+RefineManager<CellType>::~RefineManager() {}
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 // Go through all the root cells and call the recursive function
 template<typename CellType>
 bool RefineManager<CellType>::refine(const std::vector<std::shared_ptr<CellType>> &root_cells, ExtrapolationFunctionType extrapolation_function) const {

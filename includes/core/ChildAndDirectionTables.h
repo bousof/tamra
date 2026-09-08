@@ -18,16 +18,16 @@
 #include<utility>
 #include<vector>
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  PROTOTYPES.                                              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 template<int Nx, int Ny, int Nz>
 auto compute_dir_sibling_numbers();
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  MAIN CLASS                                               //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 template<int Nx, int Ny, int Nz>
 struct ChildAndDirectionTables {
@@ -58,9 +58,9 @@ struct ChildAndDirectionTables {
   // Get child cells sibling numbers for each incoming direction
   inline static const std::array<std::vector<unsigned>, number_of_directions> dir_sibling_numbers = compute_dir_sibling_numbers<Nx, Ny, Nz>();
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  STATIC METHODS                                           //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Transform sibling number to (i,j,k) coordinates
   static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const unsigned sibling_number);
@@ -81,9 +81,9 @@ struct ChildAndDirectionTables {
 };
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  IMPLEMEBNTATIONS                                         //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 template<int Nx, int Ny, int Nz>
 auto compute_dir_sibling_numbers() {

@@ -1,8 +1,8 @@
 #include "AbstractTreeIterator.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<typename CellType>
@@ -22,9 +22,9 @@ AbstractTreeIterator<CellType>::AbstractTreeIterator(const std::vector<std::shar
   cell_id_manager.resetCellID(current_cell_id);
 }
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  ACCESSORS                                                //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Get current cell
 template<typename CellType>
@@ -86,9 +86,9 @@ std::vector<unsigned> AbstractTreeIterator<CellType>::getCellIndexPath(const std
   return cell_index_path;
 }
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Go to the next leaf cell
 template<typename CellType>

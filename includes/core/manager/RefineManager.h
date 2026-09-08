@@ -16,9 +16,9 @@ template<typename CellType>
 class RefineManager {
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  VARIABLES                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
   // Minimum mesh level
   const unsigned min_level;
   // Maximum mesh level
@@ -28,18 +28,18 @@ class RefineManager {
   // Number of process
   const unsigned size;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public :
   // Constructor
   RefineManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
   // Destructor
   ~RefineManager();
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Go through all the leaf cells and split them one time if needed.
 	bool refine(const std::vector<std::shared_ptr<CellType>> &root_cells, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }) const;

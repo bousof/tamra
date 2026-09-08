@@ -1,9 +1,9 @@
 #include "Tree.h"
 //#include "../utils/display_vector.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<typename CellType, typename TreeIteratorType>
@@ -49,9 +49,9 @@ void Tree<CellType, TreeIteratorType>::createRootCells(const std::vector<RootCel
 }
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  ACCESSORS                                                //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Get root cells
 template<typename CellType, typename TreeIteratorType>
@@ -82,16 +82,16 @@ template<typename CellType, typename TreeIteratorType>
 bool Tree<CellType, TreeIteratorType>::isEmpty() const {
   if (root_cells.empty())
     return true;
-  
+
   // Go to first owned cell and return true if it is not in this proc partition
   TreeIteratorType iterator(getRootCells(), getMaxLevel());
   return !iterator.toOwnedBegin();
 }
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Recusively mesh the tree to ensure every cell is at least at
 // min level

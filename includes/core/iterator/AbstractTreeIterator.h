@@ -23,9 +23,9 @@ class AbstractTreeIterator {
   using CellIdManagerType = CellIdManager<CellType>;
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  DATA                                                     //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  private:
   // Root cells
   const std::vector<std::shared_ptr<CellType>> root_cells;
@@ -48,18 +48,18 @@ class AbstractTreeIterator {
   // Cell ID manager
   CellIdManagerType cell_id_manager;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Constructor
   AbstractTreeIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const unsigned max_level);
   // Destructor
   virtual ~AbstractTreeIterator() = default;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  ACCESSORS                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Get current cell
   std::shared_ptr<CellType> getCell() const;
@@ -79,9 +79,9 @@ class AbstractTreeIterator {
   // Construct cell index path
   std::vector<unsigned> getCellIndexPath(const std::shared_ptr<CellType> &cell) const;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Go to the next leaf cell
   bool next(const unsigned sweep_level = std::numeric_limits<int>::max());

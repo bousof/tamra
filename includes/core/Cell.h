@@ -42,9 +42,9 @@ class Cell {
   static constexpr unsigned number_volume_neighbors = ChildAndDirectionTablesType::number_volume_neighbors;
   static constexpr unsigned number_children = ChildAndDirectionTablesType::number_children;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  VARIABLES                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  private:
   std::unique_ptr<DataType> data;
   std::shared_ptr<OctType> parent_oct;
@@ -61,9 +61,9 @@ class Cell {
 	// - 8 : IS BOUNDARY CELL      &  NEED TO BE COARSENED
   int indicator;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Constructor
   Cell();
@@ -76,9 +76,9 @@ class Cell {
   // Reset cell
   void reset();
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  ACCESSORS                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Get child oct
   std::shared_ptr<OctType> getChildOct() const;
@@ -95,7 +95,7 @@ class Cell {
   // Get the sibling number (position of the cell in the parent oct child_cells array)
   unsigned getSiblingNumber() const;
   // Get cell data
-  DataType& getCellData() const { return *data; };
+  DataType& getCellData() const { return *data; }
   // Get the computation load of the cell
   double getLoad() const;
   // Flags accessors
@@ -108,12 +108,12 @@ class Cell {
   // Get the cell as a smart pointer for referencing
   std::shared_ptr<Cell> thisAsSmartPtr() const;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
 	//  MUTATORS                                                 //
-	//***********************************************************//
+	//-----------------------------------------------------------//
  public:
   // Set cell data
-  void setCellData(std::unique_ptr<DataType> &&new_data) { data = std::move(new_data); };
+  void setCellData(std::unique_ptr<DataType> &&new_data) { data = std::move(new_data); }
   // Flags mutators
   void setToThisProc()  { indicator = indicator%3; }
   void setToOtherProc() { indicator = 3 + indicator%3; }
@@ -153,9 +153,9 @@ class Cell {
  private:
   bool setToBoundary() { return indicator = 6+indicator%3; }
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // True if leaf cell (no child oct)
   bool isLeaf() const;
@@ -229,16 +229,16 @@ class Cell {
   bool verifyCoarsenNeighbors();
  public:
  // Transform sibling number to (i,j,k) coordinates
-  static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const unsigned sibling_number) { return ChildAndDirectionTablesType::siblingNumberToCoords(sibling_number); };
+  static std::tuple<unsigned, unsigned, unsigned> siblingNumberToCoords(const unsigned sibling_number) { return ChildAndDirectionTablesType::siblingNumberToCoords(sibling_number); }
   // Transform (i,j,k) coordinates to sibling number
-  static int coordsToSiblingNumber(const unsigned sibling_coord_1, const unsigned sibling_coord_2, const unsigned sibling_coord_3) { return ChildAndDirectionTablesType::coordsToSiblingNumber(sibling_coord_1, sibling_coord_2, sibling_coord_3); };
+  static int coordsToSiblingNumber(const unsigned sibling_coord_1, const unsigned sibling_coord_2, const unsigned sibling_coord_3) { return ChildAndDirectionTablesType::coordsToSiblingNumber(sibling_coord_1, sibling_coord_2, sibling_coord_3); }
  private:
   // For a given sibling number, determine if the neighbor cell in a given direction:
   // - shares the same parent cell (true) or belongs to another cell (false)
   // - it's sibling number
-  static std::pair<bool, unsigned> getDirectNeighborCellInfos(const unsigned sibling_number, const unsigned dir) { return ChildAndDirectionTablesType::directNeighborCellInfos(sibling_number, dir); };
+  static std::pair<bool, unsigned> getDirectNeighborCellInfos(const unsigned sibling_number, const unsigned dir) { return ChildAndDirectionTablesType::directNeighborCellInfos(sibling_number, dir); }
   // convert two direct neighbor directions to a plane direction
-  static int directToPlaneDir(const int dir1, const int dir2) { return ChildAndDirectionTablesType::directToPlaneDir(dir1, dir2); };
+  static int directToPlaneDir(const int dir1, const int dir2) { return ChildAndDirectionTablesType::directToPlaneDir(dir1, dir2); }
   // Get a pointer to a neighbor cell accessible by 2 consecutive othogonal direction (corners in 2D)
   std::shared_ptr<Cell> getPlaneNeighborCell(const unsigned dir, std::array<std::shared_ptr<Cell>, number_plane_neighbors> *cached_neighbors) const;
   // Get a pointer to a neighbor cell accessible by 3 consecutive othogonal direction (corners in 3D)

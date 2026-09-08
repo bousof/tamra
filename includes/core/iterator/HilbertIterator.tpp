@@ -1,8 +1,8 @@
 #include "HilbertIterator.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template <typename CellType>
@@ -20,9 +20,9 @@ HilbertIterator<CellType>::HilbertIterator(const std::vector<std::shared_ptr<Cel
   orientation_path[0] = root_cell_orientations[index_path[0]];
 };
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Converts the genealogy of a cell
 template <typename CellType>

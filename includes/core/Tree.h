@@ -40,9 +40,9 @@ class Tree {
   using RootCellEntryType = RootCellEntry<CellType>;
   using TreeIteratorType = TreeIteratorTypeT;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  DATA                                                     //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  private:
   // Minimum mesh level
   unsigned min_level;
@@ -65,9 +65,9 @@ class Tree {
   // Mesh refinement manager
 	RefineManagerType refineManager;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Constructor
   Tree(const unsigned min_level = 1, const unsigned max_level = 2, const unsigned rank = 0, const unsigned size = 1);
@@ -76,9 +76,9 @@ class Tree {
   // Create root cell
   void createRootCells(const std::vector<RootCellEntryType> &root_cell_entries);
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  ACCESSORS                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Get root cells
   const std::vector<std::shared_ptr<CellType>>& getRootCells() const;
@@ -100,9 +100,9 @@ class Tree {
   // Check if the tree is empty
   bool isEmpty() const;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Recusively mesh the tree to ensure every cell is at least at min level
   void meshAtMinLevel();
@@ -131,7 +131,7 @@ class Tree {
   );
 
   //--- Propagating -------------------------------------------//
-  void propagate() {};
+  void propagate() {}
 
   //--- Coarsening --------------------------------------------//
   bool coarsen(
@@ -139,7 +139,7 @@ class Tree {
   );
 
   //--- Computing SFC indices ---------------------------------//
-  void boundaryConditions() {};
+  void boundaryConditions() {}
 
   // Count the number of owned leaf cells
   unsigned countOwnedLeaves() const;

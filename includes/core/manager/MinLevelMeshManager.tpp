@@ -1,9 +1,9 @@
 #include "MinLevelMeshManager.h"
 //#include "../../utils/display_vector.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<typename CellType, typename TreeIteratorType>
@@ -15,12 +15,12 @@ MinLevelMeshManager<CellType, TreeIteratorType>::MinLevelMeshManager(const unsig
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>
-MinLevelMeshManager<CellType, TreeIteratorType>::~MinLevelMeshManager() {};
+MinLevelMeshManager<CellType, TreeIteratorType>::~MinLevelMeshManager() {}
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 // Serial meshing at min level
 template<typename CellType, typename TreeIteratorType>
 void MinLevelMeshManager<CellType, TreeIteratorType>::meshAtMinLevel(const std::vector<std::shared_ptr<CellType>> &root_cells) const {

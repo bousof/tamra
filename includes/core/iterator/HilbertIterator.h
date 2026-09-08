@@ -32,9 +32,9 @@ class HilbertIterator : public AbstractTreeIterator<CellType> {
   static constexpr unsigned number_of_corners = 1u << CellType::number_split_dimensions;
   static constexpr unsigned number_of_orientations = CellType::number_split_dimensions * number_of_corners;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  DATA                                                     //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  protected:
   using AbstractTreeIterator<CellType>::index_path;
  private:
@@ -53,16 +53,16 @@ class HilbertIterator : public AbstractTreeIterator<CellType> {
   // Vector of orders
   std::vector<unsigned> orientation_path;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Constructor
   HilbertIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const unsigned max_level);
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
  protected:
   // Converts the genealogy of a cell

@@ -14,9 +14,9 @@
 
 template<typename CellType>
 class CellIdManager {
-  //***********************************************************//
+  //-----------------------------------------------------------//
 	//  VARIABLES                                                //
-	//***********************************************************//
+	//-----------------------------------------------------------//
  protected:
   // Number of root cells
   const unsigned number_root_cells;
@@ -25,25 +25,25 @@ class CellIdManager {
   // Cell ID unsigned int slots
   unsigned cell_id_size;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Constructor
   CellIdManager(const unsigned number_root_cells, const unsigned max_level);
   // Destructor
   ~CellIdManager() = default;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  ACCESSOR                                                 //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Get the size of cell ID vector
   unsigned getCellIdSize() const { return cell_id_size; }
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Generate an ID from the genealogy of a cell.
   std::vector<unsigned> orderPathToId(const std::vector<unsigned> &order_path) const;

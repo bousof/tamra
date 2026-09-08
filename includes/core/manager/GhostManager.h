@@ -30,9 +30,9 @@ class GhostManager {
   using TreeIteratorType = TreeIteratorTypeT;
   using GhostManagerTaskType = GhostManagerTask<GhostManager<CellTypeT, TreeIteratorType>>;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  VARIABLES                                                //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  private:
   // Minimum mesh level
   const unsigned min_level;
@@ -53,18 +53,18 @@ class GhostManager {
   // Resend owned cells after solving conflicts by default
   bool default_resend_owned;
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public :
   // Constructor
   GhostManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
   // Destructor
   ~GhostManager();
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
 	//  MUTATORS                                                 //
-	//***********************************************************//
+	//-----------------------------------------------------------//
  public:
   // Set the default extrapolation function for owned cells
   void setDefaultOwnedExtrapolationFunction(TaskExtrapolationFunctionType default_extrapolation_function);
@@ -75,9 +75,9 @@ class GhostManager {
   // Set the default strategy on how to handle conflicts for ghost cells
   void setDefaultGhostConflictResolutionStrategy(const std::vector<GhostConflictResolutionStrategy> &default_strategies);
 
-  //***********************************************************//
+  //-----------------------------------------------------------//
   //  METHODS                                                  //
-  //***********************************************************//
+  //-----------------------------------------------------------//
  public:
   // Creation of ghost cells and exchange of ghost values
 	GhostManagerTaskType buildGhostLayer(std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const std::vector<int> &directions, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }) const;

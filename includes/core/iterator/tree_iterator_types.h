@@ -4,7 +4,7 @@
  *  Licensed under the MIT License (see LICENSE file in project root)
  *
  *  Description: Templating of Tree iterators classes.
- * 
+ *
  */
 
 #pragma once
@@ -34,7 +34,7 @@ namespace tamra::detail {
     MortonIterator<CellType, 312>,
     MortonIterator<CellType, 321>
   >;
-  
+
   template<typename IteratorType>
   std::string iterator_tag_as_string() {
       const auto& tag = IteratorType::CONFIG_SELECTION_NAME;

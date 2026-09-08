@@ -69,7 +69,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions)") {
 // All process then check if cell data is equal to level
 // The cell structure in processor 0 is
 //                      rank 0
-//                 _______________ 
+//                 _______________
 //                |_|_|   |   |   |
 //                |_|_|___|___|___|
 //                |   |_|_|   |   |
@@ -151,7 +151,7 @@ class TestCellData : public AbstractCellData {
   unsigned u_value;
   double d_value;
  public:
-  TestCellData() : u_value(0), d_value(1.) {};
+  TestCellData() : u_value(0), d_value(1.) {}
   ~TestCellData() = default;
  public:
   unsigned getUnsigned() { return u_value; }
@@ -257,7 +257,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, custo
 // X show the leaf cells that belong to each process
 // Example for size==3
 //                      rank 0               rank 1               rank 2
-//                 _______________      _______________      _______________ 
+//                 _______________      _______________      _______________
 //                |       |       |    |   |   |       |    | X | X | X | X |
 //                |       |       |    |___|___|       |    |___|___|___|___|
 //                |       |       |    | X | X |       |    |   |   | X | X |
@@ -268,7 +268,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, custo
 //                |X|X|X|X|___|___|    |_______|___|___|    |_______|_______|
 // The loads (nb leaf cells) are [17, 5, 6] and after load balancing the partitions become:
 //                      rank 0               rank 1               rank 2
-//                 _______________      _______________      _______________ 
+//                 _______________      _______________      _______________
 //                |       |       |    |   |   |       |    | X | X | X | X |
 //                |       |       |    |___|___|       |    |___|___|___|___|
 //                |       |       |    |   |   |       |    | X | X | X | X |
@@ -338,7 +338,7 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (one root)") {
 // Note also that it may lead to extrapolation cells that need to be handled:
 // Example for size==3
 //                      rank 0               rank 1               rank 2
-//                 _______________      _______________      _______________ 
+//                 _______________      _______________      _______________
 //                |       |       |    |   |   |       |    | X | X | X | X |
 //                |       |       |    |___|___|       |    |___|___|___|___|
 //                |       |       |    | X | X |       |    |   |   | X | X |
@@ -350,7 +350,7 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (one root)") {
 // X show the leaf cells that belong to each process
 // After load balancing, partition of rank 2 becomes:
 //                              rank 2
-//                 _______________________________ 
+//                 _______________________________
 //                |       |       |       |       |
 //                |   X   |   X   |   X   |   X   |
 //                |       |       |       |       |

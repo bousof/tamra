@@ -1,9 +1,9 @@
 #include "GhostManager.h"
 //#include "../../utils/display_vector.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<typename CellType, typename TreeIteratorType>
@@ -25,12 +25,12 @@ GhostManager<CellType, TreeIteratorType>::GhostManager(const unsigned min_level,
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>
-GhostManager<CellType, TreeIteratorType>::~GhostManager() {};
+GhostManager<CellType, TreeIteratorType>::~GhostManager() {}
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  MUTATORS                                                 //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Set the default extrapolation function for owned cells
 template<typename CellType, typename TreeIteratorType>
@@ -58,9 +58,9 @@ void GhostManager<CellType, TreeIteratorType>::setDefaultGhostConflictResolution
 }
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Creation of ghost cells and exchange of ghost values
 template<typename CellType, typename TreeIteratorType>

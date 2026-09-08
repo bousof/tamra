@@ -1,8 +1,8 @@
 #include "CoarseManager.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<typename CellType>
@@ -14,12 +14,12 @@ CoarseManager<CellType>::CoarseManager(const unsigned min_level, const unsigned 
 
 // Destructor
 template<typename CellType>
-CoarseManager<CellType>::~CoarseManager() {};
+CoarseManager<CellType>::~CoarseManager() {}
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 // Go through all the parent cells and coarse them one time if needed
 template<typename CellType>
 bool CoarseManager<CellType>::coarsen(const std::vector<std::shared_ptr<CellType>> &root_cells, InterpolationFunctionType interpolation_function) const {

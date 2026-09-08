@@ -12,6 +12,7 @@
 
 #include <mpi.h>
 
+
 template<class T>
 MPI_Datatype mpi_type();
 

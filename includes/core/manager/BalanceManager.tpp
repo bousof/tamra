@@ -1,9 +1,9 @@
 #include "BalanceManager.h"
 //#include "../../utils/display_vector.h"
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 // Constructor
 template<typename CellType, typename TreeIteratorType>
@@ -15,12 +15,12 @@ BalanceManager<CellType, TreeIteratorType>::BalanceManager(const unsigned min_le
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>
-BalanceManager<CellType, TreeIteratorType>::~BalanceManager() {};
+BalanceManager<CellType, TreeIteratorType>::~BalanceManager() {}
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  METHODS                                                  //
-//***********************************************************//
+//-----------------------------------------------------------//
 // Determine if load balancing is needed
 template<typename CellType, typename TreeIteratorType>
 std::pair<bool, std::vector<double>> BalanceManager<CellType, TreeIteratorType>::isLoadBalancingNeeded(const std::vector<std::shared_ptr<CellType>> &root_cells, const double max_pct_unbalance) const {

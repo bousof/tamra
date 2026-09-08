@@ -11,9 +11,9 @@
 
 #include<array>
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  PROTOTYPES.                                              //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 template<typename CellType, short MORTON_ORIENTATION>
 constexpr std::array<unsigned, CellType::number_children> make_orderings();
@@ -22,9 +22,9 @@ template<size_t ARRAY_SIZE>
 std::array<unsigned, ARRAY_SIZE> reverse_orderings(const std::array<unsigned, ARRAY_SIZE> &orderings);
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  MAIN CLASS                                               //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 template<class CellType, short MORTON_ORIENTATION>
 struct MortonTables {
@@ -33,9 +33,9 @@ struct MortonTables {
 };
 
 
-//***********************************************************//
+//-----------------------------------------------------------//
 //  IMPLEMEBNTATIONS                                         //
-//***********************************************************//
+//-----------------------------------------------------------//
 
 template<typename CellType, short MORTON_ORIENTATION>
 constexpr std::array<unsigned, CellType::number_children> make_orderings() {
