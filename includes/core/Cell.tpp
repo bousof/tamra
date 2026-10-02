@@ -354,13 +354,9 @@ void Cell<Nx, Ny, Nz, DataType>::applyToNeighborCells(const std::function<void(c
       continue;
     }
 
-    // The neighbor leaf cell has the same level
-    if (neighbor->isLeaf()) {
-      if (!only_once || !cell_already_seen.count(neighbor.get()))
-        f(thisAsSmartPtr(), neighbor, dir);
-      else if (only_once && !cell_already_seen.count(neighbor.get()))
-        cell_already_seen.insert(neighbor.get());
-    }
+    // Pass both leaf and split neighbors to the callback.
+    if (!only_once || cell_already_seen.insert(neighbor.get()).second)
+      f(thisAsSmartPtr(), neighbor, dir);
   }
 }
 
