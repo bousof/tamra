@@ -161,7 +161,7 @@ typename GhostManager<CellType, TreeIteratorType>::GhostManagerTaskType GhostMan
 
 // Update ghost cells and exchange values for solving conflicts
 template<typename CellType, typename TreeIteratorType>
-void GhostManager<CellType, TreeIteratorType>::updateGhostLayer(GhostManagerTaskType &task, TreeIteratorType &iterator) const {
+void GhostManager<CellType, TreeIteratorType>::updateGhostLayer(GhostManagerTaskType&, TreeIteratorType&) const {
   // This method handles the resend logic when conflicts are resolved
   // It loops through children of owned cells that were split and checks their neighbors
   // TODO: Implement this

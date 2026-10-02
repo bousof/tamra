@@ -116,7 +116,7 @@ void GhostManagerTask<GhostManagerType>::cancelTask() {
 }
 
 template<typename GhostManagerType>
-std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskOwned(TreeIteratorType &iterator) {
+std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskOwned(TreeIteratorType&) {
   std::vector<bool> resolution_flags(extrapolate_owned_cells.size(), false);
   for (const auto strategy : owned_strategies)
     if (!all(resolution_flags))
@@ -138,7 +138,7 @@ std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskOwned(TreeIter
 }
 
 template<typename GhostManagerType>
-std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskGhost(TreeIteratorType &iterator) {
+std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskGhost(TreeIteratorType&) {
   // SEND ERROR and terminate MPI if SPLIT_IN_OWNER or TRY_COARSEN is used
   if (std::any_of(ghost_strategies.begin(), ghost_strategies.end(), [](const GhostConflictResolutionStrategy &strategy) {
     return strategy == GhostConflictResolutionStrategy::SPLIT_IN_OWNER || (strategy==GhostConflictResolutionStrategy::TRY_COARSEN);
@@ -200,14 +200,14 @@ void GhostManagerTask<GhostManagerType>::continueIgnoreTask(std::vector<bool> &r
 }
 
 template<typename GhostManagerType>
-void GhostManagerTask<GhostManagerType>::continueSplitInOwnerTaskGhost(std::vector<bool> &resolution_flags) {
+void GhostManagerTask<GhostManagerType>::continueSplitInOwnerTaskGhost(std::vector<bool>&) {
   // For SPLIT_IN_OWNER strategy, we need to request the owner process to split its cell
   // This is a complex operation that requires communication between processes
   // TODO: Implement this
 }
 
 template<typename GhostManagerType>
-void GhostManagerTask<GhostManagerType>::continueTryCoarseTaskGhost(std::vector<bool> &resolution_flags) {
+void GhostManagerTask<GhostManagerType>::continueTryCoarseTaskGhost(std::vector<bool>&) {
   // For TRY_COARSEN strategy, we attempt to coarsen the ghost cell if possible
   // TODO: Implement this
 }

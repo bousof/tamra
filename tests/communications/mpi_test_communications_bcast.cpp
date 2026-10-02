@@ -9,8 +9,7 @@
 
 // Broadcast vector of unsigned (count known)
 TEST_CASE("[communications][bcast] Broadcast vector of unsigned (count known)") {
-  const unsigned rank = mpi_rank(),
-                 size = mpi_size();
+  const unsigned rank = mpi_rank();
 
   unsigned root = 0, count = 3;
 
@@ -31,8 +30,7 @@ TEST_CASE("[communications][bcast] Broadcast vector of unsigned (count known)") 
 
 // Broadcast vector of unsigned (count unknown)
 TEST_CASE("[communications][bcast] Broadcast vector of unsigned (count unknown)") {
-  const unsigned rank = mpi_rank(),
-                 size = mpi_size();
+  const unsigned rank = mpi_rank();
 
   unsigned root = 0;
 
@@ -53,8 +51,7 @@ TEST_CASE("[communications][bcast] Broadcast vector of unsigned (count unknown)"
 
 // Broadcast matrix of unsigned (count known)
 TEST_CASE("[communications][bcast] Broadcast matrix of unsigned (count known)") {
-  const unsigned rank = mpi_rank(),
-                 size = mpi_size();
+  const unsigned rank = mpi_rank();
 
   unsigned root = 0, rowCount = 4, colCount = 3;
 
@@ -78,8 +75,7 @@ TEST_CASE("[communications][bcast] Broadcast matrix of unsigned (count known)") 
 
 // Broadcast matrix of unsigned (count unknown)
 TEST_CASE("[communications][bcast] Broadcast matrix of unsigned (count unknown)") {
-  const unsigned rank = mpi_rank(),
-                 size = mpi_size();
+  const unsigned rank = mpi_rank();
 
   unsigned root = 0;
 

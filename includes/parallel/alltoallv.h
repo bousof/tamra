@@ -65,7 +65,7 @@ std::vector<int> vectorAlltoallvT(const std::vector<std::vector<T>> &send_buffer
 
 	// Number of values to receive from the other processes
 	std::vector<int> recv_counts;
-  if (recv_counts_in.size() == size)
+  if (recv_counts_in.size() == static_cast<std::size_t>(size))
     recv_counts = recv_counts_in;
   else {
     recv_counts.resize(size);
