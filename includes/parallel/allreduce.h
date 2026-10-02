@@ -15,7 +15,12 @@
 
 #endif // USE_MPI
 
+#include <algorithm>
+#include <cstddef>
+#include <limits>
 #include <numeric>
+#include <stdexcept>
+#include <type_traits>
 
 //-----------------------------------------------------------//
 //  PROTOTYPES                                               //
@@ -28,6 +33,32 @@ void scalarSumAllreduce(const T value, T &reduction);
 
 template<typename T>
 void scalarMinAllreduce(const T value, T &reduction);
+
+template<typename T>
+void scalarMaxAllreduce(const T value, T &reduction);
+
+// Sum-reduce a contiguous array on all ranks. In a sequential build, copy the
+// input into the output, matching the scalar allreduce behavior.
+template<typename T>
+void arraySumAllreduce(const T *values, T *reduction, const std::size_t count) {
+  static_assert(
+    std::is_same<T, unsigned>::value || std::is_same<T, float>::value || std::is_same<T, double>::value,
+    "arraySumAllreduce only supports T = unsigned, float, or double"
+  );
+
+  if (count == 0)
+    return;
+
+#ifdef USE_MPI
+  if (count > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+    throw std::length_error("arraySumAllreduce: element count exceeds the MPI int count limit");
+
+  MPI_Allreduce(values, reduction, static_cast<int>(count), mpi_type<T>(),
+                MPI_SUM, MPI_COMM_WORLD);
+#else
+  std::copy_n(values, count, reduction);
+#endif // USE_MPI
+}
 
 //-----------------------------------------------------------//
 //  LOWER LEVEL METHODS                                      //
@@ -96,3 +127,19 @@ void scalarMinAllreduce(const T value, T &reduction) {
   allreduce::detail::scalarAllreduceT(value, reduction);
 #endif // USE_MPI
 }
+
+template<typename T>
+void scalarMaxAllreduce(const T value, T &reduction) {
+  static_assert(
+    std::is_same<T, double>::value || std::is_same<T, float>::value,
+    "scalarMaxAllreduce only supports T = double or float"
+  );
+
+#ifdef USE_MPI
+  allreduce::detail::scalarAllreduceT(value, reduction, mpi_type<T>(), MPI_MAX);
+#else
+  allreduce::detail::scalarAllreduceT(value, reduction);
+#endif // USE_MPI
+}
+
+
