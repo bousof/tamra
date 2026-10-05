@@ -93,3 +93,39 @@ TEST_CASE("[core][manager][cell_id] Equal size partition computation does not th
 
   CHECK(!exception_thrown);
 }
+
+// A coarse cell ends after an inner descendant, unless that descendant is
+// on the last-child branch all the way to the coarse cell's end.
+TEST_CASE("[core][manager][cell_id] cellIdLte compares ancestor to descendant ends") {
+  using Cell2D = Cell<2,2>;
+  CellIdManager<Cell2D> cell_id_manager(1, 3);
+
+  const auto ancestor = cell_id_manager.orderPathToId({0, 1});
+  const auto inner_child = cell_id_manager.orderPathToId({0, 1, 2});
+  const auto inner_grandchild = cell_id_manager.orderPathToId({0, 1, 3, 2});
+  const auto last_child = cell_id_manager.orderPathToId({0, 1, 3});
+  const auto last_grandchild = cell_id_manager.orderPathToId({0, 1, 3, 3});
+
+  CHECK_FALSE(cell_id_manager.cellIdLte(ancestor, inner_child));
+  CHECK_FALSE(cell_id_manager.cellIdLte(ancestor, inner_grandchild));
+  CHECK(cell_id_manager.cellIdLte(ancestor, last_child));
+  CHECK(cell_id_manager.cellIdLte(ancestor, last_grandchild));
+}
+
+// The descendant always ends before or at the end of its ancestor. Use a
+// second root to cover the cell ID layout used by multi-root trees too.
+TEST_CASE("[core][manager][cell_id] cellIdLte compares descendant to ancestor ends") {
+  using Cell2D = Cell<2,2>;
+  CellIdManager<Cell2D> cell_id_manager(2, 3);
+
+  const auto ancestor = cell_id_manager.orderPathToId({1, 1});
+  const auto inner_child = cell_id_manager.orderPathToId({1, 1, 2});
+  const auto inner_grandchild = cell_id_manager.orderPathToId({1, 1, 3, 2});
+  const auto last_child = cell_id_manager.orderPathToId({1, 1, 3});
+  const auto last_grandchild = cell_id_manager.orderPathToId({1, 1, 3, 3});
+
+  CHECK(cell_id_manager.cellIdLte(inner_child, ancestor));
+  CHECK(cell_id_manager.cellIdLte(inner_grandchild, ancestor));
+  CHECK(cell_id_manager.cellIdLte(last_child, ancestor));
+  CHECK(cell_id_manager.cellIdLte(last_grandchild, ancestor));
+}

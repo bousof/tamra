@@ -286,9 +286,9 @@ bool CellIdManager<CellType>::cellIdLte(const std::vector<unsigned> &cell_id_1, 
   unsigned level_1 = getIdLevel(cell_id_1),
            level_2 = getIdLevel(cell_id_2);
 
-  if (level_1 > level_2)
-    for (unsigned l{level_2+1}; l<=level_1; ++l)
-      if (getIdChild(cell_id_1, l) != (CellType::number_children - 1))
+  if (level_1 < level_2)
+    for (unsigned l{level_1+1}; l<=level_2; ++l)
+      if (getIdChild(cell_id_2, l) != (CellType::number_children - 1))
         return false;
   if (level_1 == level_2)
     return getIdChild(cell_id_1, level_1) <= getIdChild(cell_id_2, level_2);
