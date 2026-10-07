@@ -1,4 +1,4 @@
-#include "../../includes/parallel/allreduce.h"
+#include <tamra/parallel/allreduce.h>
 
 //-----------------------------------------------------------//
 //  IMPLEMENTATIONS                                          //

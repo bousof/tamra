@@ -14,11 +14,16 @@ add_library(tamra_core STATIC
   ${TAMRA_HEADERS}   # headers are *listed*, but not compiled
 )
 
-# Public includes for everyone using tamra
+# TAMRA headers: available to the library and its users.
 target_include_directories(tamra_core
   PUBLIC
     ${CMAKE_SOURCE_DIR}/tamra/includes
-  SYSTEM PUBLIC
+)
+
+# Eigen headers: available to the library and its users,
+# with system-header treatment.
+target_include_directories(tamra_core SYSTEM
+  PUBLIC
     ${CMAKE_SOURCE_DIR}/third_party/eigen-3.4.0
 )
 

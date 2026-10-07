@@ -1,0 +1,61 @@
+/*
+ *
+ *  Copyright (c) 2025 Sofiane BOUSABAA
+ *  Licensed under the MIT License (see LICENSE file in project root)
+ *
+ *  Description: Class for iterating through tree cells based on Morton space-filling curves.
+ */
+
+#pragma once
+
+#include <array>
+#include <memory>
+#include <stack>
+#include <vector>
+
+#include <tamra/mesh/traversal/AbstractTreeIterator.h>
+#include <tamra/mesh/traversal/CellIdManager.h>
+#include <tamra/mesh/traversal/MortonTables.h>
+
+
+template<typename CellType, short MORTON_ORIENTATION = 123>
+class MortonIterator : public AbstractTreeIterator<CellType> {
+ public:
+  static constexpr std::array<char, 4> CONFIG_SELECTION_NAME{
+    'M',
+    char('0' + (MORTON_ORIENTATION / 100) % 10),
+    char('0' + (MORTON_ORIENTATION / 10) % 10),
+    char('0' + MORTON_ORIENTATION % 10)
+  };
+  using CellIdManagerType = typename AbstractTreeIterator<CellType>::CellIdManagerType;
+  using ExtrapolationFunctionType = typename AbstractTreeIterator<CellType>::ExtrapolationFunctionType;
+
+  //-----------------------------------------------------------//
+  //  DATA                                                     //
+  //-----------------------------------------------------------//
+ private:
+  // Map order to sibling number for each mother orientation
+  const std::array<unsigned, CellType::number_children> &order_to_sibling_number;
+  // Map sibling number to order for each mother orientation
+  const std::array<unsigned, CellType::number_children> &sibling_number_to_order;
+
+  //-----------------------------------------------------------//
+  //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
+  //-----------------------------------------------------------//
+ public:
+  // Constructor
+  MortonIterator(const std::vector<std::shared_ptr<CellType>> &root_cells, const unsigned max_level);
+
+  //-----------------------------------------------------------//
+  //  METHODS                                                  //
+  //-----------------------------------------------------------//
+ public:
+ protected:
+  // Converts the genealogy of a cell
+  std::vector<unsigned> indexToOrderPath(const std::vector<unsigned> &index_path) const override;
+  // Return the sibling number from the order (number along
+  // the curve) with respect to the mother orientation.
+  unsigned orderToSiblingNumber(unsigned order, const bool compute_orientation=false) const override;
+};
+
+#include "MortonIterator.tpp"

@@ -1,16 +1,16 @@
 # Serial-only test sources
 set(TAMRA_SERIAL_TESTS_SRC
   # add serial tests here
-  core/manager/serial_test_core_manager_cell_id.cpp
-  core/manager/serial_test_core_manager_coarse.cpp
-  core/manager/serial_test_core_manager_min_level.cpp
-  core/manager/serial_test_core_manager_refine.cpp
-  core/manager/serial_test_core_manager_snapshot.cpp
-  core/serial_test_core_cell_oct.cpp
-  core/serial_test_core_neighbor.cpp
-  core/serial_test_core_tree_iterator.cpp
-  core/serial_test_core_tree.cpp
-  linear_algebra/serial_test_jacobi.cpp
+  io/test_snapshot.cpp
+  linear_algebra/test_jacobi.cpp
+  mesh/adaptation/test_coarse.cpp
+  mesh/adaptation/test_min_level.cpp
+  mesh/adaptation/test_refine.cpp
+  mesh/test_cell_oct.cpp
+  mesh/test_neighbor.cpp
+  mesh/test_tree.cpp
+  mesh/traversal/test_cell_id.cpp
+  mesh/traversal/test_tree_iterator.cpp
 )
 
 add_executable(tamra_tests
@@ -30,13 +30,13 @@ add_test(NAME tamra_serial_tests COMMAND tamra_tests)
 if(USE_MPI)
   set(TAMRA_MPI_TESTS_SRC
     # add mpi tests here
-    communications/mpi_test_communications_alltoall.cpp
-    communications/mpi_test_communications_bcast.cpp
-    core/manager/mpi_test_core_manager_balance.cpp
-    core/manager/mpi_test_core_manager_ghost.cpp
-    core/manager/mpi_test_core_manager_min_level.cpp
-    core/manager/mpi_test_core_manager_snapshot.cpp
-    linear_algebra/mpi_test_jacobi.cpp
+    io/test_snapshot_mpi.cpp
+    linear_algebra/test_jacobi_mpi.cpp
+    mesh/adaptation/test_min_level_mpi.cpp
+    mesh/distributed/test_balance_mpi.cpp
+    mesh/distributed/test_ghost_mpi.cpp
+    parallel/test_alltoall_mpi.cpp
+    parallel/test_bcast_mpi.cpp
   )
 
   add_executable(tamra_mpi_tests

@@ -1,4 +1,4 @@
-#include "../../includes/parallel/allgatherv.h"
+#include <tamra/parallel/allgatherv.h>
 
 //-----------------------------------------------------------//
 //  IMPLEMENTATIONS                                          //

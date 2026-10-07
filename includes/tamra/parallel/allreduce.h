@@ -1,0 +1,145 @@
+/*
+ *
+ *  Copyright (c) 2025 Sofiane BOUSABAA
+ *  Licensed under the MIT License (see LICENSE file in project root)
+ *
+ *  Description: Simplifies MPI Allreduce operations (general case).
+ */
+
+#pragma once
+
+#ifdef USE_MPI
+
+#include <mpi.h>
+#include <tamra/parallel/mpitypes.h>
+
+#endif // USE_MPI
+
+#include <algorithm>
+#include <limits>
+#include <numeric>
+#include <stdexcept>
+#include <type_traits>
+
+
+//-----------------------------------------------------------//
+//  PROTOTYPES                                               //
+//-----------------------------------------------------------//
+
+void boolAndAllreduce(const bool value, bool &reduction);
+
+template<typename T>
+void scalarSumAllreduce(const T value, T &reduction);
+
+template<typename T>
+void scalarMinAllreduce(const T value, T &reduction);
+
+template<typename T>
+void scalarMaxAllreduce(const T value, T &reduction);
+
+// Sum-reduce a contiguous array on all ranks. In a sequential build, copy the
+// input into the output, matching the scalar allreduce behavior.
+template<typename T>
+void arraySumAllreduce(const T *values, T *reduction, const std::size_t count) {
+  static_assert(
+    std::is_same<T, unsigned>::value || std::is_same<T, float>::value || std::is_same<T, double>::value,
+    "arraySumAllreduce only supports T = unsigned, float, or double"
+  );
+
+  if (count == 0)
+    return;
+
+#ifdef USE_MPI
+  if (count > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+    throw std::length_error("arraySumAllreduce: element count exceeds the MPI int count limit");
+
+  MPI_Allreduce(values, reduction, static_cast<int>(count), mpi_type<T>(),
+                MPI_SUM, MPI_COMM_WORLD);
+#else
+  std::copy_n(values, count, reduction);
+#endif // USE_MPI
+}
+
+//-----------------------------------------------------------//
+//  LOWER LEVEL METHODS                                      //
+//-----------------------------------------------------------//
+
+namespace allreduce::detail {
+
+#ifdef USE_MPI
+
+template<typename T>
+void scalarAllreduceT(const T value, T &reduction, const MPI_Datatype data_type, const MPI_Op op_type) {
+  static_assert(
+    std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, float>::value || std::is_same<T, unsigned>::value,
+    "scalarAllreduceT only supports T = bool, double, float, or unsigned"
+  );
+
+	// Reduction of values between all processors
+  MPI_Allreduce(&value, &reduction, 1, data_type, op_type, MPI_COMM_WORLD);
+}
+
+#else
+
+template<typename T>
+void scalarAllreduceT(const T value, T &reduction) {
+  static_assert(
+    std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, float>::value || std::is_same<T, unsigned>::value,
+    "scalarAllreduceT only supports T = bool, double, float, or unsigned"
+  );
+
+	// No MPI, so one proc then reduction is value
+  reduction = value;
+}
+
+#endif // USE_MPI
+
+} // namespace allreduce::detail
+
+//-----------------------------------------------------------//
+//  IMPLEMENTATIONS                                          //
+//-----------------------------------------------------------//
+
+template<typename T>
+void scalarSumAllreduce(const T value, T &reduction) {
+  static_assert(
+    std::is_same<T, double>::value || std::is_same<T, float>::value || std::is_same<T, unsigned>::value,
+    "scalarSumAllreduce only supports T = double, float, or unsigned"
+  );
+
+#ifdef USE_MPI
+  allreduce::detail::scalarAllreduceT(value, reduction, mpi_type<T>(), MPI_SUM);
+#else
+  allreduce::detail::scalarAllreduceT(value, reduction);
+#endif // USE_MPI
+}
+
+template<typename T>
+void scalarMinAllreduce(const T value, T &reduction) {
+  static_assert(
+    std::is_same<T, double>::value || std::is_same<T, float>::value,
+    "scalarMinAllreduce only supports T = double or float"
+  );
+
+#ifdef USE_MPI
+  allreduce::detail::scalarAllreduceT(value, reduction, mpi_type<T>(), MPI_MIN);
+#else
+  allreduce::detail::scalarAllreduceT(value, reduction);
+#endif // USE_MPI
+}
+
+template<typename T>
+void scalarMaxAllreduce(const T value, T &reduction) {
+  static_assert(
+    std::is_same<T, double>::value || std::is_same<T, float>::value,
+    "scalarMaxAllreduce only supports T = double or float"
+  );
+
+#ifdef USE_MPI
+  allreduce::detail::scalarAllreduceT(value, reduction, mpi_type<T>(), MPI_MAX);
+#else
+  allreduce::detail::scalarAllreduceT(value, reduction);
+#endif // USE_MPI
+}
+
+

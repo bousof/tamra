@@ -1,4 +1,4 @@
-#include "../../includes/utils/array_utils.h"
+#include <tamra/utils/array_utils.h>
 
 std::vector<double> linspace(const double min, const double max, const unsigned count) {
   std::vector<double> result(count);

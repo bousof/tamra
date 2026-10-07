@@ -1,4 +1,4 @@
-#include "../../includes/parallel/alltoallv.h"
+#include <tamra/parallel/alltoallv.h>
 
 //-----------------------------------------------------------//
 //  IMPLEMENTATIONS                                          //

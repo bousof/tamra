@@ -1,10 +1,12 @@
-#include "../../includes/parallel/wrapper.h"
+#include <tamra/parallel/wrapper.h>
 
 // MPI initialization
 int mpi_init(int *argc, char ***argv) {
 #ifdef USE_MPI
   return MPI_Init(argc, argv);
 #else
+  (void)argc;
+  (void)argv;
   return 0;
 #endif // USE_MPI
 }

@@ -1,7 +1,8 @@
 // test_main_mpi.cpp
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest.h>
-#include <parallel/wrapper.h>  // your mpi_init / mpi_finalize
+#include <tamra/parallel/wrapper.h>
+
 
 int main(int argc, char** argv) {
   doctest::Context ctx;

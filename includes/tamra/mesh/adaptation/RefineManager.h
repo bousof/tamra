@@ -1,0 +1,51 @@
+/*
+ *
+ *  Copyright (c) 2025 Sofiane BOUSABAA
+ *  Licensed under the MIT License (see LICENSE file in project root)
+ *
+ *  Description: Class that handles tree refinement.
+ */
+
+#pragma once
+
+#include <memory>
+
+
+template<typename CellType>
+class RefineManager {
+  using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
+
+  //-----------------------------------------------------------//
+  //  VARIABLES                                                //
+  //-----------------------------------------------------------//
+  // Minimum mesh level
+  const unsigned min_level;
+  // Maximum mesh level
+  const unsigned max_level;
+  // Process rank
+  const unsigned rank;
+  // Number of process
+  const unsigned size;
+
+  //-----------------------------------------------------------//
+  //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
+  //-----------------------------------------------------------//
+ public :
+  // Constructor
+  RefineManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
+  // Destructor
+  ~RefineManager();
+
+  //-----------------------------------------------------------//
+  //  METHODS                                                  //
+  //-----------------------------------------------------------//
+ public:
+  // Go through all the leaf cells and split them one time if needed.
+	bool refine(const std::vector<std::shared_ptr<CellType>> &root_cells, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }) const;
+
+ private:
+  // Recursively refine child cells if needed
+  bool refineRecurs(const std::shared_ptr<CellType> &cell, ExtrapolationFunctionType extrapolation_function) const;
+};
+
+#include "RefineManager.tpp"

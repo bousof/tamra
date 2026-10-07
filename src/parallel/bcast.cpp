@@ -1,4 +1,4 @@
-#include "../../includes/parallel/bcast.h"
+#include <tamra/parallel/bcast.h>
 
 //-----------------------------------------------------------//
 //  IMPLEMENTATIONS                                          //
