@@ -23,15 +23,15 @@
 TEST_CASE("[core][manager][cell_id] Cell ID computation and inversion (2x2)") {
   using Cell2D = Cell<2,2>;
   // Create 4 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   //Splitting some cells
   unsigned max_level{2};
-  A->splitRoot(max_level, A);
-  A->getChildCell(2)->split(max_level);
+  cell_a->splitRoot(max_level, cell_a);
+  cell_a->getChildCell(2)->split(max_level);
 
   // Initialize iterator
-  std::vector<std::shared_ptr<Cell2D>> roots = { A };
+  std::vector<std::shared_ptr<Cell2D>> roots = { cell_a };
   MortonIterator<Cell2D, 123> iterator(roots, max_level);
 
   // Go to target cell
@@ -60,16 +60,16 @@ TEST_CASE("[core][manager][cell_id] Cell ID computation and inversion (2x2)") {
 TEST_CASE("[core][manager][cell_id] Cell ID computation and inversion (3x2 deep)") {
   using Cell2D = Cell<3,2>;
   // Create 4 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   //Splitting some cells
   unsigned max_level{20};
-  auto child_cells = A->splitRoot(max_level, A);
+  auto child_cells = cell_a->splitRoot(max_level, cell_a);
   for (unsigned i{0}; i<(max_level-1); ++i)
     child_cells = child_cells[0]->split(max_level);
 
   // Initialize iterator
-  std::vector<std::shared_ptr<Cell2D>> roots = { A };
+  std::vector<std::shared_ptr<Cell2D>> roots = { cell_a };
   MortonIterator<Cell2D, 123> iterator(roots, max_level);
 
   // Go to target cell

@@ -4,7 +4,7 @@
 //  IMPLEMENTATIONS                                          //
 //-----------------------------------------------------------//
 
-void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelData>>> &send_buffers, std::vector<std::unique_ptr<ParallelData>> &recv_buffer, const ParallelDataFactory createData) {
+void vector_data_alltoallv(const std::vector<std::vector<std::unique_ptr<ParallelData>>> &send_buffers, std::vector<std::unique_ptr<ParallelData>> &recv_buffer, const ParallelDataFactory create_data) {
   unsigned size = send_buffers.size();
 
   // Prepare data sizes for sharing between processors
@@ -17,7 +17,7 @@ void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelD
 
 	// Communication of data sizes between all processors
 	std::vector<unsigned> recv_counts;
-	vectorAlltoallv<unsigned>(send_counts, recv_counts);
+	vector_alltoallv<unsigned>(send_counts, recv_counts);
 
 	// Sending buffer, data must be put to a vector of vector of doubles
 	std::vector<std::vector<double>> send_data_buffers(size);
@@ -33,7 +33,7 @@ void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelD
 
 	// Communication of cells data between all processors
 	std::vector<double> recv_data_buffer;
-	vectorAlltoallv<double>(send_data_buffers, recv_data_buffer);
+	vector_alltoallv<double>(send_data_buffers, recv_data_buffer);
 
 	// Sending buffer, data come as a vector of doubles and must be transformed to a vector of ParallelData
 	recv_buffer.resize(recv_counts.size());
@@ -42,7 +42,7 @@ void vectorDataAlltoallv(const std::vector<std::vector<std::unique_ptr<ParallelD
 		std::vector<double> subdata(&recv_data_buffer[data_counter], &recv_data_buffer[data_counter+recv_counts[i]]);
 		data_counter += recv_counts[i];
 
-    recv_buffer[i] = createData();
+    recv_buffer[i] = create_data();
 		recv_buffer[i]->fromVectorOfData(subdata);
 	}
 }

@@ -22,11 +22,11 @@
 TEST_CASE("[core][tree_iterator] Iterator leaf cell counting (1 root cell)") {
   using Cell2D = Cell<2,2>;
   // Create 4 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{2};
@@ -34,13 +34,13 @@ TEST_CASE("[core][tree_iterator] Iterator leaf cell counting (1 root cell)") {
   tree.createRootCells(entries);
 
   //Splitting some cells
-  A->getChildCell(1)->split(max_level);
-  A->getChildCell(2)->split(max_level);
+  cell_a->getChildCell(1)->split(max_level);
+  cell_a->getChildCell(2)->split(max_level);
 
   // Count number of leaf cells
-  int number_leaf_cells = A->countLeaves();
+  int leaf_cell_count = cell_a->countLeaves();
 
-  CHECK(number_leaf_cells == 10);
+  CHECK(leaf_cell_count == 10);
 }
 
 // Iterator leaf cell counting (2 root cells)
@@ -58,14 +58,14 @@ TEST_CASE("[core][tree_iterator] Iterator leaf cell counting (1 root cell)") {
 TEST_CASE("[core][tree_iterator] Iterator leaf cell counting (2 root cells)") {
   using Cell2D = Cell<2,2>;
   // Create 4 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{2};
@@ -73,11 +73,11 @@ TEST_CASE("[core][tree_iterator] Iterator leaf cell counting (2 root cells)") {
   tree.createRootCells(entries);
 
   //Splitting some cells
-  A->getChildCell(1)->split(max_level);
-  B->getChildCell(3)->split(max_level);
+  cell_a->getChildCell(1)->split(max_level);
+  cell_b->getChildCell(3)->split(max_level);
 
   // Count number of leaf cells
-  int number_leaf_cells = A->countLeaves() + B->countLeaves();
+  int leaf_cell_count = cell_a->countLeaves() + cell_b->countLeaves();
 
-  CHECK(number_leaf_cells == 14);
+  CHECK(leaf_cell_count == 14);
 }

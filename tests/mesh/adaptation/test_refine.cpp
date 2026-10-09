@@ -22,11 +22,11 @@
 TEST_CASE("[core][manager][refine] Refine tree (one root, serial)") {
   using Cell2D = Cell<2,2>;
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries{ eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries{ entry_a };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{3};
@@ -34,30 +34,30 @@ TEST_CASE("[core][manager][refine] Refine tree (one root, serial)") {
   tree.createRootCells(entries);
 
   // Set flags for cells to refine
-  A->getChildCell(0)->setToRefine();
-  A->getChildCell(3)->setToRefine();
+  cell_a->getChildCell(0)->markForRefinement();
+  cell_a->getChildCell(3)->markForRefinement();
 
   // Refine the tree
   tree.refine();
 
   // Count number of leaf cells
-  int number_leaf_cells = A->countLeaves();
+  int leaf_cell_count = cell_a->countLeaves();
 
   // Verify that number of leaf cells is right
-  CHECK(number_leaf_cells == 10);
+  CHECK(leaf_cell_count == 10);
 
   // Set flags for cells to refine
-  A->getChildCell(0)->getChildCell(0)->setToRefine();
-  A->getChildCell(0)->getChildCell(1)->setToRefine();
+  cell_a->getChildCell(0)->getChildCell(0)->markForRefinement();
+  cell_a->getChildCell(0)->getChildCell(1)->markForRefinement();
 
   // Refine the tree
   tree.refine();
 
   // Count number of leaf cells
-  number_leaf_cells = A->countLeaves();
+  leaf_cell_count = cell_a->countLeaves();
 
   // Verify that number of leaf cells is right
-  CHECK(number_leaf_cells == 19);
+  CHECK(leaf_cell_count == 19);
 }
 
 // Refine and count number of leaf cells (two roots)
@@ -75,14 +75,14 @@ TEST_CASE("[core][manager][refine] Refine tree (one root, serial)") {
 TEST_CASE("[core][manager][refine] Refine tree (two roots, serial)") {
   using Cell2D = Cell<2,2>;
   // Create 2 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{3};
@@ -90,18 +90,18 @@ TEST_CASE("[core][manager][refine] Refine tree (two roots, serial)") {
   tree.createRootCells(entries);
 
   // Refine the first child cell of root B
-  B->getChildCell(0)->split(tree.getMaxLevel());
+  cell_b->getChildCell(0)->split(tree.getMaxLevel());
 
   // Set flags for cells to refine
-  B->getChildCell(0)->getChildCell(0)->setToRefine();
-  B->getChildCell(0)->getChildCell(1)->setToRefine();
+  cell_b->getChildCell(0)->getChildCell(0)->markForRefinement();
+  cell_b->getChildCell(0)->getChildCell(1)->markForRefinement();
 
   // Refine the tree
   tree.refine();
 
   // Count number of leaf cells
-  int number_leaf_cells = A->countLeaves() + B->countLeaves();
+  int leaf_cell_count = cell_a->countLeaves() + cell_b->countLeaves();
 
   // Verify that number of leaf cells is right
-  CHECK(number_leaf_cells == 23);
+  CHECK(leaf_cell_count == 23);
 }

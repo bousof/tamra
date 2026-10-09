@@ -19,7 +19,7 @@
 
 
 template<typename CellType, typename TreeIteratorType>
-class BalanceManager {
+class LoadBalanceManager {
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
 
   //-----------------------------------------------------------//
@@ -39,18 +39,18 @@ class BalanceManager {
   //-----------------------------------------------------------//
  public :
   // Constructor
-  BalanceManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
+  LoadBalanceManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size);
   // Destructor
-  ~BalanceManager();
+  ~LoadBalanceManager();
 
   //-----------------------------------------------------------//
   //  METHODS                                                  //
   //-----------------------------------------------------------//
  public:
   // Determine if load balancing is needed
-  std::pair<bool, std::vector<double>> isLoadBalancingNeeded(const std::vector<std::shared_ptr<CellType>> &root_cells, const double max_pct_unbalance) const;
+  std::pair<bool, std::vector<double>> evaluateLoadBalance(const std::vector<std::shared_ptr<CellType>> &root_cells, const double max_relative_load_imbalance) const;
   // Performs load balancing between processes
-	void loadBalance(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const double max_pct_unbalance = 0., ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }) const;
+	void loadBalance(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const double max_relative_load_imbalance = 0., ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }) const;
  private:
   // Determine the local load for this process
   double computeLoad(const std::shared_ptr<CellType> &cell) const;
@@ -66,4 +66,4 @@ class BalanceManager {
   bool backPropagateOwnershipFlags(const std::shared_ptr<CellType> &cell) const;
 };
 
-#include "BalanceManager.tpp"
+#include "LoadBalanceManager.tpp"

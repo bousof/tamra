@@ -25,7 +25,7 @@
 
 
 template <typename RealT = double, typename AccT = double>
-std::vector<RealT> jacobiIteration(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A_local,
+std::vector<RealT> jacobi_iteration(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A_local,
                                     const std::vector<RealT> &b_local,
                                     const std::vector<RealT> &x_local = {},
                                     const std::unordered_map<int, RealT> &x_lacking = {},
@@ -33,13 +33,13 @@ std::vector<RealT> jacobiIteration(const Eigen::SparseMatrix<RealT, Eigen::RowMa
                                     const unsigned col_offset = 0);
 
 template <typename RealT = double, typename AccT = double>
-std::vector<RealT> sparseJacobi(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A,
+std::vector<RealT> sparse_jacobi(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A,
                                  const std::vector<RealT> &b,
                                  const std::vector<RealT> &x = {},
                                  const unsigned max_iterations = 100);
 
 template <typename RealT = double, typename AccT = double>
-std::vector<RealT> parallelSparseJacobi(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A_local,
+std::vector<RealT> parallel_sparse_jacobi(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A_local,
                                          const std::vector<RealT> &b_local,
                                          const std::vector<RealT> &x_local = {},
                                          const unsigned max_iterations = 100,

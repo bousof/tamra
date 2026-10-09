@@ -23,7 +23,7 @@
 //-----------------------------------------------------------//
 
 template<typename T>
-void scalarAlltoall(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer);
+void scalar_alltoall(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer);
 
 //-----------------------------------------------------------//
 //  LOWER LEVEL METHODS                                      //
@@ -34,10 +34,10 @@ namespace alltoall::detail {
 #ifdef USE_MPI
 
 template<typename T>
-void scalarAlltoallT(const std::vector<int> &send_buffer, std::vector<T> &recv_buffer, const MPI_Datatype data_type) {
+void scalar_alltoall_impl(const std::vector<int> &send_buffer, std::vector<T> &recv_buffer, const MPI_Datatype data_type) {
   static_assert(
     std::is_same<T, int>::value,
-    "scalarAlltoallT only supports T = int"
+    "scalar_alltoall_impl only supports T = int"
   );
 
 	// Sharing of values between all processors
@@ -47,10 +47,10 @@ void scalarAlltoallT(const std::vector<int> &send_buffer, std::vector<T> &recv_b
 #else
 
 template<typename T>
-void scalarAlltoallT(const std::vector<int> &send_buffer, std::vector<T> &recv_buffer) {
+void scalar_alltoall_impl(const std::vector<int> &send_buffer, std::vector<T> &recv_buffer) {
   static_assert(
     std::is_same<T, int>::value,
-    "scalarAlltoallT only supports T = int"
+    "scalar_alltoall_impl only supports T = int"
   );
 
 	// No MPI, so one proc then only receive from itself
@@ -66,15 +66,15 @@ void scalarAlltoallT(const std::vector<int> &send_buffer, std::vector<T> &recv_b
 //-----------------------------------------------------------//
 
 template<typename T>
-void scalarAlltoall(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer) {
+void scalar_alltoall(const std::vector<T> &send_buffer, std::vector<T> &recv_buffer) {
   static_assert(
     std::is_same<T, int>::value,
-    "scalarAlltoall only supports T = int"
+    "scalar_alltoall only supports T = int"
   );
 
 #ifdef USE_MPI
-  alltoall::detail::scalarAlltoallT(send_buffer, recv_buffer, mpi_type<T>());
+  alltoall::detail::scalar_alltoall_impl(send_buffer, recv_buffer, mpi_type<T>());
 #else
-  alltoall::detail::scalarAlltoallT(send_buffer, recv_buffer);
+  alltoall::detail::scalar_alltoall_impl(send_buffer, recv_buffer);
 #endif // USE_MPI
 }

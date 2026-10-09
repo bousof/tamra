@@ -30,11 +30,11 @@
 TEST_CASE("[core][manager][coarsen] Coarsen tree (one root, serial)") {
   using Cell2D = Cell<2,2>;
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries{ eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries{ entry_a };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{3};
@@ -42,23 +42,23 @@ TEST_CASE("[core][manager][coarsen] Coarsen tree (one root, serial)") {
   tree.createRootCells(entries);
 
   // Split cells
-  A->getChildCell(0)->split(tree.getMaxLevel());
-  A->getChildCell(1)->split(tree.getMaxLevel());
-  A->getChildCell(3)->split(tree.getMaxLevel());
-  A->getChildCell(3)->getChildCell(1)->split(tree.getMaxLevel());
+  cell_a->getChildCell(0)->split(tree.getMaxLevel());
+  cell_a->getChildCell(1)->split(tree.getMaxLevel());
+  cell_a->getChildCell(3)->split(tree.getMaxLevel());
+  cell_a->getChildCell(3)->getChildCell(1)->split(tree.getMaxLevel());
 
-  // Set flags for cells to coarse
-  A->getChildCell(1)->setToCoarseRecurs();
-  A->getChildCell(3)->getChildCell(1)->setToCoarseRecurs();
+  // Set flags for cells to coarsen
+  cell_a->getChildCell(1)->markForCoarseningRecurs();
+  cell_a->getChildCell(3)->getChildCell(1)->markForCoarseningRecurs();
 
   // Coarsen the tree
   tree.coarsen();
 
   // Count number of owned leaf cells
-  int number_leaf_cells = A->countOwnedLeaves();
+  int leaf_cell_count = cell_a->countOwnedLeaves();
 
   // Verify that number of leaf cells is right
-  CHECK(number_leaf_cells == 10);
+  CHECK(leaf_cell_count == 10);
 }
 
 // Coarsen and count number of leaf cells (one root)
@@ -104,14 +104,14 @@ TEST_CASE("[core][manager][coarsen] Coarsen tree (one root, serial)") {
 TEST_CASE("[core][manager][coarsen] Coarsen tree (two roots, serial)") {
   using Cell2D = Cell<2,2>;
   // Create 2 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{3};
@@ -119,22 +119,22 @@ TEST_CASE("[core][manager][coarsen] Coarsen tree (two roots, serial)") {
   tree.createRootCells(entries);
 
   // Split cells
-  A->getChildCell(1)->split(tree.getMaxLevel());
-  A->getChildCell(3)->split(tree.getMaxLevel());
-  B->getChildCell(2)->split(tree.getMaxLevel());
-  A->getChildCell(3)->getChildCell(1)->split(tree.getMaxLevel());
+  cell_a->getChildCell(1)->split(tree.getMaxLevel());
+  cell_a->getChildCell(3)->split(tree.getMaxLevel());
+  cell_b->getChildCell(2)->split(tree.getMaxLevel());
+  cell_a->getChildCell(3)->getChildCell(1)->split(tree.getMaxLevel());
 
-  // Set flags for cells to coarse
-  A->getChildCell(1)->setToCoarseRecurs();
-  A->getChildCell(3)->getChildCell(1)->setToCoarseRecurs();
-  B->getChildCell(2)->setToCoarseRecurs();
+  // Set flags for cells to coarsen
+  cell_a->getChildCell(1)->markForCoarseningRecurs();
+  cell_a->getChildCell(3)->getChildCell(1)->markForCoarseningRecurs();
+  cell_b->getChildCell(2)->markForCoarseningRecurs();
 
   // Coarse the tree
   tree.coarsen();
 
   // Count number of owned leaf cells
-  int number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
+  int leaf_cell_count = cell_a->countOwnedLeaves() + cell_b->countOwnedLeaves();
 
   // Verify that number of leaf cells is right
-  CHECK(number_leaf_cells == 11);
+  CHECK(leaf_cell_count == 11);
 }

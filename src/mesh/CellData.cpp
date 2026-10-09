@@ -14,8 +14,8 @@ CellData::CellData()
 //-----------------------------------------------------------//
 
 // Get the computation load of the cell
-double CellData::getLoad(bool isLeaf, const std::shared_ptr<void>) const {
-  return isLeaf ? 1. : 0.;
+double CellData::getLoad(bool is_leaf, const std::shared_ptr<void>) const {
+  return is_leaf ? 1. : 0.;
 }
 
 // Get the value of the cell

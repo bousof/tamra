@@ -18,7 +18,7 @@ struct RootCellEntry {
   // Root cell
   std::shared_ptr<CellType> cell;
   // Associated neighbor cells
-  std::array<std::shared_ptr<CellType>, CellType::number_neighbors> neighbor_cells;
+  std::array<std::shared_ptr<CellType>, CellType::neighbor_count> neighbor_cells;
 
   //-----------------------------------------------------------//
 	//  VARIABLES                                                //

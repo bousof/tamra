@@ -47,7 +47,7 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::serialMeshAtMinLevelRecurs
   if (cell->getLevel() < min_level) {
     if (cell->isLeaf())
       cell->split(max_level);
-    std::array<std::shared_ptr<CellType>, CellType::number_children> child_cells = cell->getChildCells();
+    std::array<std::shared_ptr<CellType>, CellType::child_count> child_cells = cell->getChildCells();
 
     for (const auto &child : child_cells) {
       serialMeshAtMinLevelRecurs(child);
@@ -60,14 +60,14 @@ template<typename CellType, typename TreeIteratorType>
 void MinLevelMeshManager<CellType, TreeIteratorType>::parallelMeshAtMinLevel(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator) const {
   // Set all cells to belong to other process
   for (const auto &root_cell : root_cells)
-    root_cell->setToOtherProcRecurs();
+    root_cell->markRemoteRecurs();
 
   // Compute and share partitions for all process
   std::vector<std::vector<unsigned>> partitions;
   if (rank == 0)
     partitions = iterator.getCellIdManager().getEqualPartitions(min_level, size);;
-  unsigned rowCount=size, colCount=iterator.getCellIdManager().getCellIdSize();
-  matrixBcast<unsigned>(partitions, 0, rank, rowCount, colCount);
+  unsigned row_count=size, col_count=iterator.getCellIdManager().getCellIdSize();
+  matrix_bcast<unsigned>(partitions, 0, rank, row_count, col_count);
 
   // Create the first partition cell
   iterator.toCellId(partitions[rank], true);
@@ -81,7 +81,7 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::parallelMeshAtMinLevel(con
       }
 
     // Set the cell to belong to this proc
-    iterator.getCell()->setToThisProc();
+    iterator.getCell()->markOwned();
 
     // Move iterator and check if still in partition
     if (rank == size-1)
@@ -90,7 +90,7 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::parallelMeshAtMinLevel(con
       loop = iterator.next() && !iterator.cellIdGte(partitions[rank+1]);
   } while (loop);
 
-  // Backporpagate belongToThisProc flags
+  // Backporpagate isOwned flags
   for (const auto &root_cell : root_cells)
     backPropagateToThisProc(root_cell);
 }
@@ -99,7 +99,7 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::parallelMeshAtMinLevel(con
 template<typename CellType, typename TreeIteratorType>
 bool MinLevelMeshManager<CellType, TreeIteratorType>::backPropagateToThisProc(const std::shared_ptr<CellType> &cell) const {
   if (cell->isLeaf())
-    return cell->belongToThisProc();
+    return cell->isOwned();
 
   bool to_this_proc = false;
   for (const auto &child : cell->getChildCells())
@@ -107,7 +107,7 @@ bool MinLevelMeshManager<CellType, TreeIteratorType>::backPropagateToThisProc(co
       to_this_proc = true;
 
   if (to_this_proc)
-    cell->setToThisProc();
+    cell->markOwned();
 
   return to_this_proc;
 }

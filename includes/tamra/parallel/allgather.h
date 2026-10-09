@@ -26,10 +26,10 @@
 //-----------------------------------------------------------//
 
 template<typename T>
-void scalarAllgather(const T &value, std::vector<T> &recv_buffer, const unsigned size);
+void scalar_allgather(const T &value, std::vector<T> &recv_buffer, const unsigned size);
 
 template<typename T>
-void matrixAllgather(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned size);
+void matrix_allgather(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned size);
 
 //-----------------------------------------------------------//
 //  LOWER LEVEL METHODS                                      //
@@ -40,10 +40,10 @@ namespace allgather::detail {
 #ifdef USE_MPI
 
 template<typename T>
-void scalarAllgatherT(const T &value, std::vector<T> &recv_buffer, const unsigned size, const MPI_Datatype data_type) {
+void scalar_allgather_impl(const T &value, std::vector<T> &recv_buffer, const unsigned size, const MPI_Datatype data_type) {
   static_assert(
     std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
-    "scalarAllgatherT only supports T = int, or unsigned"
+    "scalar_allgather_impl only supports T = int, or unsigned"
   );
 
 	// Communication of between all processors
@@ -54,10 +54,10 @@ void scalarAllgatherT(const T &value, std::vector<T> &recv_buffer, const unsigne
 #else
 
 template<typename T>
-void scalarAllgatherT(const T &value, std::vector<T> &recv_buffer, const unsigned) {
+void scalar_allgather_impl(const T &value, std::vector<T> &recv_buffer, const unsigned) {
   static_assert(
     std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
-    "scalarAllgatherT only supports T = int, or unsigned"
+    "scalar_allgather_impl only supports T = int, or unsigned"
   );
 
 	// No MPI, so one proc then only gather from itself
@@ -69,10 +69,10 @@ void scalarAllgatherT(const T &value, std::vector<T> &recv_buffer, const unsigne
 #ifdef USE_MPI
 
 template<typename T>
-void vectorAllgatherT(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned size, const MPI_Datatype data_type) {
+void vector_allgather_impl(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned size, const MPI_Datatype data_type) {
   static_assert(
     std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, unsigned>::value,
-    "vectorAllgatherT only supports T = bool, double, or unsigned"
+    "vector_allgather_impl only supports T = bool, double, or unsigned"
   );
 
   // Number of elements to gather to all processes
@@ -84,32 +84,32 @@ void vectorAllgatherT(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, 
 }
 
 template<typename T>
-void matrixAllgatherT(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned size, const MPI_Datatype data_type) {
-  unsigned rowCount = send_buffers.size(),
-           colCount = send_buffers[0].size();
+void matrix_allgather_impl(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned size, const MPI_Datatype data_type) {
+  unsigned row_count = send_buffers.size(),
+           col_count = send_buffers[0].size();
   // Call the merging all to all function
 	std::vector<T> send_buffer, recv_buffer;
-  send_buffer.reserve(rowCount * colCount);
-  for (unsigned i{0}; i<rowCount; ++i)
+  send_buffer.reserve(row_count * col_count);
+  for (unsigned i{0}; i<row_count; ++i)
     send_buffer.insert(send_buffer.end(), send_buffers[i].begin(), send_buffers[i].end());
-  vectorAllgatherT(send_buffer, recv_buffer, size, data_type);
+  vector_allgather_impl(send_buffer, recv_buffer, size, data_type);
 
   // Split received data from each processor
-  recv_buffers.resize(size * rowCount);
+  recv_buffers.resize(size * row_count);
   for (unsigned p{0}; p<size; ++p)
-    for (unsigned i=0; i<rowCount; ++i) {
-      unsigned j = p*rowCount+i;
-      recv_buffers[j].assign(recv_buffer.begin() + j*colCount, recv_buffer.begin() + (j+1)*colCount);
+    for (unsigned i=0; i<row_count; ++i) {
+      unsigned j = p*row_count+i;
+      recv_buffers[j].assign(recv_buffer.begin() + j*col_count, recv_buffer.begin() + (j+1)*col_count);
     }
 }
 
 #else
 
 template<typename T>
-void vectorAllgatherT(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned) {
+void vector_allgather_impl(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, const unsigned) {
   static_assert(
     std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, unsigned>::value,
-    "vectorAllgatherT only supports T = bool, double, or unsigned"
+    "vector_allgather_impl only supports T = bool, double, or unsigned"
   );
 
   // No MPI, so one proc then only gather from itself
@@ -117,10 +117,10 @@ void vectorAllgatherT(std::vector<T> &send_buffer, std::vector<T> &recv_buffer, 
 }
 
 template<typename T>
-void matrixAllgatherT(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned) {
+void matrix_allgather_impl(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned) {
   static_assert(
     std::is_same<T, bool>::value || std::is_same<T, double>::value || std::is_same<T, unsigned>::value,
-    "vectorAllgatherT only supports T = bool, double, or unsigned"
+    "vector_allgather_impl only supports T = bool, double, or unsigned"
   );
 
   // No MPI, so one proc then only gather from itself
@@ -136,29 +136,29 @@ void matrixAllgatherT(const std::vector<std::vector<T>> &send_buffers, std::vect
 //-----------------------------------------------------------//
 
 template<typename T>
-void scalarAllgather(const T &value, std::vector<T> &recv_buffer, const unsigned size) {
+void scalar_allgather(const T &value, std::vector<T> &recv_buffer, const unsigned size) {
   static_assert(
     std::is_same<T, int>::value || std::is_same<T, unsigned>::value,
-    "scalarAllgather only supports T = int or unsigned"
+    "scalar_allgather only supports T = int or unsigned"
   );
 
 #ifdef USE_MPI
-  allgather::detail::scalarAllgatherT(value, recv_buffer, size, mpi_type<T>());
+  allgather::detail::scalar_allgather_impl(value, recv_buffer, size, mpi_type<T>());
 #else
-  allgather::detail::scalarAllgatherT(value, recv_buffer, size);
+  allgather::detail::scalar_allgather_impl(value, recv_buffer, size);
 #endif // USE_MPI
 }
 
 template<typename T>
-void matrixAllgather(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned size) {
+void matrix_allgather(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned size) {
   static_assert(
     std::is_same<T, unsigned>::value,
-    "matrixAllgather only supports T = unsigned"
+    "matrix_allgather only supports T = unsigned"
   );
 
 #ifdef USE_MPI
-  allgather::detail::matrixAllgatherT(send_buffers, recv_buffers, size, mpi_type<T>());
+  allgather::detail::matrix_allgather_impl(send_buffers, recv_buffers, size, mpi_type<T>());
 #else
-  allgather::detail::matrixAllgatherT(send_buffers, recv_buffers, size);
+  allgather::detail::matrix_allgather_impl(send_buffers, recv_buffers, size);
 #endif // USE_MPI
 }

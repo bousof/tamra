@@ -129,7 +129,7 @@ std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskOwned(TreeIter
           break;
         case OwnedConflictResolutionStrategy::THROW:
           bool throw_error = !all(resolution_flags);
-          boolAndAllreduce(throw_error, throw_error);
+          bool_and_allreduce(throw_error, throw_error);
           if (throw_error)
             throw std::runtime_error("Error thrown in GhostManagerTask::continueTaskOwned()");
           break;
@@ -161,11 +161,11 @@ std::vector<bool> GhostManagerTask<GhostManagerType>::continueTaskGhost(TreeIter
           continueSplitInOwnerTaskGhost(resolution_flags);
           break;
         case GhostConflictResolutionStrategy::TRY_COARSEN:
-          continueTryCoarseTaskGhost(resolution_flags);
+          continueTryCoarsenTaskGhost(resolution_flags);
           break;
         case GhostConflictResolutionStrategy::THROW:
           bool throw_error = !all(resolution_flags);
-          boolAndAllreduce(throw_error, throw_error);
+          bool_and_allreduce(throw_error, throw_error);
           if (throw_error)
             throw std::runtime_error("Error thrown in GhostManagerTask::continueTaskGhost()");
           break;
@@ -207,7 +207,7 @@ void GhostManagerTask<GhostManagerType>::continueSplitInOwnerTaskGhost(std::vect
 }
 
 template<typename GhostManagerType>
-void GhostManagerTask<GhostManagerType>::continueTryCoarseTaskGhost(std::vector<bool>&) {
+void GhostManagerTask<GhostManagerType>::continueTryCoarsenTaskGhost(std::vector<bool>&) {
   // For TRY_COARSEN strategy, we attempt to coarsen the ghost cell if possible
   // TODO: Implement this
 }

@@ -1,7 +1,7 @@
 #include <tamra/linear_algebra/jacobi.h>
 
 template <typename RealT, typename AccT>
-std::vector<RealT> jacobiIteration(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A_local,
+std::vector<RealT> jacobi_iteration(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A_local,
                                    const std::vector<RealT> &b_local,
                                    const std::vector<RealT> &x_local,
                                    const std::unordered_map<int, RealT> &x_lacking,
@@ -9,9 +9,9 @@ std::vector<RealT> jacobiIteration(const Eigen::SparseMatrix<RealT, Eigen::RowMa
                                    const unsigned col_offset) { // Number of rows
 
   // Number of local rows owned by this rank
-  const int nb_local_rows = A_local.rows();
-  const int col_max = col_offset + nb_local_rows;
-  std::vector<RealT> x_next(nb_local_rows);
+  const int local_row_count = A_local.rows();
+  const int col_max = col_offset + local_row_count;
+  std::vector<RealT> x_next(local_row_count);
   for (long i{0}; i<A_local.rows(); ++i) {
     AccT diag{0.}, sum{0.};
 
@@ -37,17 +37,17 @@ std::vector<RealT> jacobiIteration(const Eigen::SparseMatrix<RealT, Eigen::RowMa
 }
 
 template <typename RealT, typename AccT>
-std::vector<RealT> sparseJacobi(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A,
+std::vector<RealT> sparse_jacobi(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A,
                                 const std::vector<RealT> &b,
                                 const std::vector<RealT> &x,
                                 const unsigned max_iterations) {
 
-  const int nb_rows = A.rows();
+  const int row_count = A.rows();
   std::vector<RealT> x_next = x;
-  x_next.resize(nb_rows);
+  x_next.resize(row_count);
 
   for (unsigned iter{0}; iter<max_iterations; ++iter)
-    x_next = jacobiIteration<RealT, AccT>(A, b, x_next);
+    x_next = jacobi_iteration<RealT, AccT>(A, b, x_next);
 
   return x_next;
 }
@@ -60,7 +60,7 @@ inline unsigned owner_rank(unsigned col, const std::vector<int> &row_cumsum) {
 }
 
 template <typename RealT, typename AccT>
-std::vector<RealT> parallelSparseJacobi(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A_local,
+std::vector<RealT> parallel_sparse_jacobi(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A_local,
                                          const std::vector<RealT> &b_local,
                                          const std::vector<RealT> &x_local,
                                          const unsigned max_iterations,
@@ -68,16 +68,16 @@ std::vector<RealT> parallelSparseJacobi(const Eigen::SparseMatrix<RealT, Eigen::
 
   // If only one process run the sequential version
   if (size == 1)
-    return sparseJacobi<RealT, AccT>(A_local, b_local, x_local, max_iterations);
+    return sparse_jacobi<RealT, AccT>(A_local, b_local, x_local, max_iterations);
 
   // Exchange nb of local rows on each process
-  const int nb_local_rows = A_local.rows();
-  std::vector<int> nb_rows(size);
-  MPI_Allgather(&nb_local_rows, 1, MPI_INT, nb_rows.data(), 1, MPI_INT, MPI_COMM_WORLD);
+  const int local_row_count = A_local.rows();
+  std::vector<int> row_counts(size);
+  MPI_Allgather(&local_row_count, 1, MPI_INT, row_counts.data(), 1, MPI_INT, MPI_COMM_WORLD);
 
   // Compute offsets to determine process partitions
   std::vector<int> row_cumsum(size);
-  cumulative_sum(nb_rows, row_cumsum);
+  cumulative_sum(row_counts, row_cumsum);
 
   // Compute index of rows to receive from each process
   std::vector<std::set<int>> recv_indexes_sets(size);
@@ -105,17 +105,17 @@ std::vector<RealT> parallelSparseJacobi(const Eigen::SparseMatrix<RealT, Eigen::
   // Share index of rows to receive from each process
   // and get index of rows to send to each process
   std::vector<std::vector<int>> send_indexes;
-	vectorAlltoallv<int>(recv_indexes_buffers, send_indexes);
+	vector_alltoallv<int>(recv_indexes_buffers, send_indexes);
 
   // Find the number of rows before
-  int rows_offset = std::accumulate(nb_rows.begin(), nb_rows.begin()+rank, 0);
+  int rows_offset = std::accumulate(row_counts.begin(), row_counts.begin()+rank, 0);
 
   // Vector for sending values to other procs
   std::vector<std::vector<RealT>> send_values(size);
   std::vector<RealT> recv_values;
   std::unordered_map<int, RealT> x_lacking;
   std::vector<RealT> x_next = x_local;
-  x_next.resize(nb_local_rows);
+  x_next.resize(local_row_count);
   for (unsigned iter{0}; iter<max_iterations; ++iter) {
     for (unsigned p{0}; p<size; ++p) {
       send_values[p].resize(send_indexes[p].size());
@@ -123,13 +123,13 @@ std::vector<RealT> parallelSparseJacobi(const Eigen::SparseMatrix<RealT, Eigen::
         send_values[p][i] = x_next[send_indexes[p][i] - rows_offset];
     }
 
-    vectorAlltoallv<RealT>(send_values, recv_values);
+    vector_alltoallv<RealT>(send_values, recv_values);
 
     // Create a vector for storing lacking x values
     for (size_t i{0}; i<recv_indexes.size(); ++i)
       x_lacking[recv_indexes[i]] = recv_values[i];
 
-    x_next = jacobiIteration<RealT, AccT>(A_local, b_local, x_next, x_lacking, rank, rows_offset);
+    x_next = jacobi_iteration<RealT, AccT>(A_local, b_local, x_next, x_lacking, rank, rows_offset);
   }
 
   return x_next;
@@ -138,14 +138,14 @@ std::vector<RealT> parallelSparseJacobi(const Eigen::SparseMatrix<RealT, Eigen::
 #else
 
 template <typename RealT, typename AccT>
-std::vector<RealT> parallelSparseJacobi(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A_local,
+std::vector<RealT> parallel_sparse_jacobi(const Eigen::SparseMatrix<RealT, Eigen::RowMajor> &A_local,
                                         const std::vector<RealT> &b_local,
                                         const std::vector<RealT> &x_local,
                                         const unsigned max_iterations,
                                         const unsigned, const unsigned) {
 
   // If MPI is not used, run the sequential version
-  return sparseJacobi<RealT, AccT>(A_local, b_local, x_local, max_iterations);;
+  return sparse_jacobi<RealT, AccT>(A_local, b_local, x_local, max_iterations);;
 }
 
 #endif // USE_MPI

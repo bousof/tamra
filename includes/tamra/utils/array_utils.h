@@ -13,7 +13,7 @@
 
 
 template <typename T>
-T cumulative_sum(const std::vector<T> &counts, std::vector<T> &displacements, const bool startAtZero = false) {
+T cumulative_sum(const std::vector<T> &counts, std::vector<T> &displacements, const bool start_at_zero = false) {
   static_assert(
     std::is_same<T, bool>::value || std::is_same<T, unsigned>::value || std::is_same<T, int>::value || std::is_same<T, double>::value,
     "cumulative_sum only supports T = bool, double, int, or unsigned"
@@ -22,10 +22,10 @@ T cumulative_sum(const std::vector<T> &counts, std::vector<T> &displacements, co
   displacements.resize(counts.size());
   int sum = 0;
   for (size_t i{0}; i<counts.size(); ++i) {
-    if (startAtZero)
+    if (start_at_zero)
       displacements[i] = sum;
     sum += counts[i];
-    if (!startAtZero)
+    if (!start_at_zero)
       displacements[i] = sum;
   }
   return sum;

@@ -50,7 +50,7 @@ void initialize_tree_cells_limits(std::shared_ptr<CellType> cell) {
     return;
 
   const auto &cell_data = cell->getCellData();
-  for (unsigned n{0}; n<CellType::number_children; ++n) {
+  for (unsigned n{0}; n<CellType::child_count; ++n) {
     auto &child_cell_data = cell->getChildCell(n)->getCellData();
     cell_data.extrapolateToChild(child_cell_data, n);
     initialize_tree_cells_limits<CellType>(cell->getChildCell(n));
@@ -70,14 +70,14 @@ TEST_CASE("[core][neighbor] Neighbor leafs search (quadtree)") {
   static constexpr int Nx = 2, Ny = 2, Nz = 0;
   using Cell2D = Cell<Nx,Ny,Nz, core::neighbor::TestCellData<Nx, Ny, Nz>>;
   // Create 4 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b };
 
   // Create the tree
   unsigned max_level{2};
@@ -88,19 +88,19 @@ TEST_CASE("[core][neighbor] Neighbor leafs search (quadtree)") {
   tree.meshAtMinLevel();
 
   //Splitting some cells
-  A->getChildCell(0)->split(max_level);
-  A->getChildCell(1)->split(max_level);
-  A->getChildCell(3)->split(max_level);
-  B->getChildCell(1)->split(max_level);
-  B->getChildCell(2)->split(max_level);
+  cell_a->getChildCell(0)->split(max_level);
+  cell_a->getChildCell(1)->split(max_level);
+  cell_a->getChildCell(3)->split(max_level);
+  cell_b->getChildCell(1)->split(max_level);
+  cell_b->getChildCell(2)->split(max_level);
 
   // Set root cells data
-  A->getCellData().imin = 0    ; A->getCellData().imax = Nx*Nx;
-  A->getCellData().jmin = 0    ; A->getCellData().jmax = Ny*Ny;
-  B->getCellData().imin = Nx*Nx; B->getCellData().imax = 2*Nx*Nx;
-  B->getCellData().jmin = 0    ; B->getCellData().jmax = Ny*Ny;
-  core::neighbor::initialize_tree_cells_limits(A);
-  core::neighbor::initialize_tree_cells_limits(B);
+  cell_a->getCellData().imin = 0    ; cell_a->getCellData().imax = Nx*Nx;
+  cell_a->getCellData().jmin = 0    ; cell_a->getCellData().jmax = Ny*Ny;
+  cell_b->getCellData().imin = Nx*Nx; cell_b->getCellData().imax = 2*Nx*Nx;
+  cell_b->getCellData().jmin = 0    ; cell_b->getCellData().jmax = Ny*Ny;
+  core::neighbor::initialize_tree_cells_limits(cell_a);
+  core::neighbor::initialize_tree_cells_limits(cell_b);
 
   // Check neighbors in all directions
   bool passed = true;
@@ -126,7 +126,7 @@ TEST_CASE("[core][neighbor] Neighbor leafs search (quadtree)") {
           // Deduce the sibling number if the two cells have the same level
           if (c->getLevel() == n->getLevel()) {
             unsigned i_c, j_c, k_c;
-            std::tie(i_c, j_c, k_c) = Cell2D::siblingNumberToCoords(c->getSiblingNumber());
+            std::tie(i_c, j_c, k_c) = Cell2D::sibling_number_to_coords(c->getSiblingNumber());
             if (dir == 0 || dir == 4 || dir == 6)
               i_c = (i_c + Nx - 1) % Nx;
             if (dir == 1 || dir == 5 || dir == 7)
@@ -136,7 +136,7 @@ TEST_CASE("[core][neighbor] Neighbor leafs search (quadtree)") {
             if (dir == 3 || dir == 6 || dir == 7)
               j_c = (j_c + 1) % Ny;
             unsigned i_n, j_n, k_n;
-            std::tie(i_n, j_n, k_n) = Cell2D::siblingNumberToCoords(n->getSiblingNumber());
+            std::tie(i_n, j_n, k_n) = Cell2D::sibling_number_to_coords(n->getSiblingNumber());
             passed &= (i_c == i_n && j_c == j_n);
           }
 
@@ -238,7 +238,7 @@ bool check_octree_cell(const std::shared_ptr<CellType> &cell, const unsigned ima
 
   // Extract cell data
   auto &cell_data = cell->getCellData();
-  for (unsigned dir{0}; dir<CellType::number_volume_neighbors; ++dir) { // TODO USE VOLUME NEIGHBORS
+  for (unsigned dir{0}; dir<CellType::volume_neighbor_count; ++dir) { // TODO USE VOLUME NEIGHBORS
     if (!passed) break;
 
     // Get neighbor and extract cell data
@@ -269,7 +269,7 @@ bool check_octree_cell(const std::shared_ptr<CellType> &cell, const unsigned ima
     // Deduce the sibling number if the two cells have the same level
     if (cell->getLevel() == neighbor_cell->getLevel()) {
       unsigned i_c, j_c, k_c;
-      std::tie(i_c, j_c, k_c) = CellType::siblingNumberToCoords(cell->getSiblingNumber());
+      std::tie(i_c, j_c, k_c) = CellType::sibling_number_to_coords(cell->getSiblingNumber());
       if (dir == 0 || dir == 6 || dir == 8 || dir == 10 || dir == 12 || dir == 18 || dir == 20 || dir == 22 || dir == 24)
         i_c = (i_c + Nx - 1) % Nx;
       if (dir == 1 || dir == 7 || dir == 9 || dir == 11 || dir == 13 || dir == 19 || dir == 21 || dir == 23 || dir == 25)
@@ -283,7 +283,7 @@ bool check_octree_cell(const std::shared_ptr<CellType> &cell, const unsigned ima
       if (dir == 5 || dir == 12 || dir == 13 || dir == 16 || dir == 17 || dir == 22 || dir == 23 || dir == 24 || dir == 25)
         k_c = (k_c + 1) % Nz;
       unsigned i_n, j_n, k_n;
-      std::tie(i_n, j_n, k_n) = CellType::siblingNumberToCoords(neighbor_cell->getSiblingNumber());
+      std::tie(i_n, j_n, k_n) = CellType::sibling_number_to_coords(neighbor_cell->getSiblingNumber());
       passed &= (i_c == i_n && j_c == j_n && k_c == k_n);
     }
 
@@ -619,14 +619,14 @@ TEST_CASE("[core][neighbor] Neighbors search (octree, 1 level)") {
   static constexpr int Nx = 2, Ny = 2, Nz = 2;
   using Cell3D = Cell<Nx,Ny,Nz, core::neighbor::TestCellData<Nx, Ny, Nz>>;
   // Create 4 root cells
-  auto A = std::make_shared<Cell3D>(nullptr);
-  auto B = std::make_shared<Cell3D>(nullptr);
+  auto cell_a = std::make_shared<Cell3D>(nullptr);
+  auto cell_b = std::make_shared<Cell3D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell3D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell3D>> entries { eA, eB };
+  RootCellEntry<Cell3D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell3D>> entries { entry_a, entry_b };
 
   // Create the tree
   unsigned max_level{2};
@@ -637,27 +637,27 @@ TEST_CASE("[core][neighbor] Neighbors search (octree, 1 level)") {
   tree.meshAtMinLevel();
 
   // Splitting some cells
-  A->getChildCell(0)->split(max_level);
-  A->getChildCell(3)->split(max_level);
-  A->getChildCell(5)->split(max_level);
-  A->getChildCell(7)->split(max_level);
-  B->getChildCell(0)->split(max_level);
-  B->getChildCell(3)->split(max_level);
-  B->getChildCell(4)->split(max_level);
-  B->getChildCell(7)->split(max_level);
+  cell_a->getChildCell(0)->split(max_level);
+  cell_a->getChildCell(3)->split(max_level);
+  cell_a->getChildCell(5)->split(max_level);
+  cell_a->getChildCell(7)->split(max_level);
+  cell_b->getChildCell(0)->split(max_level);
+  cell_b->getChildCell(3)->split(max_level);
+  cell_b->getChildCell(4)->split(max_level);
+  cell_b->getChildCell(7)->split(max_level);
 
   // Set root cells data
-  A->getCellData().imin = 0    ; A->getCellData().imax = Nx*Nx;
-  A->getCellData().jmin = 0    ; A->getCellData().jmax = Ny*Ny;
-  A->getCellData().kmin = 0    ; A->getCellData().kmax = Nz*Nz;
-  B->getCellData().imin = Nx*Nx; B->getCellData().imax = 2*Nx*Nx;
-  B->getCellData().jmin = 0    ; B->getCellData().jmax = Ny*Ny;
-  B->getCellData().kmin = 0    ; B->getCellData().kmax = Nz*Nz;
-  core::neighbor::initialize_tree_cells_limits(A);
-  core::neighbor::initialize_tree_cells_limits(B);
+  cell_a->getCellData().imin = 0    ; cell_a->getCellData().imax = Nx*Nx;
+  cell_a->getCellData().jmin = 0    ; cell_a->getCellData().jmax = Ny*Ny;
+  cell_a->getCellData().kmin = 0    ; cell_a->getCellData().kmax = Nz*Nz;
+  cell_b->getCellData().imin = Nx*Nx; cell_b->getCellData().imax = 2*Nx*Nx;
+  cell_b->getCellData().jmin = 0    ; cell_b->getCellData().jmax = Ny*Ny;
+  cell_b->getCellData().kmin = 0    ; cell_b->getCellData().kmax = Nz*Nz;
+  core::neighbor::initialize_tree_cells_limits(cell_a);
+  core::neighbor::initialize_tree_cells_limits(cell_b);
 
   // Fix bug
-  auto c = A->getChildCell(0)->getChildCell(5);
+  auto c = cell_a->getChildCell(0)->getChildCell(5);
 
   // Check neighbors in all directions
   tree.applyToOwnedLeaves(
@@ -692,14 +692,14 @@ TEST_CASE("[core][neighbor] Neighbors search (octree, deep)") {
   static constexpr int Nx = 2, Ny = 2, Nz = 2;
   using Cell3D = Cell<Nx,Ny,Nz, core::neighbor::TestCellData<Nx, Ny, Nz>>;
   // Create 4 root cells
-  auto A = std::make_shared<Cell3D>(nullptr);
-  auto B = std::make_shared<Cell3D>(nullptr);
+  auto cell_a = std::make_shared<Cell3D>(nullptr);
+  auto cell_b = std::make_shared<Cell3D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell3D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell3D>> entries { eA, eB };
+  RootCellEntry<Cell3D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell3D>> entries { entry_a, entry_b };
 
   // Create the tree
   unsigned max_level{4};
@@ -710,33 +710,33 @@ TEST_CASE("[core][neighbor] Neighbors search (octree, deep)") {
   tree.meshAtMinLevel();
 
   // Splitting some cells
-  A->getChildCell(0)->split(max_level);
-  A->getChildCell(3)->split(max_level);
-  A->getChildCell(5)->split(max_level);
-  A->getChildCell(5)->getChildCell(5)->split(max_level);
-  A->getChildCell(5)->getChildCell(5)->getChildCell(5)->split(max_level);
-  A->getChildCell(7)->split(max_level);
-  A->getChildCell(7)->getChildCell(0)->split(max_level);
-  A->getChildCell(7)->getChildCell(2)->split(max_level);
-  B->getChildCell(0)->split(max_level);
-  B->getChildCell(0)->getChildCell(0)->split(max_level);
-  B->getChildCell(0)->getChildCell(0)->getChildCell(0)->split(max_level);
-  B->getChildCell(3)->split(max_level);
-  //B->getChildCell(4)->split(max_level); // Already split due to mesh conformity constraint
-  B->getChildCell(7)->split(max_level);
+  cell_a->getChildCell(0)->split(max_level);
+  cell_a->getChildCell(3)->split(max_level);
+  cell_a->getChildCell(5)->split(max_level);
+  cell_a->getChildCell(5)->getChildCell(5)->split(max_level);
+  cell_a->getChildCell(5)->getChildCell(5)->getChildCell(5)->split(max_level);
+  cell_a->getChildCell(7)->split(max_level);
+  cell_a->getChildCell(7)->getChildCell(0)->split(max_level);
+  cell_a->getChildCell(7)->getChildCell(2)->split(max_level);
+  cell_b->getChildCell(0)->split(max_level);
+  cell_b->getChildCell(0)->getChildCell(0)->split(max_level);
+  cell_b->getChildCell(0)->getChildCell(0)->getChildCell(0)->split(max_level);
+  cell_b->getChildCell(3)->split(max_level);
+  //cell_b->getChildCell(4)->split(max_level); // Already split due to mesh conformity constraint
+  cell_b->getChildCell(7)->split(max_level);
 
   // Set root cells data
-  A->getCellData().imin = 0          ; A->getCellData().imax = Nx*Nx*Nx*Nx;
-  A->getCellData().jmin = 0          ; A->getCellData().jmax = Ny*Ny*Ny*Ny;
-  A->getCellData().kmin = 0          ; A->getCellData().kmax = Nz*Nz*Nz*Nz;
-  B->getCellData().imin = Nx*Nx*Nx*Nx; B->getCellData().imax = 2*Nx*Nx*Nx*Nx;
-  B->getCellData().jmin = 0          ; B->getCellData().jmax = Ny*Ny*Ny*Ny;
-  B->getCellData().kmin = 0          ; B->getCellData().kmax = Nz*Nz*Nz*Nz;
-  core::neighbor::initialize_tree_cells_limits(A);
-  core::neighbor::initialize_tree_cells_limits(B);
+  cell_a->getCellData().imin = 0          ; cell_a->getCellData().imax = Nx*Nx*Nx*Nx;
+  cell_a->getCellData().jmin = 0          ; cell_a->getCellData().jmax = Ny*Ny*Ny*Ny;
+  cell_a->getCellData().kmin = 0          ; cell_a->getCellData().kmax = Nz*Nz*Nz*Nz;
+  cell_b->getCellData().imin = Nx*Nx*Nx*Nx; cell_b->getCellData().imax = 2*Nx*Nx*Nx*Nx;
+  cell_b->getCellData().jmin = 0          ; cell_b->getCellData().jmax = Ny*Ny*Ny*Ny;
+  cell_b->getCellData().kmin = 0          ; cell_b->getCellData().kmax = Nz*Nz*Nz*Nz;
+  core::neighbor::initialize_tree_cells_limits(cell_a);
+  core::neighbor::initialize_tree_cells_limits(cell_b);
 
   // Fix bug
-  auto c = A->getChildCell(0)->getChildCell(5);
+  auto c = cell_a->getChildCell(0)->getChildCell(5);
 
   // Check neighbors in all directions
   tree.applyToOwnedLeaves(

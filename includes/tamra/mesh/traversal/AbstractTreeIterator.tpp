@@ -12,14 +12,14 @@ AbstractTreeIterator<CellType>::AbstractTreeIterator(const std::vector<std::shar
   cell_id_manager(root_cells.size(), max_level) {
   level_partition_sizes.assign(max_level+1, 1);
   for (int i=(max_level-1); i>=0; --i)
-    level_partition_sizes[i] = level_partition_sizes[i+1] * CellType::number_children;
+    level_partition_sizes[i] = level_partition_sizes[i+1] * CellType::child_count;
   index_path.reserve(max_level+1);
   index_path.resize(1);
   index_path[0] = 0;
   order_path.reserve(max_level+1);
   order_path.resize(1);
   order_path[0] = 0;
-  cell_id_manager.resetCellID(current_cell_id);
+  cell_id_manager.resetCellId(current_cell_id);
 }
 
 //-----------------------------------------------------------//
@@ -94,7 +94,7 @@ std::vector<unsigned> AbstractTreeIterator<CellType>::getCellIndexPath(const std
 template<typename CellType>
 bool AbstractTreeIterator<CellType>::next(const unsigned sweep_level) {
   unsigned current_order = order_path.back();
-  if (current_order < (CellType::number_children-1)) { // Going to the next sibling
+  if (current_order < (CellType::child_count-1)) { // Going to the next sibling
     this->toParent();
     this->toChild(current_order+1);
     toLeaf(sweep_level, false);
@@ -113,8 +113,8 @@ bool AbstractTreeIterator<CellType>::next(const unsigned sweep_level) {
 // Go to the next leaf cell belonging to this proc
 template<typename CellType>
 bool AbstractTreeIterator<CellType>::ownedNext(const unsigned sweep_level) {
-  bool notLoop = next(sweep_level);
-  return notLoop && current_cell->belongToThisProc();
+  bool did_not_wrap = next(sweep_level);
+  return did_not_wrap && current_cell->isOwned();
 }
 
 // Go to the previous leaf cell
@@ -140,8 +140,8 @@ bool AbstractTreeIterator<CellType>::prev(const unsigned sweep_level) {
 // Go to the previous leaf cell belonging to this proc
 template<typename CellType>
 bool AbstractTreeIterator<CellType>::ownedPrev(const unsigned sweep_level) {
-  bool notLoop = prev(sweep_level);
-  return notLoop && current_cell->belongToThisProc();
+  bool did_not_wrap = prev(sweep_level);
+  return did_not_wrap && current_cell->isOwned();
 }
 
 // Go to the first leaf cell of first root
@@ -159,7 +159,7 @@ bool AbstractTreeIterator<CellType>::toOwnedBegin(const unsigned sweep_level) {
   unsigned i;
   bool found = false;
   for (i=0; i<root_cells.size(); ++i)
-    if (root_cells[i]->belongToThisProc()) {
+    if (root_cells[i]->isOwned()) {
       found = true;
       break;
     }
@@ -175,7 +175,7 @@ bool AbstractTreeIterator<CellType>::toOwnedBegin(const unsigned sweep_level) {
 
 // Go to the last leaf cell of last root
 template<typename CellType>
-void AbstractTreeIterator<CellType>::toEnd(const unsigned sweep_level) {
+void AbstractTreeIterator<CellType>::toLast(const unsigned sweep_level) {
   // Go last root
   this->toRoot(root_cells.size()-1);
   toLeaf(sweep_level, true);
@@ -188,7 +188,7 @@ bool AbstractTreeIterator<CellType>::toOwnedEnd(const unsigned sweep_level) {
   long int i;
   bool found = false;
   for (i=root_cells.size()-1; i>=0; --i)
-    if (root_cells[i]->belongToThisProc()) {
+    if (root_cells[i]->isOwned()) {
       found = true;
       break;
     }
@@ -208,7 +208,7 @@ void AbstractTreeIterator<CellType>::toLeaf(const unsigned sweep_level, const bo
   while (!current_cell->isLeaf() && order_path.size()<=sweep_level)
     // Update current to child
     if (reverse)
-      this->toChild(CellType::number_children - 1);
+      this->toChild(CellType::child_count - 1);
     else
       this->toChild(0);
 }
@@ -219,13 +219,13 @@ void AbstractTreeIterator<CellType>::toOwnedLeaf(const unsigned sweep_level, con
   while (!current_cell->isLeaf() && order_path.size()<=sweep_level) {
     long int order;
     if (reverse)
-      for (order=CellType::number_children-1; order>=0; --order) {
-        if (getChildCellFromOrder(current_cell, order, true)->belongToThisProc())
+      for (order=CellType::child_count-1; order>=0; --order) {
+        if (getChildCellFromOrder(current_cell, order, true)->isOwned())
           break;
       } // Keep braces to avoid dangling (if, else, what else?)
     else
-      for (order=0; order<CellType::number_children; ++order)
-        if (getChildCellFromOrder(current_cell, order, true)->belongToThisProc())
+      for (order=0; order<CellType::child_count; ++order)
+        if (getChildCellFromOrder(current_cell, order, true)->isOwned())
           break;
 
     // Update current to child

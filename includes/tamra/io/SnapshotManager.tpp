@@ -218,16 +218,16 @@ void SnapshotManager<TreeType>::dumpRootCells(const TreeType& tree, std::ostream
   std::vector<std::vector<int>> root_cell_neighbors(tree.getRootCells().size());
   for (size_t i{0}; i<tree.getRootCells().size(); ++i) {
     // initialize with out-of-range index (use size as sentinel)
-    root_cell_neighbors[i].assign(CellType::number_neighbors, -1);
+    root_cell_neighbors[i].assign(CellType::neighbor_count, -1);
     const auto& root_cell = tree.getRootCells()[i];
-    for (unsigned dir{0}; dir<CellType::number_neighbors; ++dir)
+    for (unsigned dir{0}; dir<CellType::neighbor_count; ++dir)
       if (root_cell->getNeighborCell(dir))
         root_cell_neighbors[i][dir] = root_cell_indices[root_cell->getNeighborCell(dir).get()];
   }
   // Dump the root cell neighbors
   for (size_t i{0}; i<tree.getRootCells().size(); ++i) {
     os << "ROOT_CELL " << i << " NEIGHBORS";
-    for (unsigned dir{0}; dir<CellType::number_neighbors; ++dir)
+    for (unsigned dir{0}; dir<CellType::neighbor_count; ++dir)
       os << " " << root_cell_neighbors[i][dir];
     os << "\n";
   }
@@ -262,7 +262,7 @@ void SnapshotManager<TreeType>::restoreRootCells(TreeType& tree, std::istream& i
       throw std::runtime_error("SnapshotManager::restoreRootCells: unexpected root cell index");
 
     expect(is, "NEIGHBORS");
-    for (unsigned dir = 0; dir < CellType::number_neighbors; ++dir) {
+    for (unsigned dir = 0; dir < CellType::neighbor_count; ++dir) {
       const int neighbor_index = get<int>(is);
       if (neighbor_index >= 0) {
         if (neighbor_index >= static_cast<int>(root_cells_size))
@@ -299,20 +299,20 @@ void SnapshotManager<TreeType>::dumpLeafCells(const TreeType& tree, std::ostream
 
   int first_owned_leaf = -1;
   int last_owned_leaf = -1;
-  unsigned number_leaf_cells = 0;
+  unsigned leaf_cell_count = 0;
   std::vector<unsigned> leaf_levels;
   do {
-    if (iterator.getCell()->belongToThisProc()) {
+    if (iterator.getCell()->isOwned()) {
       if (first_owned_leaf < 0)
-        first_owned_leaf = static_cast<int>(number_leaf_cells);
-      last_owned_leaf = static_cast<int>(number_leaf_cells);
+        first_owned_leaf = static_cast<int>(leaf_cell_count);
+      last_owned_leaf = static_cast<int>(leaf_cell_count);
     }
     leaf_levels.push_back(iterator.getCell()->getLevel());
-    ++number_leaf_cells;
+    ++leaf_cell_count;
   } while (iterator.next());
 
   os << "PARTITION " << first_owned_leaf << " " << last_owned_leaf << "\n";
-  os << "LEAF_LEVELS " << number_leaf_cells;
+  os << "LEAF_LEVELS " << leaf_cell_count;
   for (unsigned leaf_level : leaf_levels)
     os << " " << leaf_level;
   os << "\n";
@@ -342,7 +342,7 @@ void SnapshotManager<TreeType>::restoreLeafCellsWithIterator(TreeType& tree, std
 
   // Initialize all cells to belong to other process
   for (const auto &root_cell : tree.getRootCells())
-    root_cell->setToOtherProcRecurs();
+    root_cell->markRemoteRecurs();
 
   // Get the index path of the first leaf cell in the serialized traversal
   expect(is, "FIRST_LEAF_CELL");
@@ -366,8 +366,8 @@ void SnapshotManager<TreeType>::restoreLeafCellsWithIterator(TreeType& tree, std
 
   // Restore the serialized leaf levels and recover ownership from the partition interval.
   expect(is, "LEAF_LEVELS");
-  const unsigned number_leaf_cells = get<unsigned>(is);
-  for (unsigned i{0}; i < number_leaf_cells; ++i) {
+  const unsigned leaf_cell_count = get<unsigned>(is);
+  for (unsigned i{0}; i < leaf_cell_count; ++i) {
     const unsigned leaf_level = get<unsigned>(is);
 
     // Split cell until reaching correct leaf level, and set the cell to belong to this process
@@ -380,7 +380,7 @@ void SnapshotManager<TreeType>::restoreLeafCellsWithIterator(TreeType& tree, std
     if (first_owned_leaf >= 0 &&
         static_cast<int>(i) >= first_owned_leaf &&
         static_cast<int>(i) <= last_owned_leaf)
-      iterator.getCell()->setToThisProcRecurs();
+      iterator.getCell()->markOwnedRecurs();
 
     iterator.next();
   }
@@ -423,11 +423,11 @@ void SnapshotManager<TreeType>::restoreCellData(TreeType& tree, std::istream& is
 
   // Get the levels of the leaf cells
   expect(is, "CELL_DATA");
-  const unsigned number_cells = get<unsigned>(is);
+  const unsigned cell_count = get<unsigned>(is);
   is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Ignore line break
-  if (number_cells != tree.countCells())
+  if (cell_count != tree.countCells())
     throw std::runtime_error("SnapshotManager::restoreCellData: cell count mismatch");
-  if (number_cells > 0) {
+  if (cell_count > 0) {
     // Restore the tree cells
     const bool binary = this->metadata.binary;
     tree.applyToAllCells(
@@ -443,7 +443,7 @@ void SnapshotManager<TreeType>::restoreCellData(TreeType& tree, std::istream& is
 template<typename TreeType>
 bool SnapshotManager<TreeType>::backPropagateOwnershipFlags(const std::shared_ptr<CellType> &cell) const {
   if (cell->isLeaf())
-    return cell->belongToThisProc();
+    return cell->isOwned();
 
   bool to_this_proc = false;
   for (const auto &child : cell->getChildCells())
@@ -451,9 +451,9 @@ bool SnapshotManager<TreeType>::backPropagateOwnershipFlags(const std::shared_pt
       to_this_proc = true;
 
   if (to_this_proc)
-    cell->setToThisProc();
+    cell->markOwned();
   else
-    cell->setToOtherProc();
+    cell->markRemote();
 
   return to_this_proc;
 }
@@ -487,15 +487,15 @@ void SnapshotManager<TreeType>::dumpEmptyPartitionLeafCells(const TreeType& tree
     os << " " << i;
   os << "\n";
 
-  unsigned number_leaf_cells = 0;
+  unsigned leaf_cell_count = 0;
   std::vector<unsigned> leaf_levels;
   do {
     leaf_levels.push_back(iterator.getCell()->getLevel());
-    ++number_leaf_cells;
+    ++leaf_cell_count;
   } while (iterator.next(1));
 
   os << "PARTITION -1 -1\n";
-  os << "LEAF_LEVELS " << number_leaf_cells;
+  os << "LEAF_LEVELS " << leaf_cell_count;
   for (unsigned leaf_level : leaf_levels)
     os << " " << leaf_level;
   os << "\n";
@@ -507,16 +507,16 @@ void SnapshotManager<TreeType>::dumpEmptyPartitionCellData(const TreeType& tree,
   using CellType = typename TreeType::CellType;
 
   // Count cells up to level 1, which is the structural subset restored on empty partitions.
-  unsigned nb_level_1_cells = 0;
+  unsigned level_1_cell_count = 0;
   tree.applyToAllCells(
-    [&nb_level_1_cells](const std::shared_ptr<CellType> &cell, unsigned) mutable {
+    [&level_1_cell_count](const std::shared_ptr<CellType> &cell, unsigned) mutable {
       if (cell->getLevel() <= 1)
-        nb_level_1_cells++;
+        level_1_cell_count++;
     }
   );
 
   // Dump the data associated with that structural subset.
-  os << "CELL_DATA " << nb_level_1_cells << "\n";
+  os << "CELL_DATA " << level_1_cell_count << "\n";
   if (this->binary) {
     tree.applyToAllCells(
       [&os](const std::shared_ptr<CellType> &cell, unsigned) mutable {

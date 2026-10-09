@@ -16,13 +16,13 @@ TEST_CASE("[communications][bcast] Broadcast vector of unsigned (count known)") 
   std::vector<unsigned> buffer;
   if (rank == root)
     buffer = {2, 7, 8};
-  vectorBcast<unsigned>(buffer, root, rank, count);
+  vector_bcast<unsigned>(buffer, root, rank, count);
 
   bool passed = buffer == std::vector<unsigned>({2, 7, 8});
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -37,13 +37,13 @@ TEST_CASE("[communications][bcast] Broadcast vector of unsigned (count unknown)"
   std::vector<unsigned> buffer;
   if (rank == root)
     buffer = {2, 7, 8};
-  vectorBcast<unsigned>(buffer, root, rank);
+  vector_bcast<unsigned>(buffer, root, rank);
 
   bool passed = buffer == std::vector<unsigned>({2, 7, 8});
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -53,12 +53,12 @@ TEST_CASE("[communications][bcast] Broadcast vector of unsigned (count unknown)"
 TEST_CASE("[communications][bcast] Broadcast matrix of unsigned (count known)") {
   const unsigned rank = mpi_rank();
 
-  unsigned root = 0, rowCount = 4, colCount = 3;
+  unsigned root = 0, row_count = 4, col_count = 3;
 
   std::vector<std::vector<unsigned>> buffer;
   if (rank == root)
     buffer = { {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12} };
-  matrixBcast<unsigned>(buffer, root, rank, rowCount, colCount);
+  matrix_bcast<unsigned>(buffer, root, rank, row_count, col_count);
 
   bool passed = buffer[0] == std::vector<unsigned>({1, 2, 3});
   passed &= buffer[1] == std::vector<unsigned>({4, 5, 6});
@@ -67,7 +67,7 @@ TEST_CASE("[communications][bcast] Broadcast matrix of unsigned (count known)") 
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -82,7 +82,7 @@ TEST_CASE("[communications][bcast] Broadcast matrix of unsigned (count unknown)"
   std::vector<std::vector<unsigned>> buffer;
   if (rank == root)
     buffer = { {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12} };
-  matrixBcast<unsigned>(buffer, root, rank);
+  matrix_bcast<unsigned>(buffer, root, rank);
 
   bool passed = buffer[0] == std::vector<unsigned>({1, 2, 3});
   passed &= buffer[1] == std::vector<unsigned>({4, 5, 6});
@@ -91,7 +91,7 @@ TEST_CASE("[communications][bcast] Broadcast matrix of unsigned (count unknown)"
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);

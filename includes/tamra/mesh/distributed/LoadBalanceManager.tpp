@@ -1,4 +1,4 @@
-#include "BalanceManager.h"
+#include "LoadBalanceManager.h"
 //#include <tamra/utils/display_vector.h>
 
 //-----------------------------------------------------------//
@@ -7,7 +7,7 @@
 
 // Constructor
 template<typename CellType, typename TreeIteratorType>
-BalanceManager<CellType, TreeIteratorType>::BalanceManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size)
+LoadBalanceManager<CellType, TreeIteratorType>::LoadBalanceManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size)
 : min_level(min_level),
   max_level(max_level),
   rank(rank),
@@ -15,7 +15,7 @@ BalanceManager<CellType, TreeIteratorType>::BalanceManager(const unsigned min_le
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>
-BalanceManager<CellType, TreeIteratorType>::~BalanceManager() {}
+LoadBalanceManager<CellType, TreeIteratorType>::~LoadBalanceManager() {}
 
 
 //-----------------------------------------------------------//
@@ -23,7 +23,7 @@ BalanceManager<CellType, TreeIteratorType>::~BalanceManager() {}
 //-----------------------------------------------------------//
 // Determine if load balancing is needed
 template<typename CellType, typename TreeIteratorType>
-std::pair<bool, std::vector<double>> BalanceManager<CellType, TreeIteratorType>::isLoadBalancingNeeded(const std::vector<std::shared_ptr<CellType>> &root_cells, const double max_pct_unbalance) const {
+std::pair<bool, std::vector<double>> LoadBalanceManager<CellType, TreeIteratorType>::evaluateLoadBalance(const std::vector<std::shared_ptr<CellType>> &root_cells, const double max_relative_load_imbalance) const {
   // Root process that handles decision making
   const int root = 0;
 
@@ -34,28 +34,28 @@ std::pair<bool, std::vector<double>> BalanceManager<CellType, TreeIteratorType>:
 
   // Share load between all processors
   std::vector<double> loads;
-  scalarGather<double>(load, loads, root, rank, size);
+  scalar_gather<double>(load, loads, root, rank, size);
 
-  // Compute the max and mean load and compare load unbalance with max_pct_unbalance
+  // Compute the max and mean load and compare load unbalance with max_relative_load_imbalance
   bool balancing_needed;
   if (rank == 0) {
     double total_load = std::accumulate(loads.begin(), loads.end(), 0.0);
     double mean_load = total_load / static_cast<double>(loads.size());
     double max_load = *std::max_element(loads.begin(), loads.end());
 
-    if ((max_load - mean_load) / mean_load > max_pct_unbalance)
+    if ((max_load - mean_load) / mean_load > max_relative_load_imbalance)
       balancing_needed = true;
   }
 
   // Broadcast decision to all processes
-  scalarBcast<bool>(balancing_needed, root);
+  scalar_bcast<bool>(balancing_needed, root);
 
   return std::make_pair(balancing_needed, loads);
 }
 
 // Parallel meshing at min level
 template<typename CellType, typename TreeIteratorType>
-void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const double max_pct_unbalance, ExtrapolationFunctionType extrapolation_function) const {
+void LoadBalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector<std::shared_ptr<CellType>> &root_cells, TreeIteratorType &iterator, const double max_relative_load_imbalance, ExtrapolationFunctionType extrapolation_function) const {
   // If only one process, nothing to do
   if (size == 1)
     return;
@@ -65,7 +65,7 @@ void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector<s
 
   bool balancing_needed;
   std::vector<double> loads;
-  std::tie(balancing_needed, loads) = isLoadBalancingNeeded(root_cells, max_pct_unbalance);
+  std::tie(balancing_needed, loads) = evaluateLoadBalance(root_cells, max_relative_load_imbalance);
   if (!balancing_needed)
     return;
 
@@ -82,7 +82,7 @@ void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector<s
     std::vector<double> cumulative_loads_vectors;
     if (rank == root)
       cumulative_loads_vectors = concatenate(cumulative_loads, target_cumulative_loads);
-    vectorBcast<double>(cumulative_loads_vectors, root, rank, 2*(size+1));
+    vector_bcast<double>(cumulative_loads_vectors, root, rank, 2*(size+1));
     if (rank != root) {
       cumulative_loads.insert(cumulative_loads.end(), cumulative_loads_vectors.begin(), cumulative_loads_vectors.begin()+size+1);
       target_cumulative_loads.insert(target_cumulative_loads.end(), cumulative_loads_vectors.begin()+size+1, cumulative_loads_vectors.end());
@@ -90,9 +90,9 @@ void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector<s
   }
 
   //std::cout << "P_" << rank << ": cumulative loads";
-  //displayVector(std::cout, cumulative_loads) << std::endl;
+  //display_vector(std::cout, cumulative_loads) << std::endl;
   //std::cout << "P_" << rank << ": target cumulative loads";
-  //displayVector(std::cout, target_cumulative_loads) << std::endl;
+  //display_vector(std::cout, target_cumulative_loads) << std::endl;
 
   // Determine the cells to send to each process
   std::vector<std::vector<std::shared_ptr<CellType>>> cells_to_send = cellsToExchange(cumulative_loads, target_cumulative_loads, iterator);
@@ -113,8 +113,8 @@ void BalanceManager<CellType, TreeIteratorType>::loadBalance(const std::vector<s
 
 // Determine the local load for this process
 template<typename CellType, typename TreeIteratorType>
-double BalanceManager<CellType, TreeIteratorType>::computeLoad(const std::shared_ptr<CellType> &cell) const {
-  if (!cell->belongToThisProc())
+double LoadBalanceManager<CellType, TreeIteratorType>::computeLoad(const std::shared_ptr<CellType> &cell) const {
+  if (!cell->isOwned())
     return 0.;
   if (cell->isLeaf())
     return cell->getLoad();
@@ -129,7 +129,7 @@ double BalanceManager<CellType, TreeIteratorType>::computeLoad(const std::shared
 
 // Determine the cells to send to each process
 template<typename CellType, typename TreeIteratorType>
-std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, TreeIteratorType>::cellsToExchange(const std::vector<double> &cumulative_loads, const std::vector<double> &target_cumulative_loads, TreeIteratorType &iterator) const {
+std::vector<std::vector<std::shared_ptr<CellType>>> LoadBalanceManager<CellType, TreeIteratorType>::cellsToExchange(const std::vector<double> &cumulative_loads, const std::vector<double> &target_cumulative_loads, TreeIteratorType &iterator) const {
   // If process has no cells we return empty arrays
   std::vector<std::vector<std::shared_ptr<CellType>>> cells_to_send(size);
   if (!iterator.toOwnedBegin())
@@ -190,7 +190,7 @@ std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, Tre
   { // Unset sent leaf flags to belong to other proc
     for (unsigned p{0}; p<size; ++p)
       for (auto &cell : cells_to_send[p])
-        cell->setToOtherProcRecurs();
+        cell->markRemoteRecurs();
   }
 
   return cells_to_send;
@@ -198,7 +198,7 @@ std::vector<std::vector<std::shared_ptr<CellType>>> BalanceManager<CellType, Tre
 
 // Exchange cells structure and data
 template<typename CellType, typename TreeIteratorType>
-void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const std::vector<std::vector<std::shared_ptr<CellType>>> &cells_to_send, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
+void LoadBalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const std::vector<std::vector<std::shared_ptr<CellType>>> &cells_to_send, TreeIteratorType &iterator, ExtrapolationFunctionType extrapolation_function) const {
   // For the first cell we sent the cell ID to be able to locate it.
   // For the lacking ines only the level is set to avoid redundant information.
   std::vector<std::vector<unsigned>> cells_structure_to_send(size);
@@ -228,20 +228,20 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
   }
 
   //std::cout << "P_" << rank << ": send structure ";
-  //displayVector(std::cout, cells_structure_to_send) << std::endl;
+  //display_vector(std::cout, cells_structure_to_send) << std::endl;
 
   // Exchange tree structure
   std::vector<std::vector<unsigned>> cells_structure_recv(size);
-  vectorAlltoallv<unsigned>(cells_structure_to_send, cells_structure_recv);
+  vector_alltoallv<unsigned>(cells_structure_to_send, cells_structure_recv);
 
   // Exchange cell data
   std::vector<std::unique_ptr<ParallelData>> all_cell_data_recv;
-  vectorDataAlltoallv(all_cell_data, all_cell_data_recv, []() {
+  vector_data_alltoallv(all_cell_data, all_cell_data_recv, []() {
     return std::make_unique<typename CellType::CellDataType>();
   });
 
   //std::cout << "P_" << rank << ": recv structure";
-  //displayVector(std::cout, cells_structure_recv) << std::endl;
+  //display_vector(std::cout, cells_structure_recv) << std::endl;
 
   { // Create received cells and set leaf flags to this proc
     std::vector<unsigned> first_cell_id, cell_levels;
@@ -253,14 +253,14 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
         uncompressCellStructure(cells_structure_recv[p], first_cell_id, cell_levels, cell_id_size);
         // Create the first cell and assign it to this proc
         iterator.toCellId(first_cell_id, true, extrapolation_function);
-        iterator.getCell()->setToThisProcRecurs();
+        iterator.getCell()->markOwnedRecurs();
         // Set first cell data
         iterator.getCell()->setCellData(std::unique_ptr<typename CellType::CellDataType>(
           static_cast<typename CellType::CellDataType*>(all_cell_data_recv[cell_counter++].release())
         ));
         if (!iterator.getCell()->isLeaf())
           // Call extrapolation function on non-leaf cells
-          iterator.getCell()->extrapolateRecursively(extrapolation_function);
+          iterator.getCell()->extrapolateRecurs(extrapolation_function);
         // Insert the other cells levels
         for (const unsigned &cell_level : cell_levels) {
           iterator.next(cell_level);
@@ -269,7 +269,7 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
               iterator.getCell()->split(max_level, extrapolation_function);
             iterator.toLeaf(cell_level);
           }
-          iterator.getCell()->setToThisProcRecurs();
+          iterator.getCell()->markOwnedRecurs();
 
           // Set cell data
           iterator.getCell()->setCellData(std::unique_ptr<typename CellType::CellDataType>(
@@ -278,7 +278,7 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
 
           if (!iterator.getCell()->isLeaf())
             // Call extrapolation function on non-leaf cells
-            iterator.getCell()->extrapolateRecursively(extrapolation_function);
+            iterator.getCell()->extrapolateRecurs(extrapolation_function);
         }
       }
   }
@@ -286,7 +286,7 @@ void BalanceManager<CellType, TreeIteratorType>::exchangeAndCreateCells(const st
 
 // Compress the structure of cells (1 cell ID + other cell levels)
 template<typename CellType, typename TreeIteratorType>
-void BalanceManager<CellType, TreeIteratorType>::compressCellStructure(const std::vector<unsigned> &first_cell_id, const std::vector<unsigned> &cell_levels, std::vector<unsigned> &cell_structure) const {
+void LoadBalanceManager<CellType, TreeIteratorType>::compressCellStructure(const std::vector<unsigned> &first_cell_id, const std::vector<unsigned> &cell_levels, std::vector<unsigned> &cell_structure) const {
   cell_structure.resize(first_cell_id.size() + cell_levels.size());
   // Insert the first cell ID
   std::copy(first_cell_id.begin(), first_cell_id.end(), cell_structure.begin());
@@ -296,7 +296,7 @@ void BalanceManager<CellType, TreeIteratorType>::compressCellStructure(const std
 
 // Uncompress the structure of cells (1 cell ID + other cell levels)
 template<typename CellType, typename TreeIteratorType>
-void BalanceManager<CellType, TreeIteratorType>::uncompressCellStructure(const std::vector<unsigned> &cell_structure, std::vector<unsigned> &first_cell_id, std::vector<unsigned> &cell_levels, const unsigned cell_id_size) const {
+void LoadBalanceManager<CellType, TreeIteratorType>::uncompressCellStructure(const std::vector<unsigned> &cell_structure, std::vector<unsigned> &first_cell_id, std::vector<unsigned> &cell_levels, const unsigned cell_id_size) const {
   // Extract the first cell ID
   first_cell_id.resize(cell_id_size);
   std::copy(cell_structure.begin(), cell_structure.begin() + cell_id_size, first_cell_id.begin());
@@ -307,9 +307,9 @@ void BalanceManager<CellType, TreeIteratorType>::uncompressCellStructure(const s
 
 // Set a parent to belong to this proc if any of its child do else set to other proc
 template<typename CellType, typename TreeIteratorType>
-bool BalanceManager<CellType, TreeIteratorType>::backPropagateOwnershipFlags(const std::shared_ptr<CellType> &cell) const {
+bool LoadBalanceManager<CellType, TreeIteratorType>::backPropagateOwnershipFlags(const std::shared_ptr<CellType> &cell) const {
   if (cell->isLeaf())
-    return cell->belongToThisProc();
+    return cell->isOwned();
 
   bool to_this_proc = false;
   for (const auto &child : cell->getChildCells())
@@ -317,9 +317,9 @@ bool BalanceManager<CellType, TreeIteratorType>::backPropagateOwnershipFlags(con
       to_this_proc = true;
 
   if (to_this_proc)
-    cell->setToThisProc();
+    cell->markOwned();
   else
-    cell->setToOtherProc();
+    cell->markRemote();
 
   return to_this_proc;
 }

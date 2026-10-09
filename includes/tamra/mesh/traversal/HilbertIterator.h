@@ -27,8 +27,8 @@ class HilbertIterator : public AbstractTreeIterator<CellType> {
   };
   using CellIdManagerType = typename AbstractTreeIterator<CellType>::CellIdManagerType;
   using ExtrapolationFunctionType = typename AbstractTreeIterator<CellType>::ExtrapolationFunctionType;
-  static constexpr unsigned number_of_corners = 1u << CellType::number_split_dimensions;
-  static constexpr unsigned number_of_orientations = CellType::number_split_dimensions * number_of_corners;
+  static constexpr unsigned corner_count = 1u << CellType::split_dimension_count;
+  static constexpr unsigned orientation_count = CellType::split_dimension_count * corner_count;
 
   //-----------------------------------------------------------//
   //  DATA                                                     //
@@ -39,11 +39,11 @@ class HilbertIterator : public AbstractTreeIterator<CellType> {
   // Possible leaf orientations
   const std::vector<unsigned> &possible_leaf_orientations;
   // Map order to sibling number for each mother orientation
-  const std::array<std::array<unsigned, number_of_corners>, number_of_orientations> &child_orderings;
+  const std::array<std::array<unsigned, corner_count>, orientation_count> &child_orderings;
   // Map order to child cell orientation for each mother orientation
-  const std::array<std::array<unsigned, number_of_corners>, number_of_orientations> &child_orientations;
+  const std::array<std::array<unsigned, corner_count>, orientation_count> &child_orientations;
   // Map sibling number to order for each mother orientation
-  const std::array<std::array<unsigned, number_of_corners>, number_of_orientations> &reverse_child_orderings;
+  const std::array<std::array<unsigned, corner_count>, orientation_count> &reverse_child_orderings;
   // Default leaf orientation
   const unsigned default_leaf_orientation;
   // Root cell orientations

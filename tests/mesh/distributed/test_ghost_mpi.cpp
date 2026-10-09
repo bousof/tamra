@@ -28,11 +28,11 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells creation (one root, 1D)") 
                  size = mpi_size();
 
   // Create 2 root cells
-  auto A = std::make_shared<Cell1D>(nullptr);
+  auto cell_a = std::make_shared<Cell1D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell1D> eA{A};
-  std::vector<RootCellEntry<Cell1D>> entries { eA };
+  RootCellEntry<Cell1D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell1D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{2};
@@ -40,19 +40,19 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells creation (one root, 1D)") 
   tree.createRootCells(entries);
 
   // Mesh until min level (2)
-  A->setToOtherProcRecurs();
+  cell_a->markRemoteRecurs();
   if (rank==0 || rank==1)  {
-    A->setToThisProc();
-    A->getChildCell(rank)->split(max_level);
-    A->getChildCell(rank)->setToThisProcRecurs();
-    A->getChildCell(rank)->getChildCell(0)->getCellData().setValue(2*rank);
-    A->getChildCell(rank)->getChildCell(1)->getCellData().setValue(2*rank+1);
+    cell_a->markOwned();
+    cell_a->getChildCell(rank)->split(max_level);
+    cell_a->getChildCell(rank)->markOwnedRecurs();
+    cell_a->getChildCell(rank)->getChildCell(0)->getCellData().setValue(2*rank);
+    cell_a->getChildCell(rank)->getChildCell(1)->getCellData().setValue(2*rank+1);
   }
 
   // Ghost parent cell should be leaf at that point
   bool passed = true;
   if (rank==0 || rank==1)
-    passed &= A->getChildCell((rank+1)%2)->isLeaf();
+    passed &= cell_a->getChildCell((rank+1)%2)->isLeaf();
 
   // Create ghost cells
   Tree<Cell1D>::GhostManagerTaskType task = tree.buildGhostLayer();
@@ -62,15 +62,15 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells creation (one root, 1D)") 
 
   // Ghost parent cell Y should not be leaf anymore
   if (rank==0 || rank==1) {
-    unsigned otherRank = (rank+1) % 2;
-    passed &= !A->getChildCell(otherRank)->isLeaf();
+    unsigned other_rank = (rank+1) % 2;
+    passed &= !cell_a->getChildCell(other_rank)->isLeaf();
     // Check value
-    passed &= A->getChildCell(otherRank)->getChildCell(rank)->getCellData().getValue() == (2*otherRank+rank);
+    passed &= cell_a->getChildCell(other_rank)->getChildCell(rank)->getCellData().getValue() == (2*other_rank+rank);
   }
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -86,7 +86,7 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells creation (one root, 1D)") 
 //
 // In process 0:
 // - Cell Y received from process 1 is found splitted.
-// - > Ghost cell interpolation conflict.
+// - > Ghost cell extrapolation conflict.
 //                              rank 0
 //                │       │       │       │       │
 // structure  ->  │   X   │ X │ X │   Y   │   Y   │
@@ -94,7 +94,7 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells creation (one root, 1D)") 
 //
 // In process 1:
 // - Cell Y received from process 0 result in a splitting of cells Z to a conflict.
-// - > Owned cell interpolation conflict.
+// - > Owned cell extrapolation conflict.
 //                              rank 1
 //                │       │       │       │       │
 // structure  ->  │       │   │ Y │   Z   │   Z   │
@@ -105,11 +105,11 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells leading to extrapolate con
                  size = mpi_size();
 
   // Create 2 root cells
-  auto A = std::make_shared<Cell1D>(nullptr);
+  auto cell_a = std::make_shared<Cell1D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell1D> eA{A};
-  std::vector<RootCellEntry<Cell1D>> entries { eA };
+  RootCellEntry<Cell1D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell1D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{3};
@@ -117,19 +117,19 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells leading to extrapolate con
   tree.createRootCells(entries);
 
   // Create the tree structure
-  A->setToOtherProcRecurs();
+  cell_a->markRemoteRecurs();
   if (rank == 0)  {
-    A->setToThisProc();
-    A->getChildCell(0)->split(max_level);
-    A->getChildCell(0)->getChildCell(1)->split(max_level);
-    A->getChildCell(0)->setToThisProcRecurs();
-    A->getChildCell(0)->getChildCell(1)->getChildCell(1)->getCellData().setValue(rank);
+    cell_a->markOwned();
+    cell_a->getChildCell(0)->split(max_level);
+    cell_a->getChildCell(0)->getChildCell(1)->split(max_level);
+    cell_a->getChildCell(0)->markOwnedRecurs();
+    cell_a->getChildCell(0)->getChildCell(1)->getChildCell(1)->getCellData().setValue(rank);
   }
   if (rank == 1)  {
-    A->setToThisProc();
-    A->getChildCell(1)->setToThisProc();
-    A->getChildCell(1)->setToThisProcRecurs();
-    A->getChildCell(1)->getCellData().setValue(rank);
+    cell_a->markOwned();
+    cell_a->getChildCell(1)->markOwned();
+    cell_a->getChildCell(1)->markOwnedRecurs();
+    cell_a->getChildCell(1)->getCellData().setValue(rank);
   }
 
   // Create ghost cells
@@ -139,14 +139,14 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells leading to extrapolate con
   bool passed = !task.is_finished;
 
   // Set up the task conflict resolution strategy that consist nin copying value to child cells
-  auto copyInterpolationFunction = [](const std::shared_ptr<Cell1D> &parent_cell) -> bool {
+  auto copy_parent_to_children = [](const std::shared_ptr<Cell1D> &parent_cell) -> bool {
     // Example: simply duplicate the parent value for each child (placeholder logic)
     for (const auto &child : parent_cell->getChildCells())
       child->getCellData().setValue(parent_cell->getCellData().getValue());
     return true;
   };
-  task.setOwnedExtrapolationFunction(copyInterpolationFunction);
-  task.setGhostExtrapolationFunction(copyInterpolationFunction);
+  task.setOwnedExtrapolationFunction(copy_parent_to_children);
+  task.setGhostExtrapolationFunction(copy_parent_to_children);
   task.setOwnedConflictResolutionStrategy({ OwnedConflictResolutionStrategy::EXTRAPOLATE });
   task.setGhostConflictResolutionStrategy({ GhostConflictResolutionStrategy::EXTRAPOLATE });
 
@@ -158,22 +158,22 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells leading to extrapolate con
 
   // Ghost parent cell Y should not be leaf anymore
   if (rank == 0) {
-    unsigned otherRank = 1;
-    passed &= !A->getChildCell(1)->isLeaf();
+    unsigned other_rank = 1;
+    passed &= !cell_a->getChildCell(1)->isLeaf();
     // Check value
-    passed &= A->getChildCell(1)->getChildCell(0)->getCellData().getValue() == (otherRank);
+    passed &= cell_a->getChildCell(1)->getChildCell(0)->getCellData().getValue() == (other_rank);
   }
   if (rank == 1) {
-    unsigned otherRank = 0;
-    passed &= !A->getChildCell(0)->isLeaf();
-    passed &= !A->getChildCell(0)->getChildCell(1)->isLeaf();
+    unsigned other_rank = 0;
+    passed &= !cell_a->getChildCell(0)->isLeaf();
+    passed &= !cell_a->getChildCell(0)->getChildCell(1)->isLeaf();
     // Check value
-    passed &= A->getChildCell(0)->getChildCell(1)->getChildCell(1)->getCellData().getValue() == (otherRank);
+    passed &= cell_a->getChildCell(0)->getChildCell(1)->getChildCell(1)->getCellData().getValue() == (other_rank);
   }
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);

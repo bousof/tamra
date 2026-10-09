@@ -54,16 +54,16 @@ unsigned Oct<CellType>::getLevel() const { return level; }
 
 // Get neighbor cells
 template<typename CellType>
-const std::array<std::shared_ptr<CellType>, Oct<CellType>::number_neighbors>& Oct<CellType>::getNeighborCells() const { return neighbor_cells; }
+const std::array<std::shared_ptr<CellType>, Oct<CellType>::neighbor_count>& Oct<CellType>::getNeighborCells() const { return neighbor_cells; }
 
 // Get child cells
 template<typename CellType>
-const std::array<std::shared_ptr<CellType>, Oct<CellType>::number_children>& Oct<CellType>::getChildCells() const { return child_cells; }
+const std::array<std::shared_ptr<CellType>, Oct<CellType>::child_count>& Oct<CellType>::getChildCells() const { return child_cells; }
 
 // Get a specific child cell
 template<typename CellType>
 std::shared_ptr<CellType> Oct<CellType>::getChildCell(const unsigned sibling_number) const {
-  if (sibling_number>=number_children)
+  if (sibling_number>=child_count)
     throw std::runtime_error("Invalid siblign number in Oct::getChildCell()");
   return child_cells[sibling_number];
 };
@@ -82,7 +82,7 @@ void Oct<CellType>::setParentCell(std::shared_ptr<CellType> cell) {
 // Set the neighbor cell (only for direct neighbors)
 template<typename CellType>
 void Oct<CellType>::setNeighborCell(const unsigned dir, std::shared_ptr<CellType> cell) {
-  if (dir>=number_neighbors)
+  if (dir>=neighbor_count)
     throw std::runtime_error("Cannot set neighbor in Oct::setNeighborCell()");
   neighbor_cells[dir] = cell;
 };
@@ -90,7 +90,7 @@ void Oct<CellType>::setNeighborCell(const unsigned dir, std::shared_ptr<CellType
 // Set a specific child cell
 template<typename CellType>
 void Oct<CellType>::setChildCell(const unsigned sibling_number, std::shared_ptr<CellType> cell) {
-  if (sibling_number>=number_children)
+  if (sibling_number>=child_count)
     throw std::runtime_error("Cannot set child in Oct::setChildCell()");
   child_cells[sibling_number] = cell;
 };
@@ -112,7 +112,7 @@ unsigned Oct<CellType>::getSiblingNumber(const CellType* ptr_child_cell) const {
 // Get a pointer to a neighbor cell
 template<typename CellType>
 std::shared_ptr<CellType> Oct<CellType>::getNeighborCell(const unsigned dir) const {
-  if (dir>=number_neighbors)
+  if (dir>=neighbor_count)
     throw std::runtime_error("Invalid direct neighbor direction in Oct::getNeighborCell()");
 
   return neighbor_cells[dir];

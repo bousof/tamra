@@ -28,7 +28,7 @@
 //-----------------------------------------------------------//
 
 template<typename T>
-void scalarGather(T &value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size);
+void scalar_gather(T &value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size);
 
 //-----------------------------------------------------------//
 //  LOWER LEVEL METHODS                                      //
@@ -39,7 +39,7 @@ namespace gather::detail {
 #ifdef USE_MPI
 
 template<typename T>
-void scalarGatherT(const T value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size, const MPI_Datatype data_type) {
+void scalar_gather_impl(const T value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size, const MPI_Datatype data_type) {
 	// Communication of cells IDs between all processors
   if (rank == root)
 	  buffer.resize(size);
@@ -49,7 +49,7 @@ void scalarGatherT(const T value, std::vector<T> &buffer, const unsigned root, c
 #else
 
 template<typename T>
-void scalarGatherT(const T value, std::vector<T> &buffer, const unsigned, const unsigned, const unsigned) {
+void scalar_gather_impl(const T value, std::vector<T> &buffer, const unsigned, const unsigned, const unsigned) {
   buffer = { value };
 }
 
@@ -62,15 +62,15 @@ void scalarGatherT(const T value, std::vector<T> &buffer, const unsigned, const 
 //-----------------------------------------------------------//
 
 template<typename T>
-void scalarGather(T &value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size) {
+void scalar_gather(T &value, std::vector<T> &buffer, const unsigned root, const unsigned rank, const unsigned size) {
   static_assert(
     std::is_same<T, double>::value,
-    "scalarGather only supports T = double"
+    "scalar_gather only supports T = double"
   );
 
 #ifdef USE_MPI
-  gather::detail::scalarGatherT(value, buffer, root, rank, size, mpi_type<T>());
+  gather::detail::scalar_gather_impl(value, buffer, root, rank, size, mpi_type<T>());
 #else
-  gather::detail::scalarGatherT(value, buffer, root, rank, size);
+  gather::detail::scalar_gather_impl(value, buffer, root, rank, size);
 #endif // USE_MPI
 }

@@ -31,7 +31,7 @@ TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (no overlap, 100 iter)") {
   std::vector<double> b_local = {1., 2.};
   std::vector<double> x_local = {0., 0.};
 
-  std::vector<double> x_sol = parallelSparseJacobi<double, double>(A_local, b_local, x_local, 100, rank, size);
+  std::vector<double> x_sol = parallel_sparse_jacobi<double, double>(A_local, b_local, x_local, 100, rank, size);
 
   bool passed = true;
   std::vector<double> expected = {-1., 3.};
@@ -40,7 +40,7 @@ TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (no overlap, 100 iter)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -76,7 +76,7 @@ TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (overlap, 100 iter)") {
   };
   std::vector<double> x_local = {0., 0.};
 
-  std::vector<double> x_sol = parallelSparseJacobi<double, double>(A_local, b_local, x_local, 100, rank, size);
+  std::vector<double> x_sol = parallel_sparse_jacobi<double, double>(A_local, b_local, x_local, 100, rank, size);
 
   bool passed = true;
   std::vector<double> expected = {
@@ -88,7 +88,7 @@ TEST_CASE("[linalg][jacobi][mpi] Jacobi parallel (overlap, 100 iter)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);

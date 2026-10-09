@@ -18,31 +18,31 @@ TEST_CASE("[core][cell_oct] Instanciation of core template classes") {
   Oct<Cell<2>> oct2;
   Oct<Cell<2, 2>> oct22;
   Oct<Cell<2, 2, 2>> oct222;
-  CellData cellData;
+  CellData cell_data;
 
   // Number of dimensions
-  CHECK(cell2.number_dimensions == 1);
-  CHECK(cell22.number_dimensions == 2);
-  CHECK(cell222.number_dimensions == 3);
+  CHECK(cell2.dimension_count == 1);
+  CHECK(cell22.dimension_count == 2);
+  CHECK(cell222.dimension_count == 3);
   // Number of children
-  CHECK(cell2.number_children == 2);
-  CHECK(cell22.number_children == 4);
-  CHECK(cell222.number_children == 8);
-  CHECK(oct2.number_children == 2);
-  CHECK(oct22.number_children == 2*2);
-  CHECK(oct222.number_children == 2*2*2);
+  CHECK(cell2.child_count == 2);
+  CHECK(cell22.child_count == 4);
+  CHECK(cell222.child_count == 8);
+  CHECK(oct2.child_count == 2);
+  CHECK(oct22.child_count == 2*2);
+  CHECK(oct222.child_count == 2*2*2);
   // Number of neighbors
-  CHECK(cell2.number_neighbors == 2);
-  CHECK(cell22.number_neighbors == 4);
-  CHECK(cell222.number_neighbors == 6);
+  CHECK(cell2.neighbor_count == 2);
+  CHECK(cell22.neighbor_count == 4);
+  CHECK(cell222.neighbor_count == 6);
   // Number of 2D neighbors
-  CHECK(cell2.number_plane_neighbors == 2);
-  CHECK(cell22.number_plane_neighbors == 8);
-  CHECK(cell222.number_plane_neighbors == 18);
+  CHECK(cell2.plane_neighbor_count == 2);
+  CHECK(cell22.plane_neighbor_count == 8);
+  CHECK(cell222.plane_neighbor_count == 18);
   // Number of 3D neighbors
-  CHECK(cell2.number_volume_neighbors == 2);
-  CHECK(cell22.number_volume_neighbors == 8);
-  CHECK(cell222.number_volume_neighbors == 26);
+  CHECK(cell2.volume_neighbor_count == 2);
+  CHECK(cell22.volume_neighbor_count == 8);
+  CHECK(cell222.volume_neighbor_count == 26);
 }
 
 // Test Cell and Oct basic structure
@@ -53,7 +53,7 @@ TEST_CASE("[core][cell_oct] Cell and Oct basic structure") {
   oct.init(dummy_parent, 1);
   auto children = oct.getChildCells();
 
-  CHECK(children.size() == CellType::number_children);
+  CHECK(children.size() == CellType::child_count);
   // All child cells should be nullptr by default
   for (const auto &ptr : children)
     CHECK(ptr == nullptr);
@@ -72,7 +72,7 @@ TEST_CASE("[core][cell_oct] Cell splitting with Oct") {
   auto root = std::make_shared<CellType>(nullptr);
   auto children = root->splitRoot(2, root);  // Split with max_level = 2
 
-  CHECK(children.size() == CellType::number_children);
+  CHECK(children.size() == CellType::child_count);
 
   for (const auto &child : children) {
     CHECK(child->getLevel() == 1);
@@ -94,7 +94,7 @@ TEST_CASE("[core][cell_oct] Recursive splitting to deeper levels") {
     auto grandchildren = child->getChildOct()->getChildCells();
     CHECK(child->getLevel() == 1);
     CHECK(child->getParentOct() == root->getChildOct());
-    CHECK(grandchildren.size() == CellType::number_children);
+    CHECK(grandchildren.size() == CellType::child_count);
     for (auto &gc : grandchildren) {
       CHECK(gc->getLevel() == 2);
       CHECK(gc->getParentOct() == child->getChildOct());

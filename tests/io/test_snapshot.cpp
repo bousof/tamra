@@ -128,7 +128,7 @@ void initialize_tree_cells_limits(std::shared_ptr<CellType> cell) {
     return;
 
   const auto &cell_data = cell->getCellData();
-  for (unsigned n{0}; n<CellType::number_children; ++n) {
+  for (unsigned n{0}; n<CellType::child_count; ++n) {
     auto &child_cell_data = cell->getChildCell(n)->getCellData();
     cell_data.extrapolateToChild(child_cell_data, n);
     initialize_tree_cells_limits<CellType>(cell->getChildCell(n));
@@ -145,7 +145,7 @@ void check_cells_data(std::shared_ptr<CellType> cell, std::shared_ptr<CellType> 
     return;
 
   const auto &cell_data = cell->getCellData();
-  for (unsigned n{0}; n<CellType::number_children; ++n) {
+  for (unsigned n{0}; n<CellType::child_count; ++n) {
     auto &child_cell_data = cell->getChildCell(n)->getCellData();
     cell_data.extrapolateToChild(child_cell_data, n);
     check_cells_data<CellType>(cell->getChildCell(n), restored_cell->getChildCell(n));
@@ -208,11 +208,11 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a binary tree with 1 root cell 
   using BinaryTree = Tree<Cell1D>;
 
   // Create root cell
-  auto A = std::make_shared<Cell1D>(nullptr);
+  auto cell_a = std::make_shared<Cell1D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell1D> eA{A};
-  std::vector<RootCellEntry<Cell1D>> entries { eA };
+  RootCellEntry<Cell1D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell1D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{2};
@@ -220,8 +220,8 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a binary tree with 1 root cell 
   tree.createRootCells(entries);
 
   // Count number of leaf cells
-  int number_leaf_cells = A->countLeaves();
-  CHECK(number_leaf_cells == 2);
+  int leaf_cell_count = cell_a->countLeaves();
+  CHECK(leaf_cell_count == 2);
 
   // Create a snapshot manager
   SnapshotManager<BinaryTree> snapshot_manager(0, 1);
@@ -244,8 +244,8 @@ TEST_CASE("[core][manager][snapshot] Restore and merge complementary binary part
   RootCellEntry<Cell1D> first_entry{first_root};
   BinaryTree first_tree(1, 1, 0, 2);
   first_tree.createRootCells({first_entry});
-  first_root->setToThisProcRecurs();
-  first_root->getChildCell(1)->setToOtherProcRecurs();
+  first_root->markOwnedRecurs();
+  first_root->getChildCell(1)->markRemoteRecurs();
   first_root->getChildCell(0)->getCellData().setValue(10.0);
   first_root->getChildCell(1)->getCellData().setValue(20.0);
 
@@ -253,12 +253,12 @@ TEST_CASE("[core][manager][snapshot] Restore and merge complementary binary part
   RootCellEntry<Cell1D> second_entry{second_root};
   BinaryTree second_tree(1, 1, 1, 2);
   second_tree.createRootCells({second_entry});
-  second_root->setToThisProcRecurs();
-  second_root->getChildCell(0)->setToOtherProcRecurs();
+  second_root->markOwnedRecurs();
+  second_root->getChildCell(0)->markRemoteRecurs();
   second_root->getChildCell(0)->getCellData().setValue(10.0);
   second_root->getChildCell(1)->getCellData().setValue(20.0);
 
-  std::cout << second_root->belongToThisProc() << std::endl; // Should be true
+  std::cout << second_root->isOwned() << std::endl; // Should be true
 
   SnapshotManager<BinaryTree> first_snapshot_manager(0, 2);
   SnapshotManager<BinaryTree> second_snapshot_manager(1, 2);
@@ -292,11 +292,11 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with 1 root cell and
   using QuadTree = Tree<Cell2D>;
 
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{2};
@@ -304,12 +304,12 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with 1 root cell and
   tree.createRootCells(entries);
 
   //Splitting some cells
-  A->getChildCell(1)->split(max_level);
-  A->getChildCell(2)->split(max_level);
+  cell_a->getChildCell(1)->split(max_level);
+  cell_a->getChildCell(2)->split(max_level);
 
   // Count number of leaf cells
-  int number_leaf_cells = tree.countOwnedLeaves();
-  CHECK(number_leaf_cells == 10);
+  int leaf_cell_count = tree.countOwnedLeaves();
+  CHECK(leaf_cell_count == 10);
 
   // Create a snapshot manager
   SnapshotManager<QuadTree> snapshot_manager(0, 1);
@@ -319,7 +319,7 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with 1 root cell and
   SnapshotManager<QuadTree> restore_manager(0, 1);
   QuadTree restored_tree = restore_manager.readMetaAndRestoreFromString(snapshot_string);
 
-  CHECK(number_leaf_cells == restored_tree.countOwnedLeaves());
+  CHECK(leaf_cell_count == restored_tree.countOwnedLeaves());
   auto A_restored = restored_tree.getRootCells()[0];
   CHECK( A_restored->getChildCell(0)->isLeaf());
   CHECK(!A_restored->getChildCell(1)->isLeaf());
@@ -344,11 +344,11 @@ TEST_CASE("[core][manager][snapshot] Restore a snapshot from a different tree it
   using ImportQuadTree = Tree<Cell2D, HilbertIterator<Cell2D>>;
 
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{3};
@@ -356,14 +356,14 @@ TEST_CASE("[core][manager][snapshot] Restore a snapshot from a different tree it
   tree.createRootCells(entries);
 
   //Splitting some cells
-  A->getChildCell(1)->split(max_level);
-  A->getChildCell(1)->getChildCell(1)->split(max_level);
-  A->getChildCell(2)->split(max_level);
-  A->getChildCell(2)->getChildCell(2)->split(max_level);
+  cell_a->getChildCell(1)->split(max_level);
+  cell_a->getChildCell(1)->getChildCell(1)->split(max_level);
+  cell_a->getChildCell(2)->split(max_level);
+  cell_a->getChildCell(2)->getChildCell(2)->split(max_level);
 
   // Count number of leaf cells
-  int number_leaf_cells = tree.countOwnedLeaves();
-  CHECK(number_leaf_cells == 16);
+  int leaf_cell_count = tree.countOwnedLeaves();
+  CHECK(leaf_cell_count == 16);
 
   // Create a snapshot manager
   SnapshotManager<ExportQuadTree> snapshot_manager(0, 1, true);
@@ -373,7 +373,7 @@ TEST_CASE("[core][manager][snapshot] Restore a snapshot from a different tree it
   SnapshotManager<ImportQuadTree> restore_manager(0, 1, true);
   ImportQuadTree restored_tree = restore_manager.readMetaAndRestoreFromString(snapshot_string);
 
-  CHECK(number_leaf_cells == restored_tree.countOwnedLeaves());
+  CHECK(leaf_cell_count == restored_tree.countOwnedLeaves());
   auto A_restored = restored_tree.getRootCells()[0];
   CHECK( A_restored->getChildCell(0)->isLeaf());
   CHECK(!A_restored->getChildCell(1)->isLeaf());
@@ -400,22 +400,22 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with 4 root cells (b
   using QuadTree = Tree<Cell2D>;
 
   // Create 4 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
-  auto C = std::make_shared<Cell2D>(nullptr);
-  auto D = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
+  auto cell_c = std::make_shared<Cell2D>(nullptr);
+  auto cell_d = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A}, eB{B}, eC{C}, eD{D};
-  eA.setNeighbor(1, B);   // A +x -> B
-  eA.setNeighbor(3, C);   // A +y -> C
-  eB.setNeighbor(0, A);   // B -x -> A
-  eB.setNeighbor(3, D);   // B +y -> D
-  eC.setNeighbor(1, D);   // C +x -> D
-  eC.setNeighbor(2, A);   // C -y -> A
-  eD.setNeighbor(0, C);   // D -x -> C
-  eD.setNeighbor(2, B);   // D -y -> B
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB, eC, eD };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b}, entry_c{cell_c}, entry_d{cell_d};
+  entry_a.setNeighbor(1, cell_b);   // A +x -> B
+  entry_a.setNeighbor(3, cell_c);   // A +y -> C
+  entry_b.setNeighbor(0, cell_a);   // B -x -> A
+  entry_b.setNeighbor(3, cell_d);   // B +y -> D
+  entry_c.setNeighbor(1, cell_d);   // C +x -> D
+  entry_c.setNeighbor(2, cell_a);   // C -y -> A
+  entry_d.setNeighbor(0, cell_c);   // D -x -> C
+  entry_d.setNeighbor(2, cell_b);   // D -y -> B
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b, entry_c, entry_d };
 
   QuadTree tree;
   tree.createRootCells(entries);
@@ -456,14 +456,14 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with cell data (rest
   using Cell2D = Cell<Nx,Ny,Nz, core::manager::snapshot::TestCellData<Nx, Ny, Nz>>;
   using QuadTree = Tree<Cell2D>;
   // Create 4 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b };
 
   // Create the tree
   unsigned max_level{2};
@@ -474,19 +474,19 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with cell data (rest
   tree.meshAtMinLevel();
 
   //Splitting some cells
-  A->getChildCell(0)->split(max_level);
-  A->getChildCell(1)->split(max_level);
-  A->getChildCell(3)->split(max_level);
-  B->getChildCell(1)->split(max_level);
-  B->getChildCell(2)->split(max_level);
+  cell_a->getChildCell(0)->split(max_level);
+  cell_a->getChildCell(1)->split(max_level);
+  cell_a->getChildCell(3)->split(max_level);
+  cell_b->getChildCell(1)->split(max_level);
+  cell_b->getChildCell(2)->split(max_level);
 
   // Set root cells data
-  A->getCellData().imin = 0    ; A->getCellData().imax = Nx*Nx;
-  A->getCellData().jmin = 0    ; A->getCellData().jmax = Ny*Ny;
-  B->getCellData().imin = Nx*Nx; B->getCellData().imax = 2*Nx*Nx;
-  B->getCellData().jmin = 0    ; B->getCellData().jmax = Ny*Ny;
-  core::manager::snapshot::initialize_tree_cells_limits(A);
-  core::manager::snapshot::initialize_tree_cells_limits(B);
+  cell_a->getCellData().imin = 0    ; cell_a->getCellData().imax = Nx*Nx;
+  cell_a->getCellData().jmin = 0    ; cell_a->getCellData().jmax = Ny*Ny;
+  cell_b->getCellData().imin = Nx*Nx; cell_b->getCellData().imax = 2*Nx*Nx;
+  cell_b->getCellData().jmin = 0    ; cell_b->getCellData().jmax = Ny*Ny;
+  core::manager::snapshot::initialize_tree_cells_limits(cell_a);
+  core::manager::snapshot::initialize_tree_cells_limits(cell_b);
 
   std::string snapshot_string;
   if (false) {
@@ -531,6 +531,6 @@ TEST_CASE("[core][manager][snapshot] Snapshot of a quadtree with cell data (rest
   auto A_restored = restored_tree.getRootCells()[0],
        B_restored = restored_tree.getRootCells()[1];
 
-  core::manager::snapshot::check_cells_data(A, A_restored);
-  core::manager::snapshot::check_cells_data(B, B_restored);
+  core::manager::snapshot::check_cells_data(cell_a, A_restored);
+  core::manager::snapshot::check_cells_data(cell_b, B_restored);
 }

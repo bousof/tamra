@@ -42,9 +42,9 @@ class GhostManager {
   const unsigned rank;
   // Number of process
   const unsigned size;
-  // Function on how to interpolate owned cell values to children
+  // Function on how to extrapolate owned cell values to children
   TaskExtrapolationFunctionType default_owned_extrapolation_function;
-  // Function on how to interpolate ghost cell values to children
+  // Function on how to extrapolate ghost cell values to children
   TaskExtrapolationFunctionType default_ghost_extrapolation_function;
   // Default strategy on how to handle conflicts for owned cells
   std::vector<OwnedConflictResolutionStrategy> default_owned_strategies;
@@ -90,8 +90,8 @@ class GhostManager {
  private:
   // Loop on owned cells and check if neighbors belong to another process
   void findCellsToSend(const std::vector<std::vector<unsigned>> &begin_ids, const std::vector<std::vector<unsigned>> &end_ids, std::vector<std::vector<std::shared_ptr<CellType>>> &cells_to_send, TreeIteratorType &iterator, const std::vector<int> &directions) const;
-  // Set all ghost cells to coarse
-  void setGhostToCoarseRecurs(const std::shared_ptr<CellType> &cell) const;
+  // Set all ghost cells to coarsen
+  void markGhostsForCoarseningRecurs(const std::shared_ptr<CellType> &cell) const;
 };
 
 #include "GhostManager.tpp"

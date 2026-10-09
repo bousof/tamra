@@ -21,8 +21,8 @@ template<typename CellType> class Oct;
 template<typename CellType>
 class Oct {
  public:
-  static constexpr unsigned number_children = CellType::number_children;
-  static constexpr unsigned number_neighbors = CellType::number_neighbors;
+  static constexpr unsigned child_count = CellType::child_count;
+  static constexpr unsigned neighbor_count = CellType::neighbor_count;
 
   //-----------------------------------------------------------//
 	//  VARIABLES                                                //
@@ -33,9 +33,9 @@ class Oct {
   // Oct level
   unsigned level;
   // Neighbor cells
-  std::array<std::shared_ptr<CellType>, number_neighbors> neighbor_cells;
+  std::array<std::shared_ptr<CellType>, neighbor_count> neighbor_cells;
   // Child cells
-  std::array<std::shared_ptr<CellType>, number_children> child_cells;
+  std::array<std::shared_ptr<CellType>, child_count> child_cells;
 
 	//-----------------------------------------------------------//
 	//  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -61,9 +61,9 @@ class Oct {
   // Get level of the oct
   unsigned getLevel() const;
   // Get neighbor cells
-  const std::array<std::shared_ptr<CellType>, number_neighbors>& getNeighborCells() const;
+  const std::array<std::shared_ptr<CellType>, neighbor_count>& getNeighborCells() const;
   // Get child cells
-  const std::array<std::shared_ptr<CellType>, number_children>& getChildCells() const;
+  const std::array<std::shared_ptr<CellType>, child_count>& getChildCells() const;
   // Get a specific child cell
   std::shared_ptr<CellType> getChildCell(const unsigned sibling_number) const;
 

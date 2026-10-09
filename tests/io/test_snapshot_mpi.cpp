@@ -130,7 +130,7 @@ void initialize_tree_cells_limits(std::shared_ptr<CellType> cell) {
     return;
 
   const auto &cell_data = cell->getCellData();
-  for (unsigned n{0}; n<CellType::number_children; ++n) {
+  for (unsigned n{0}; n<CellType::child_count; ++n) {
     auto &child_cell_data = cell->getChildCell(n)->getCellData();
     cell_data.extrapolateToChild(child_cell_data, n);
     initialize_tree_cells_limits<CellType>(cell->getChildCell(n));
@@ -147,7 +147,7 @@ void check_cells_data(std::shared_ptr<CellType> cell, std::shared_ptr<CellType> 
     return;
 
   const auto &cell_data = cell->getCellData();
-  for (unsigned n{0}; n<CellType::number_children; ++n) {
+  for (unsigned n{0}; n<CellType::child_count; ++n) {
     auto &child_cell_data = cell->getChildCell(n)->getCellData();
     cell_data.extrapolateToChild(child_cell_data, n);
     check_cells_data<CellType>(cell->getChildCell(n), restored_cell->getChildCell(n));
@@ -161,13 +161,13 @@ bool compare_cells(const std::shared_ptr<CellType>& cell,
   bool passed = true;
   passed &= compare_data(cell->getCellData(), restored_cell->getCellData());
   passed &= (cell->isLeaf() == restored_cell->isLeaf());
-  passed &= (cell->belongToThisProc() == restored_cell->belongToThisProc());
-  passed &= (cell->belongToOtherProc() == restored_cell->belongToOtherProc());
+  passed &= (cell->isOwned() == restored_cell->isOwned());
+  passed &= (cell->isRemote() == restored_cell->isRemote());
 
   if (!passed || cell->isLeaf())
     return passed;
 
-  for (unsigned n{0}; n<CellType::number_children; ++n)
+  for (unsigned n{0}; n<CellType::child_count; ++n)
     passed &= compare_cells<CellType>(cell->getChildCell(n), restored_cell->getChildCell(n), compare_data);
 
   return passed;
@@ -261,7 +261,7 @@ std::vector<std::string> make_partition_snapshots(const unsigned source_size,
   std::vector<std::string> snapshots;
   snapshots.reserve(source_size);
   unsigned partition_start{0};
-  const unsigned number_leaf_cells = 1u << max_level;
+  const unsigned leaf_cell_count = 1u << max_level;
 
   for (unsigned source_rank{0}; source_rank<source_size; ++source_rank) {
     auto root = std::make_shared<Cell1D>(nullptr);
@@ -279,19 +279,19 @@ std::vector<std::string> make_partition_snapshots(const unsigned source_size,
     };
     split_to_level(split_to_level, root);
 
-    root->setToOtherProcRecurs();
+    root->markRemoteRecurs();
     MortonIterator<Cell1D> iterator(tree.getRootCells(), tree.getMaxLevel());
     iterator.toBegin();
     const unsigned partition_end = partition_start + partition_sizes[source_rank];
-    for (unsigned leaf_index{0}; leaf_index<number_leaf_cells; ++leaf_index) {
+    for (unsigned leaf_index{0}; leaf_index<leaf_cell_count; ++leaf_index) {
       iterator.getCell()->getCellData().setValue(static_cast<double>(leaf_index));
       if (leaf_index >= partition_start && leaf_index < partition_end)
-        iterator.getCell()->setToThisProc();
-      if (leaf_index + 1 < number_leaf_cells)
+        iterator.getCell()->markOwned();
+      if (leaf_index + 1 < leaf_cell_count)
         iterator.next();
     }
     if (partition_sizes[source_rank] > 0)
-      root->setToThisProc();
+      root->markOwned();
 
     SnapshotManager<BinaryTree> snapshot_manager(source_rank, source_size);
     snapshots.push_back(snapshot_manager.dumpMetaAndTreeToString(tree));
@@ -314,11 +314,11 @@ TEST_CASE("[core][manager][snapshot][mpi] Snapshot of a binary tree with 1 root 
                  size = mpi_size();
 
   // Create root cell
-  auto A = std::make_shared<Cell1D>(nullptr);
+  auto cell_a = std::make_shared<Cell1D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell1D> eA{A};
-  std::vector<RootCellEntry<Cell1D>> entries { eA };
+  RootCellEntry<Cell1D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell1D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{1}, max_level{2};
@@ -327,17 +327,17 @@ TEST_CASE("[core][manager][snapshot][mpi] Snapshot of a binary tree with 1 root 
 
   // Process 0 owns the tree, all other processes have empty partitions
   if (rank == 0)
-    A->setToThisProcRecurs();
+    cell_a->markOwnedRecurs();
   else
-    A->setToOtherProcRecurs();
+    cell_a->markRemoteRecurs();
 
   core::manager::snapshot::mpi::assign_incremental_values(tree);
 
   bool passed = true;
 
   // Count number of leaf cells
-  int number_owned_leaf_cells = A->countOwnedLeaves();
-  passed &= (number_owned_leaf_cells == ((rank == 0) ? 2 : 0));
+  int owned_leaf_count = cell_a->countOwnedLeaves();
+  passed &= (owned_leaf_count == ((rank == 0) ? 2 : 0));
 
   // Create a snapshot manager
   SnapshotManager<BinaryTree> snapshot_manager(rank, size);
@@ -355,7 +355,7 @@ TEST_CASE("[core][manager][snapshot][mpi] Snapshot of a binary tree with 1 root 
   );
 
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
   CHECK(all_passed);
 }
 
@@ -365,20 +365,20 @@ TEST_CASE("[core][manager][snapshot][mpi] Snapshot of a quadtree meshed at min l
   const unsigned rank = mpi_rank(),
                  size = mpi_size();
 
-  auto A = std::make_shared<Cell2D>(nullptr);
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   unsigned min_level{2}, max_level{3};
   QuadTree tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
   tree.meshAtMinLevel();
 
-  A->getCellData().imin = 0;
-  A->getCellData().imax = 1u << min_level;
-  A->getCellData().jmin = 0;
-  A->getCellData().jmax = 1u << min_level;
-  core::manager::snapshot::mpi::initialize_tree_cells_limits(A);
+  cell_a->getCellData().imin = 0;
+  cell_a->getCellData().imax = 1u << min_level;
+  cell_a->getCellData().jmin = 0;
+  cell_a->getCellData().jmax = 1u << min_level;
+  core::manager::snapshot::mpi::initialize_tree_cells_limits(cell_a);
 
   SnapshotManager<QuadTree> snapshot_manager(rank, size);
   std::string snapshot_string = snapshot_manager.dumpMetaAndTreeToString(tree);
@@ -394,7 +394,7 @@ TEST_CASE("[core][manager][snapshot][mpi] Snapshot of a quadtree meshed at min l
   );
 
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
   CHECK(all_passed);
 }
 
@@ -404,13 +404,13 @@ TEST_CASE("[core][manager][snapshot][mpi] Snapshot of a refined quadtree with tw
   const unsigned rank = mpi_rank(),
                  size = mpi_size();
 
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
 
-  RootCellEntry<Cell2D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);
-  eB.setNeighbor(0, A);
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);
+  entry_b.setNeighbor(0, cell_a);
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b };
 
   unsigned min_level{2}, max_level{3};
   QuadTree tree(min_level, max_level, rank, size);
@@ -431,16 +431,16 @@ TEST_CASE("[core][manager][snapshot][mpi] Snapshot of a refined quadtree with tw
     if (cell->isLeaf())
       cell->split(max_level);
 
-  A->getCellData().imin = 0;
-  A->getCellData().imax = 1u << min_level;
-  A->getCellData().jmin = 0;
-  A->getCellData().jmax = 1u << min_level;
-  B->getCellData().imin = 1u << min_level;
-  B->getCellData().imax = 2u << min_level;
-  B->getCellData().jmin = 0;
-  B->getCellData().jmax = 1u << min_level;
-  core::manager::snapshot::mpi::initialize_tree_cells_limits(A);
-  core::manager::snapshot::mpi::initialize_tree_cells_limits(B);
+  cell_a->getCellData().imin = 0;
+  cell_a->getCellData().imax = 1u << min_level;
+  cell_a->getCellData().jmin = 0;
+  cell_a->getCellData().jmax = 1u << min_level;
+  cell_b->getCellData().imin = 1u << min_level;
+  cell_b->getCellData().imax = 2u << min_level;
+  cell_b->getCellData().jmin = 0;
+  cell_b->getCellData().jmax = 1u << min_level;
+  core::manager::snapshot::mpi::initialize_tree_cells_limits(cell_a);
+  core::manager::snapshot::mpi::initialize_tree_cells_limits(cell_b);
 
   SnapshotManager<QuadTree> snapshot_manager(rank, size, true);
   std::string snapshot_string = snapshot_manager.dumpMetaAndTreeToString(tree);
@@ -456,7 +456,7 @@ TEST_CASE("[core][manager][snapshot][mpi] Snapshot of a refined quadtree with tw
   );
 
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
   CHECK(all_passed);
 }
 
@@ -489,7 +489,7 @@ TEST_CASE("[core][manager][snapshot][mpi] Restore and merge partitions from a la
   passed &= owned_values[1] == static_cast<double>(2 * rank + 1);
 
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
   CHECK(all_passed);
 }
 
@@ -499,11 +499,11 @@ TEST_CASE("[core][manager][snapshot][mpi] Rebalance a merged snapshot tree") {
   const unsigned rank = mpi_rank();
   const unsigned size = mpi_size();
   const unsigned source_size = 2 * size;
-  const unsigned number_leaf_cells = 4 * size;
-  const unsigned max_level = static_cast<unsigned>(std::log2(number_leaf_cells));
+  const unsigned leaf_cell_count = 4 * size;
+  const unsigned max_level = static_cast<unsigned>(std::log2(leaf_cell_count));
 
   std::vector<unsigned> partition_sizes(source_size, 1);
-  partition_sizes.back() = number_leaf_cells - (source_size - 1);
+  partition_sizes.back() = leaf_cell_count - (source_size - 1);
   const auto snapshots = core::manager::snapshot::mpi::make_partition_snapshots(source_size, max_level, partition_sizes);
 
   SnapshotManager<BinaryTree> restore_manager(rank, size);
@@ -519,10 +519,10 @@ TEST_CASE("[core][manager][snapshot][mpi] Rebalance a merged snapshot tree") {
 
   const unsigned owned_leaf_count = restored_tree.countOwnedLeaves();
   unsigned total_owned_leaf_count;
-  scalarSumAllreduce<unsigned>(owned_leaf_count, total_owned_leaf_count);
-  passed &= total_owned_leaf_count == number_leaf_cells;
-  passed &= owned_leaf_count >= number_leaf_cells / size - 1;
-  passed &= owned_leaf_count <= number_leaf_cells / size + 1;
+  scalar_sum_allreduce<unsigned>(owned_leaf_count, total_owned_leaf_count);
+  passed &= total_owned_leaf_count == leaf_cell_count;
+  passed &= owned_leaf_count >= leaf_cell_count / size - 1;
+  passed &= owned_leaf_count <= leaf_cell_count / size + 1;
 
   double owned_value_sum{0.0};
   restored_tree.applyToOwnedLeaves(
@@ -531,10 +531,10 @@ TEST_CASE("[core][manager][snapshot][mpi] Rebalance a merged snapshot tree") {
     }
   );
   double total_value_sum;
-  scalarSumAllreduce<double>(owned_value_sum, total_value_sum);
-  passed &= total_value_sum == static_cast<double>(number_leaf_cells * (number_leaf_cells - 1) / 2);
+  scalar_sum_allreduce<double>(owned_value_sum, total_value_sum);
+  passed &= total_value_sum == static_cast<double>(leaf_cell_count * (leaf_cell_count - 1) / 2);
 
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
   CHECK(all_passed);
 }

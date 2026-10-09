@@ -35,9 +35,9 @@ class MortonIterator : public AbstractTreeIterator<CellType> {
   //-----------------------------------------------------------//
  private:
   // Map order to sibling number for each mother orientation
-  const std::array<unsigned, CellType::number_children> &order_to_sibling_number;
+  const std::array<unsigned, CellType::child_count> &order_to_sibling_number;
   // Map sibling number to order for each mother orientation
-  const std::array<unsigned, CellType::number_children> &sibling_number_to_order;
+  const std::array<unsigned, CellType::child_count> &sibling_number_to_order;
 
   //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //

@@ -1,4 +1,4 @@
-#include "CoarseManager.h"
+#include "CoarseningManager.h"
 
 //-----------------------------------------------------------//
 //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -6,7 +6,7 @@
 
 // Constructor
 template<typename CellType>
-CoarseManager<CellType>::CoarseManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size)
+CoarseningManager<CellType>::CoarseningManager(const unsigned min_level, const unsigned max_level, const unsigned rank, const unsigned size)
 : min_level(min_level),
   max_level(max_level),
   rank(rank),
@@ -14,28 +14,28 @@ CoarseManager<CellType>::CoarseManager(const unsigned min_level, const unsigned 
 
 // Destructor
 template<typename CellType>
-CoarseManager<CellType>::~CoarseManager() {}
+CoarseningManager<CellType>::~CoarseningManager() {}
 
 
 //-----------------------------------------------------------//
 //  METHODS                                                  //
 //-----------------------------------------------------------//
-// Go through all the parent cells and coarse them one time if needed
+// Go through all the parent cells and coarsen them one time if needed
 template<typename CellType>
-bool CoarseManager<CellType>::coarsen(const std::vector<std::shared_ptr<CellType>> &root_cells, InterpolationFunctionType interpolation_function) const {
+bool CoarseningManager<CellType>::coarsen(const std::vector<std::shared_ptr<CellType>> &root_cells, InterpolationFunctionType interpolation_function) const {
   // Looping on levels starting from high to low level
   bool structure_changed = false;
   for (unsigned coarse_level=(max_level-1); coarse_level>=min_level; --coarse_level)
     // Looping on all root cells
     for (const auto &root_cell : root_cells)
-      // Recursively coarse cells at min level
+      // Recursively coarsen cells at min level
       structure_changed |= coarsenToLevelRecurs(root_cell, coarse_level, interpolation_function);
   return structure_changed;
 }
 
-// Recursively coarse cells at a specific level
+// Recursively coarsen cells at a specific level
 template<typename CellType>
-bool CoarseManager<CellType>::coarsenToLevelRecurs(const std::shared_ptr<CellType> &cell, const unsigned coarse_level, InterpolationFunctionType interpolation_function) const {
+bool CoarseningManager<CellType>::coarsenToLevelRecurs(const std::shared_ptr<CellType> &cell, const unsigned coarse_level, InterpolationFunctionType interpolation_function) const {
   if (cell->isLeaf() || cell->getLevel()>coarse_level)
     return false;
 
@@ -47,9 +47,9 @@ bool CoarseManager<CellType>::coarsenToLevelRecurs(const std::shared_ptr<CellTyp
     return structure_changed;
   }
 
-  // Try to coarse the cell
+  // Try to coarsen the cell
   for (const auto &child : cell->getChildCells())
-    if (!child->isToCoarse())
+    if (!child->isMarkedForCoarsening())
       return false;
   return cell->coarsen(min_level, interpolation_function);
 }

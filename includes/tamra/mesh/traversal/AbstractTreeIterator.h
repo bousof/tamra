@@ -98,7 +98,7 @@ class AbstractTreeIterator {
   // Go to the first leaf cell of first root belonging to this process
   bool toOwnedBegin(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Go to the last leaf cell of last root
-  void toEnd(const unsigned sweep_level = std::numeric_limits<int>::max());
+  void toLast(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Go to the last leaf cell of last root belonging to this process
   bool toOwnedEnd(const unsigned sweep_level = std::numeric_limits<int>::max());
   // Moves the iterator to a leaf cell of the current cell

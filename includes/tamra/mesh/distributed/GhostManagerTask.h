@@ -66,9 +66,9 @@ class GhostManagerTask {
   std::vector<std::vector<unsigned>> partition_begin_ids;
   // IDs of the last cells on each of the process
   std::vector<std::vector<unsigned>> partition_end_ids;
-  // Function on how to interpolate owned cell values to children
+  // Function on how to extrapolate owned cell values to children
   ExtrapolationFunctionType owned_extrapolation_function;
-  // Function on how to interpolate ghost cell values to children
+  // Function on how to extrapolate ghost cell values to children
   ExtrapolationFunctionType ghost_extrapolation_function;
   // Strategy on how to handle conflicts for owned cells
   std::vector<OwnedConflictResolutionStrategy> owned_strategies;
@@ -130,7 +130,7 @@ class GhostManagerTask {
   void continueExtrapolateTaskGhost(std::vector<bool> &resolution_flags);
   void continueIgnoreTask(std::vector<bool> &resolution_flags);
   void continueSplitInOwnerTaskGhost(std::vector<bool> &resolution_flags);
-  void continueTryCoarseTaskGhost(std::vector<bool> &resolution_flags);
+  void continueTryCoarsenTaskGhost(std::vector<bool> &resolution_flags);
   bool applyExtrapolationFunctionRecurs(const std::shared_ptr<CellType> &cell, const ExtrapolationFunctionType &extrapolation_function);
 };
 

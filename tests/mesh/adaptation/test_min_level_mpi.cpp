@@ -29,11 +29,11 @@ TEST_CASE("[core][manager][min_level][mpi] Meshing at min level (one root, paral
                  size = mpi_size();
 
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -44,23 +44,23 @@ TEST_CASE("[core][manager][min_level][mpi] Meshing at min level (one root, paral
   tree.meshAtMinLevel();
 
   // Count number of owned leaf cells
-  unsigned number_leaf_cells = A->countOwnedLeaves();
+  unsigned leaf_cell_count = cell_a->countOwnedLeaves();
 
   // Compute the number of cells on each process
-  unsigned total_cells_min_level = (unsigned)(pow(Cell2D::number_children, min_level));
+  unsigned total_cells_min_level = (unsigned)(pow(Cell2D::child_count, min_level));
 
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
-  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
+  scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
   bool passed = total_leaf_cells == total_cells_min_level;
 
   // Also the number of cells should be equally distributed
-  passed &= number_leaf_cells >= total_cells_min_level/size;
-  passed &= number_leaf_cells <= (total_cells_min_level/size+1);
+  passed &= leaf_cell_count >= total_cells_min_level/size;
+  passed &= leaf_cell_count <= (total_cells_min_level/size+1);
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -103,14 +103,14 @@ TEST_CASE("[core][manager][min_level][mpi] Meshing at min level (two roots, para
                  size = mpi_size();
 
   // Create 2 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -121,23 +121,23 @@ TEST_CASE("[core][manager][min_level][mpi] Meshing at min level (two roots, para
   tree.meshAtMinLevel();
 
   // Count number of owned leaf cells
-  unsigned number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
+  unsigned leaf_cell_count = cell_a->countOwnedLeaves() + cell_b->countOwnedLeaves();
 
   // Compute the number of cells on each process
-  unsigned total_cells_min_level = tree.getRootCells().size() * (unsigned)(pow(Cell2D::number_children, min_level));
+  unsigned total_cells_min_level = tree.getRootCells().size() * (unsigned)(pow(Cell2D::child_count, min_level));
 
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
-  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
+  scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
   bool passed = total_leaf_cells == total_cells_min_level;
 
   // Also the number of cells should be equally distributed
-  passed &= number_leaf_cells >= total_cells_min_level/size;
-  passed &= number_leaf_cells <= (total_cells_min_level/size+1);
+  passed &= leaf_cell_count >= total_cells_min_level/size;
+  passed &= leaf_cell_count <= (total_cells_min_level/size+1);
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -158,14 +158,14 @@ TEST_CASE("[core][manager][min_level][mpi] Mesh at min level (1 root per process
                  size = mpi_size();
 
   // Create 2 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -176,23 +176,23 @@ TEST_CASE("[core][manager][min_level][mpi] Mesh at min level (1 root per process
   tree.meshAtMinLevel();
 
   // Count number of owned leaf cells
-  unsigned number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
+  unsigned leaf_cell_count = cell_a->countOwnedLeaves() + cell_b->countOwnedLeaves();
 
   // Compute the number of cells on each process
-  unsigned total_cells_min_level = tree.getRootCells().size() * (unsigned)(pow(Cell2D::number_children, min_level));
+  unsigned total_cells_min_level = tree.getRootCells().size() * (unsigned)(pow(Cell2D::child_count, min_level));
 
   // The sum of all the leaf cells owned should be total_cells_min_level
   unsigned total_leaf_cells;
-  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
+  scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
   bool passed = total_leaf_cells == total_cells_min_level;
 
   // Also the number of cells should be equally distributed
-  passed &= number_leaf_cells >= total_cells_min_level/size;
-  passed &= number_leaf_cells <= (total_cells_min_level/size+1);
+  passed &= leaf_cell_count >= total_cells_min_level/size;
+  passed &= leaf_cell_count <= (total_cells_min_level/size+1);
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);

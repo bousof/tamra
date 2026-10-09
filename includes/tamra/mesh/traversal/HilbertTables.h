@@ -25,7 +25,7 @@ auto compute_orderings();
 
 inline std::tuple<std::vector<unsigned>,
                   std::vector<std::vector<unsigned>>,
-                  std::vector<std::vector<unsigned>>> compute_orderings_vec(const unsigned number_split_dimensions, const unsigned Nx, const unsigned Ny, const unsigned Nz);
+                  std::vector<std::vector<unsigned>>> compute_orderings_vec(const unsigned split_dimension_count, const unsigned Nx, const unsigned Ny, const unsigned Nz);
 
 inline std::tuple<std::vector<unsigned>,
                   std::vector<std::vector<unsigned>>,
@@ -49,14 +49,14 @@ std::array<std::array<unsigned, NUMBER_CORNERS>, NUMBER_ORIENTATIONS> reverse_or
 
 template<class CellType>
 struct HilbertTables {
-  static constexpr unsigned number_of_corners = 1u << CellType::number_split_dimensions;
-  static constexpr unsigned number_of_orientations = CellType::number_split_dimensions * number_of_corners;
+  static constexpr unsigned corner_count = 1u << CellType::split_dimension_count;
+  static constexpr unsigned orientation_count = CellType::split_dimension_count * corner_count;
 
   static const auto& get_orderings()                  { static const auto t = compute_orderings<CellType>(); return t; }
   static const auto& get_possible_leaf_orientations() { return std::get<0>(get_orderings()); }
   static const auto& get_child_orderings()            { return std::get<1>(get_orderings()); }
   static const auto& get_child_orientations()         { return std::get<2>(get_orderings()); }
-  static const auto& get_reverse_child_orderings()    { static const auto t = reverse_orderings<number_of_corners, number_of_orientations>(std::get<1>(get_orderings())); return t; }
+  static const auto& get_reverse_child_orderings()    { static const auto t = reverse_orderings<corner_count, orientation_count>(std::get<1>(get_orderings())); return t; }
 };
 
 
@@ -66,25 +66,25 @@ struct HilbertTables {
 
 template<typename CellType>
 auto compute_orderings() {
-  static constexpr unsigned number_of_corners = 1u << CellType::number_split_dimensions;
-  static constexpr unsigned number_of_orientations = CellType::number_split_dimensions * number_of_corners;
+  static constexpr unsigned corner_count = 1u << CellType::split_dimension_count;
+  static constexpr unsigned orientation_count = CellType::split_dimension_count * corner_count;
 
   std::tuple<std::vector<unsigned>,
              std::vector<std::vector<unsigned>>,
-             std::vector<std::vector<unsigned>>> orderings = compute_orderings_vec(CellType::number_split_dimensions, CellType::Nx, CellType::Ny, CellType::Nz);
+             std::vector<std::vector<unsigned>>> orderings = compute_orderings_vec(CellType::split_dimension_count, CellType::Nx, CellType::Ny, CellType::Nz);
 
   std::vector<unsigned> possible_leaf_orientations = std::get<0>(orderings);
   // Cast child orderings to array of arrays for faster access
-  std::array<std::array<unsigned, number_of_corners>, number_of_orientations> child_orderings;
+  std::array<std::array<unsigned, corner_count>, orientation_count> child_orderings;
   std::vector<std::vector<unsigned>> child_orderings_vec = std::get<1>(orderings);
-  for (unsigned i{0}; i<number_of_orientations; ++i)
-    for (unsigned j{0}; j<number_of_corners; ++j)
+  for (unsigned i{0}; i<orientation_count; ++i)
+    for (unsigned j{0}; j<corner_count; ++j)
       child_orderings[i][j] = child_orderings_vec[i][j];
   // Cast child orientations to array of arrays for faster access
-  std::array<std::array<unsigned, number_of_corners>, number_of_orientations> child_orientations;
+  std::array<std::array<unsigned, corner_count>, orientation_count> child_orientations;
   std::vector<std::vector<unsigned>> child_orientations_vec = std::get<2>(orderings);
-  for (unsigned i{0}; i<number_of_orientations; ++i)
-    for (unsigned j{0}; j<number_of_corners; ++j)
+  for (unsigned i{0}; i<orientation_count; ++i)
+    for (unsigned j{0}; j<corner_count; ++j)
       child_orientations[i][j] = child_orientations_vec[i][j];
 
   return std::make_tuple(possible_leaf_orientations, child_orderings, child_orientations);
@@ -92,18 +92,18 @@ auto compute_orderings() {
 
 inline std::tuple<std::vector<unsigned>,
                   std::vector<std::vector<unsigned>>,
-                  std::vector<std::vector<unsigned>>> compute_orderings_vec(const unsigned number_split_dimensions, const unsigned Nx, const unsigned Ny, const unsigned Nz) {
+                  std::vector<std::vector<unsigned>>> compute_orderings_vec(const unsigned split_dimension_count, const unsigned Nx, const unsigned Ny, const unsigned Nz) {
   const unsigned Nx1 = Nx > 1 ? Nx : 1,
                  Ny1 = Ny > 1 ? Ny : 1,
                  Nz1 = Nz > 1 ? Nz : 1,
                  Ni = Nx1 > 1 ? Nx1 : Ny1 > 1 ? Ny1 : Nz1,
                  Nj = (Nx1 > 1 && Ny1 > 1) ? Ny1 : Nz1,
                  Nk = Nz1;
-  if (number_split_dimensions == 1)
+  if (split_dimension_count == 1)
     return compute_orderings_1d(Ni);
-  else if ((number_split_dimensions == 2) && (Ni == 2) && (Nj == 2))
+  else if ((split_dimension_count == 2) && (Ni == 2) && (Nj == 2))
     return compute_orderings_quad_tree();
-  else if ((number_split_dimensions == 2) && (Ni == 2) && (Nj == 2) && (Nk == 2))
+  else if ((split_dimension_count == 2) && (Ni == 2) && (Nj == 2) && (Nk == 2))
     return compute_orderings_oct_tree();
   throw std::runtime_error(
     "HilbertIterator does not handle arbitrary cell splitting "

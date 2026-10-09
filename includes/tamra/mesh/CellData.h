@@ -30,7 +30,7 @@ class CellData : public AbstractCellData {
   //-----------------------------------------------------------//
  public:
   // Get the computation load of the cell
-  double getLoad(bool isLeaf, const std::shared_ptr<void> =nullptr) const override;
+  double getLoad(bool is_leaf, const std::shared_ptr<void> =nullptr) const override;
   // Get the value of the cell
   double getValue() const;
 

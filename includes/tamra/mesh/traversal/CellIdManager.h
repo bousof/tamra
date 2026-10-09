@@ -19,7 +19,7 @@ class CellIdManager {
 	//-----------------------------------------------------------//
  protected:
   // Number of root cells
-  const unsigned number_root_cells;
+  const unsigned root_cell_count;
   // Tree max level
   const unsigned max_level;
   // Cell ID unsigned int slots
@@ -30,7 +30,7 @@ class CellIdManager {
   //-----------------------------------------------------------//
  public:
   // Constructor
-  CellIdManager(const unsigned number_root_cells, const unsigned max_level);
+  CellIdManager(const unsigned root_cell_count, const unsigned max_level);
   // Destructor
   ~CellIdManager() = default;
 
@@ -60,7 +60,7 @@ class CellIdManager {
   // Moves the cell ID to root cell
   void toRoot(std::vector<unsigned> &cell_id, const unsigned root_number) const;
   // Reset cell ID
-  void resetCellID(std::vector<unsigned> &cell_id) const;
+  void resetCellId(std::vector<unsigned> &cell_id) const;
   // Check if a cell ID is greater than
   // True if 1.start > 2.end
   bool cellIdGt(const std::vector<unsigned> &cell_id_1, const std::vector<unsigned> &cell_id_2) const;

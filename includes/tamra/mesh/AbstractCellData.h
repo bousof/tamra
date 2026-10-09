@@ -28,7 +28,7 @@ class AbstractCellData : public ParallelData {
   //-----------------------------------------------------------//
  public:
   // Get the computation load of the cell
-  virtual double getLoad(bool isLeaf, const std::shared_ptr<void> cell=nullptr) const = 0;
+  virtual double getLoad(bool is_leaf, const std::shared_ptr<void> cell=nullptr) const = 0;
 
   //-----------------------------------------------------------//
   //  METHODS                                                  //

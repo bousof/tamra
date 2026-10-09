@@ -59,7 +59,7 @@ namespace tamra::detail {
   }
 
   template<typename T>
-  struct type_tag {
+  struct TypeTag {
     using type = T;
   };
 
@@ -72,7 +72,7 @@ namespace tamra::detail {
       using IteratorType = std::tuple_element_t<I, IteratorTuple>;
 
       if (iterator_type == iterator_tag_as_string<IteratorType>())
-        return std::forward<Func>(f)(type_tag<IteratorType>{});
+        return std::forward<Func>(f)(TypeTag<IteratorType>{});
 
       return dispatch_on_tree_iterator_impl<IteratorTuple, I + 1>(iterator_type, std::forward<Func>(f));
     } else {

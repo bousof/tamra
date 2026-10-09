@@ -6,10 +6,10 @@
 
 // Constructor
 template<typename CellType>
-CellIdManager<CellType>::CellIdManager(const unsigned number_root_cells, const unsigned max_level)
-: number_root_cells(number_root_cells),
+CellIdManager<CellType>::CellIdManager(const unsigned root_cell_count, const unsigned max_level)
+: root_cell_count(root_cell_count),
   max_level(max_level) {
-  cell_id_size = (number_root_cells > 1) ? (max_level+2) : (max_level+1);
+  cell_id_size = (root_cell_count > 1) ? (max_level+2) : (max_level+1);
 }
 
 
@@ -70,12 +70,12 @@ std::vector<std::vector<unsigned>> CellIdManager<CellType>::getEqualPartitions(c
 
   // Define the partitions for each processor
   for (unsigned rank{1}; rank<size; ++rank) {
-    double reminder = static_cast<double>(rank * number_root_cells) / size;
+    double reminder = static_cast<double>(rank * root_cell_count) / size;
     for (unsigned i{0}; i<=level; ++i) {
       reminder = (reminder < 0) ? 0 : reminder;
       order_path[i] = std::ceil(static_cast<unsigned>(reminder));
-      order_path[i] = (order_path[i] > (CellType::number_children-1)) ? (CellType::number_children-1) : order_path[i];
-      reminder = CellType::number_children * (reminder - order_path[i]);
+      order_path[i] = (order_path[i] > (CellType::child_count-1)) ? (CellType::child_count-1) : order_path[i];
+      reminder = CellType::child_count * (reminder - order_path[i]);
     }
 
     // Compute cell Id of cell between partitions rank and rank+1
@@ -103,7 +103,7 @@ void CellIdManager<CellType>::setIdLevel(std::vector<unsigned> &cell_id, const u
 template<typename CellType>
 unsigned CellIdManager<CellType>::getIdRoot(const std::vector<unsigned> &cell_id) const {
   // Decode root index
-  if (number_root_cells > 1)
+  if (root_cell_count > 1)
     return cell_id[1];
   return 0;
 }
@@ -111,7 +111,7 @@ unsigned CellIdManager<CellType>::getIdRoot(const std::vector<unsigned> &cell_id
 // Edit the cell_id root index and return the old one
 template<typename CellType>
 void CellIdManager<CellType>::setIdRoot(std::vector<unsigned> &cell_id, const unsigned root_number) const {
-  if (number_root_cells > 1)
+  if (root_cell_count > 1)
     // Encode root index
     cell_id[1] = static_cast<unsigned>(root_number);
 }
@@ -120,7 +120,7 @@ void CellIdManager<CellType>::setIdRoot(std::vector<unsigned> &cell_id, const un
 template<typename CellType>
 unsigned CellIdManager<CellType>::getIdChild(const std::vector<unsigned> &cell_id, const unsigned level) const {
   // Decode child index
-  if (number_root_cells > 1)
+  if (root_cell_count > 1)
     return static_cast<unsigned>(cell_id[level+1]);
   else
     return static_cast<unsigned>(cell_id[level]);
@@ -130,7 +130,7 @@ unsigned CellIdManager<CellType>::getIdChild(const std::vector<unsigned> &cell_i
 template<typename CellType>
 void CellIdManager<CellType>::setIdChild(std::vector<unsigned> &cell_id, const unsigned level, const unsigned child_index) const {
   // Encode child index
-  if (number_root_cells > 1)
+  if (root_cell_count > 1)
     cell_id[level+1] = static_cast<unsigned>(child_index);
   else
     cell_id[level] = static_cast<unsigned>(child_index);
@@ -145,7 +145,7 @@ void CellIdManager<CellType>::toLeaf(std::vector<unsigned> &cell_id, const unsig
 
   for (unsigned l{old_level+1}; l<=level; ++l)
     if (reverse)
-      setIdChild(cell_id, l, CellType::number_children - 1);
+      setIdChild(cell_id, l, CellType::child_count - 1);
     else
       setIdChild(cell_id, l, 0);
 }
@@ -178,14 +178,14 @@ void CellIdManager<CellType>::toRoot(std::vector<unsigned> &cell_id, const unsig
   // Set ID level to zero
   setIdLevel(cell_id, 0);
   // Reset cell ID first root
-  resetCellID(cell_id); // TODO: To keep unsued bits clean, should not be necessary
+  resetCellId(cell_id); // TODO: To keep unsued bits clean, should not be necessary
   // Set root to desired root number
   setIdRoot(cell_id, root_number);
 }
 
 // Reset cell ID
 template<typename CellType>
-void CellIdManager<CellType>::resetCellID(std::vector<unsigned> &cell_id) const {
+void CellIdManager<CellType>::resetCellId(std::vector<unsigned> &cell_id) const {
   // Reset cell ID first root
   cell_id.assign(cell_id_size, 0);
 }
@@ -288,7 +288,7 @@ bool CellIdManager<CellType>::cellIdLte(const std::vector<unsigned> &cell_id_1, 
 
   if (level_1 < level_2)
     for (unsigned l{level_1+1}; l<=level_2; ++l)
-      if (getIdChild(cell_id_2, l) != (CellType::number_children - 1))
+      if (getIdChild(cell_id_2, l) != (CellType::child_count - 1))
         return false;
   if (level_1 == level_2)
     return getIdChild(cell_id_1, level_1) <= getIdChild(cell_id_2, level_2);

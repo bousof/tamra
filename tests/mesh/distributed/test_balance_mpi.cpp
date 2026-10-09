@@ -20,11 +20,11 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions)") {
                  size = mpi_size();
 
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -33,32 +33,32 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions)") {
 
   // Split to level 3 in process 0
   if (rank == 1) {
-    for (const auto &child : A->getChildCells())
+    for (const auto &child : cell_a->getChildCells())
       child->split(max_level);
-    for (const auto &child : A->getChildCells())
+    for (const auto &child : cell_a->getChildCells())
       for (const auto &gc : child->getChildCells())
         gc->split(max_level);
-    A->setToThisProcRecurs();
+    cell_a->markOwnedRecurs();
   } else
-    A->setToOtherProcRecurs();
+    cell_a->markRemoteRecurs();
 
   // Load balance the tree
   tree.loadBalance();
 
   // Count number of owned leaf cells
-  unsigned number_leaf_cells = A->countOwnedLeaves();
+  unsigned leaf_cell_count = cell_a->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
-  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
+  scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
 
   // Also the number of cells should be equally distributed
-  bool passed = number_leaf_cells >= total_leaf_cells/size-1;
-  passed &= number_leaf_cells <= (total_leaf_cells/size+2);
+  bool passed = leaf_cell_count >= total_leaf_cells/size-1;
+  passed &= leaf_cell_count <= (total_leaf_cells/size+2);
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -85,11 +85,11 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, data 
                  size = mpi_size();
 
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -99,17 +99,17 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, data 
   // Split to level 3 in process 0
   if (rank == 1) {
     unsigned counter = 0;
-    for (const auto &child : A->getChildCells())
+    for (const auto &child : cell_a->getChildCells())
       if (++counter%2 == 0)
         child->split(max_level);
-    for (const auto &child : A->getChildCells())
+    for (const auto &child : cell_a->getChildCells())
       if (++counter%2 == 0)
         for (const auto &gc : child->getChildCells())
           if (++counter%2 == 0)
             gc->split(max_level);
-    A->setToThisProcRecurs();
+    cell_a->markOwnedRecurs();
   } else
-    A->setToOtherProcRecurs();
+    cell_a->markRemoteRecurs();
 
   // Set cell values
   MortonIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
@@ -122,15 +122,15 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, data 
   tree.loadBalance();
 
   // Count number of owned leaf cells
-  unsigned number_leaf_cells = A->countOwnedLeaves();
+  unsigned leaf_cell_count = cell_a->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
-  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
+  scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
 
   // Also the number of cells should be equally distributed
-  bool passed = number_leaf_cells >= total_leaf_cells/size-1;
-  passed &= number_leaf_cells <= (total_leaf_cells/size+2);
+  bool passed = leaf_cell_count >= total_leaf_cells/size-1;
+  passed &= leaf_cell_count <= (total_leaf_cells/size+2);
 
   // Check if cell data is valid (value==level)
   if (iterator.toOwnedBegin())
@@ -140,7 +140,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, data 
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -159,8 +159,8 @@ class TestCellData : public AbstractCellData {
   void setUnsigned(unsigned u_value) { this->u_value = u_value; }
   double getDouble() { return d_value; }
   void setDouble(double d_value) { this->d_value = d_value; }
-  double getLoad(bool isLeaf, const std::shared_ptr<void> =nullptr) const override {
-    return isLeaf ? 1. : 0.; // Can use custom load here for load balancing
+  double getLoad(bool is_leaf, const std::shared_ptr<void> =nullptr) const override {
+    return is_leaf ? 1. : 0.; // Can use custom load here for load balancing
   }
   // Conversion as vector of double for data communication
   void fromVectorOfData(const std::vector<double> &buffer) override {
@@ -188,11 +188,11 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, custo
                  size = mpi_size();
 
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -202,52 +202,52 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, custo
   // Split to level 3 in process 0
   if (rank == 1) {
     unsigned counter = 0;
-    for (const auto &child : A->getChildCells())
+    for (const auto &child : cell_a->getChildCells())
       if (++counter%2 == 0)
         child->split(max_level);
-    for (const auto &child : A->getChildCells())
+    for (const auto &child : cell_a->getChildCells())
       if (++counter%2 == 0)
         for (const auto &gc : child->getChildCells())
           if (++counter%2 == 0)
             gc->split(max_level);
-    A->setToThisProcRecurs();
+    cell_a->markOwnedRecurs();
   } else
-    A->setToOtherProcRecurs();
+    cell_a->markRemoteRecurs();
 
   // Set cell values
   MortonIterator<Cell2D> iterator(tree.getRootCells(), tree.getMaxLevel());
   if (iterator.toOwnedBegin())
     do {
-      core::manager::balance::TestCellData &cellData = iterator.getCell()->getCellData();
-      cellData.setUnsigned(iterator.getCell()->getLevel());
-      cellData.setDouble(2.*iterator.getCell()->getLevel());
+      core::manager::balance::TestCellData &cell_data = iterator.getCell()->getCellData();
+      cell_data.setUnsigned(iterator.getCell()->getLevel());
+      cell_data.setDouble(2.*iterator.getCell()->getLevel());
     } while (iterator.ownedNext());
 
   // Load balance the tree
   tree.loadBalance();
 
   // Count number of owned leaf cells
-  unsigned number_leaf_cells = A->countOwnedLeaves();
+  unsigned leaf_cell_count = cell_a->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
-  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
+  scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
 
   // Also the number of cells should be equally distributed
-  bool passed = number_leaf_cells >= total_leaf_cells/size-1;
-  passed &= number_leaf_cells <= (total_leaf_cells/size+2);
+  bool passed = leaf_cell_count >= total_leaf_cells/size-1;
+  passed &= leaf_cell_count <= (total_leaf_cells/size+2);
 
   // Check if cell data is valid (value==level)
   if (iterator.toOwnedBegin())
     do {
-      core::manager::balance::TestCellData &cellData = iterator.getCell()->getCellData();
-      passed &= (cellData.getUnsigned() == iterator.getCell()->getLevel());
-      passed &= (cellData.getDouble() == 2.*iterator.getCell()->getLevel());
+      core::manager::balance::TestCellData &cell_data = iterator.getCell()->getCellData();
+      passed &= (cell_data.getUnsigned() == iterator.getCell()->getLevel());
+      passed &= (cell_data.getDouble() == 2.*iterator.getCell()->getLevel());
     } while (iterator.ownedNext());
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -285,11 +285,11 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (one root)") {
                  size = mpi_size();
 
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -301,29 +301,29 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (one root)") {
 
   // Split first 4 cells in process 0
   if (rank == 0)
-    for (const auto &child : A->getChildCell(0)->getChildCells())
-      if (child->belongToOtherProc())
+    for (const auto &child : cell_a->getChildCell(0)->getChildCells())
+      if (child->isRemote())
         child->split(max_level);
 
   // Load balance the tree
   tree.loadBalance();
 
   // Count number of owned leaf cells
-  unsigned number_leaf_cells = A->countOwnedLeaves();
+  unsigned leaf_cell_count = cell_a->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
-  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
+  scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
 
-  //std::cout << rank << " " << number_leaf_cells << " " << total_leaf_cells << std::endl;
+  //std::cout << rank << " " << leaf_cell_count << " " << total_leaf_cells << std::endl;
 
   // Also the number of cells should be equally distributed
-  bool passed = number_leaf_cells >= total_leaf_cells/size-1;
-  passed &= number_leaf_cells <= (total_leaf_cells/size+2);
+  bool passed = leaf_cell_count >= total_leaf_cells/size-1;
+  passed &= leaf_cell_count <= (total_leaf_cells/size+2);
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -377,11 +377,11 @@ TEST_CASE("[core][manager][balance][mpi] Big load balancing (one root)") {
                  size = mpi_size();
 
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -393,13 +393,13 @@ TEST_CASE("[core][manager][balance][mpi] Big load balancing (one root)") {
 
   // Split first 4 cells in process 0
   if (rank == 0) {
-    for (const auto &child : A->getChildCell(0)->getChildCells())
-      if (child->belongToOtherProc())
+    for (const auto &child : cell_a->getChildCell(0)->getChildCells())
+      if (child->isRemote())
         child->split(max_level);
-    for (const auto &child : A->getChildCell(0)->getChildCells())
-      if (child->belongToOtherProc())
+    for (const auto &child : cell_a->getChildCell(0)->getChildCells())
+      if (child->isRemote())
         for (const auto &gc : child->getChildCells())
-          if (gc->belongToOtherProc())
+          if (gc->isRemote())
             gc->split(max_level);
   }
 
@@ -412,15 +412,15 @@ TEST_CASE("[core][manager][balance][mpi] Big load balancing (one root)") {
   if (iterator.toOwnedBegin())
     do {
       level = iterator.getCell()->getLevel();
-      area += (unsigned)(pow(Cell2D::number_children, max_level-level));
+      area += (unsigned)(pow(Cell2D::child_count, max_level-level));
     } while (iterator.ownedNext());
 
   // Compute the sum of all the leaf cells owned
   unsigned sum_area;
-  scalarSumAllreduce<unsigned>(area, sum_area);
+  scalar_sum_allreduce<unsigned>(area, sum_area);
 
   // Compute the number of cells on each process
-  unsigned total_area = (unsigned)(pow(Cell2D::number_children, max_level));
+  unsigned total_area = (unsigned)(pow(Cell2D::child_count, max_level));
 
   //std::cout << "P_" << rank << ": " << area << " " << sum_area << " " << total_area << std::endl;
 
@@ -429,7 +429,7 @@ TEST_CASE("[core][manager][balance][mpi] Big load balancing (one root)") {
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);
@@ -444,14 +444,14 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (two roots)") {
                  size = mpi_size();
 
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -462,31 +462,31 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (two roots)") {
   tree.meshAtMinLevel();
 
   // Split first 4 cells in process 0
-  for (const auto &child : A->getChildCells())
-    if (child->belongToThisProc())
+  for (const auto &child : cell_a->getChildCells())
+    if (child->isOwned())
       for (const auto &gc : child->getChildCells())
-        if (gc->belongToThisProc())
+        if (gc->isOwned())
           gc->split(max_level);
 
   // Load balance the tree
   tree.loadBalance();
 
   // Count number of owned leaf cells
-  unsigned number_leaf_cells = A->countOwnedLeaves() + B->countOwnedLeaves();
+  unsigned leaf_cell_count = cell_a->countOwnedLeaves() + cell_b->countOwnedLeaves();
 
   // Compute the sum of all the leaf cells owned
   unsigned total_leaf_cells;
-  scalarSumAllreduce<unsigned>(number_leaf_cells, total_leaf_cells);
+  scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
 
-  //std::cout << rank << " " << number_leaf_cells << " " << total_leaf_cells << std::endl;
+  //std::cout << rank << " " << leaf_cell_count << " " << total_leaf_cells << std::endl;
 
   // Also the number of cells should be equally distributed
-  bool passed = number_leaf_cells >= total_leaf_cells/size-1;
-  passed &= number_leaf_cells <= (total_leaf_cells/size+2);
+  bool passed = leaf_cell_count >= total_leaf_cells/size-1;
+  passed &= leaf_cell_count <= (total_leaf_cells/size+2);
 
   // Test should pass on all processes
   bool all_passed;
-  boolAndAllreduce(passed, all_passed);
+  bool_and_allreduce(passed, all_passed);
 
   // Final check
   CHECK(all_passed);

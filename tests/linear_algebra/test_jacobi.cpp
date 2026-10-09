@@ -21,7 +21,7 @@ TEST_CASE("[linalg][jacobi] Jacobi 2x2 serial (1 iter)") {
   std::vector<double> b = {1., 2.};
   std::vector<double> x = {0., 0.};
 
-  std::vector<double> x_next = jacobiIteration(A, b, x);
+  std::vector<double> x_next = jacobi_iteration(A, b, x);
 
   std::vector<double> expected = {0.5, 2.0};
   for (int i{0}; i<2; ++i)
@@ -44,7 +44,7 @@ TEST_CASE("[linalg][jacobi] Jacobi 2x2 serial (100 iter)") {
   std::vector<double> b = {1., 2.};
   std::vector<double> x = {0., 0.};
 
-  std::vector<double> x_sol = sparseJacobi(A, b, x, 100);
+  std::vector<double> x_sol = sparse_jacobi(A, b, x, 100);
 
   std::vector<double> expected = {-1., 3.};
   for (int i{0}; i<2; ++i)

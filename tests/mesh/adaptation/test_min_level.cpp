@@ -13,11 +13,11 @@
 TEST_CASE("[core][manager][min_level] Mesh at min level (one root, serial)") {
   using Cell2D = Cell<2,3>;
   // Create root cell
-  auto A = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A};
-  std::vector<RootCellEntry<Cell2D>> entries { eA };
+  RootCellEntry<Cell2D> entry_a{cell_a};
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -28,23 +28,23 @@ TEST_CASE("[core][manager][min_level] Mesh at min level (one root, serial)") {
   tree.meshAtMinLevel();
 
   // Count number of leaf cells
-  unsigned number_leaf_cells = A->countLeaves();
+  unsigned leaf_cell_count = cell_a->countLeaves();
 
-  CHECK(number_leaf_cells == (unsigned)(pow(Cell2D::number_children, min_level)));
+  CHECK(leaf_cell_count == (unsigned)(pow(Cell2D::child_count, min_level)));
 }
 
 // Mesh at min level and count number of leaf cells (two roots)
 TEST_CASE("[core][manager][min_level] Mesh at min level (two roots, serial)") {
   using Cell2D = Cell<2,3>;
   // Create 2 root cells
-  auto A = std::make_shared<Cell2D>(nullptr);
-  auto B = std::make_shared<Cell2D>(nullptr);
+  auto cell_a = std::make_shared<Cell2D>(nullptr);
+  auto cell_b = std::make_shared<Cell2D>(nullptr);
 
   // Create root cell entries
-  RootCellEntry<Cell2D> eA{A}, eB{B};
-  eA.setNeighbor(1, B);          // A +x -> B
-  eB.setNeighbor(0, A);          // B -x -> A
-  std::vector<RootCellEntry<Cell2D>> entries { eA, eB };
+  RootCellEntry<Cell2D> entry_a{cell_a}, entry_b{cell_b};
+  entry_a.setNeighbor(1, cell_b);          // A +x -> B
+  entry_b.setNeighbor(0, cell_a);          // B -x -> A
+  std::vector<RootCellEntry<Cell2D>> entries { entry_a, entry_b };
 
   // Construction of the tree
   unsigned min_level{2}, max_level{3};
@@ -55,7 +55,7 @@ TEST_CASE("[core][manager][min_level] Mesh at min level (two roots, serial)") {
   tree.meshAtMinLevel();
 
   // Count number of leaf cells
-  unsigned number_leaf_cells = A->countLeaves() + B->countLeaves();
+  unsigned leaf_cell_count = cell_a->countLeaves() + cell_b->countLeaves();
 
-  CHECK(number_leaf_cells == tree.getRootCells().size() * (unsigned)(pow(Cell2D::number_children, min_level)));
+  CHECK(leaf_cell_count == tree.getRootCells().size() * (unsigned)(pow(Cell2D::child_count, min_level)));
 }

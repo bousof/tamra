@@ -14,11 +14,11 @@
 #include <numeric>
 #include <vector>
 
-#include <tamra/mesh/adaptation/CoarseManager.h>
+#include <tamra/mesh/adaptation/CoarseningManager.h>
 #include <tamra/mesh/adaptation/MinLevelMeshManager.h>
-#include <tamra/mesh/adaptation/RefineManager.h>
+#include <tamra/mesh/adaptation/RefinementManager.h>
 #include <tamra/mesh/Cell.h>
-#include <tamra/mesh/distributed/BalanceManager.h>
+#include <tamra/mesh/distributed/LoadBalanceManager.h>
 #include <tamra/mesh/distributed/GhostManager.h>
 #include <tamra/mesh/RootCellEntry.h>
 #include <tamra/mesh/traversal/MortonIterator.h>
@@ -28,15 +28,15 @@ template<typename CellTypeT, typename TreeIteratorTypeT = MortonIterator<CellTyp
 class Tree {
  public:
   using CellType = CellTypeT;
-  using BalanceManagerType = BalanceManager<CellType, TreeIteratorTypeT>;
-  using CoarseManagerType = CoarseManager<CellType>;
+  using LoadBalanceManagerType = LoadBalanceManager<CellType, TreeIteratorTypeT>;
+  using CoarseningManagerType = CoarseningManager<CellType>;
   using ExtrapolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
   using InterpolationFunctionType = std::function<void(const std::shared_ptr<CellType>&)>;
   using MergeFunctionType = std::function<void(const std::shared_ptr<CellType>&, const std::shared_ptr<CellType>&)>;
   using GhostManagerType = GhostManager<CellType, TreeIteratorTypeT>;
   using GhostManagerTaskType = typename GhostManager<CellType, TreeIteratorTypeT>::GhostManagerTaskType;
   using MinLevelMeshManagerType = MinLevelMeshManager<CellType, TreeIteratorTypeT>;
-  using RefineManagerType = RefineManager<CellType>;
+  using RefinementManagerType = RefinementManager<CellType>;
   using RootCellEntryType = RootCellEntry<CellType>;
   using TreeIteratorType = TreeIteratorTypeT;
 
@@ -55,15 +55,15 @@ class Tree {
   // Root cells
   std::vector<std::shared_ptr<CellType>> root_cells;
   // Load balancing manager
-	BalanceManagerType balanceManager;
+	LoadBalanceManagerType load_balance_manager;
   // Mesh coarsening manager
-	CoarseManagerType coarseManager;
+	CoarseningManagerType coarsening_manager;
   // Ghost cell manager
-	GhostManagerType ghostManager;
+	GhostManagerType ghost_manager;
   // Min level meshing manager
-	MinLevelMeshManagerType minLevelMeshManager;
+	MinLevelMeshManagerType min_level_mesh_manager;
   // Mesh refinement manager
-	RefineManagerType refineManager;
+	RefinementManagerType refinement_manager;
 
   //-----------------------------------------------------------//
   //  CONSTRUCTORS, DESTRUCTOR AND INITIALIZATION              //
@@ -89,9 +89,9 @@ class Tree {
   // Get ghost manager
   GhostManagerType getGhostManager() const;
   // Default directions
-  static const std::vector<int>& defaultDirections() {
+  static const std::vector<int>& default_directions() {
     static const std::vector<int> dirs = [] {
-        std::vector<int> v(CellType::number_neighbors); // 4 connexity
+        std::vector<int> v(CellType::neighbor_count); // 4 connexity
         std::iota(v.begin(), v.end(), 0);
         return v;
     }();
@@ -115,19 +115,19 @@ class Tree {
 
   // Creation of ghost cells
   GhostManagerTaskType buildGhostLayer(
-    InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; },
-    const std::vector<int> &directions = defaultDirections()
+    ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; },
+    const std::vector<int> &directions = default_directions()
   );
   // Exchange ghost cell values
   void exchangeGhostValues(
     GhostManagerTaskType &task,
-    InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }
+    ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; }
   );
 
   // Redistribute cells among processes to balance computation load
   void loadBalance(
-    InterpolationFunctionType interpolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; },
-    const double max_pct_unbalance = 0.1
+    ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; },
+    const double max_relative_load_imbalance = 0.1
   );
 
   //--- Propagating -------------------------------------------//
@@ -175,7 +175,7 @@ class Tree {
   void mergeWith(
     const Tree &other_tree, ExtrapolationFunctionType extrapolation_function = [](const std::shared_ptr<CellType> &cell) { (void)cell; },
     MergeFunctionType merge_function = [](const std::shared_ptr<CellType> &cell, const std::shared_ptr<CellType> &other_cell) {
-      if (!cell->belongToThisProc() && other_cell->belongToThisProc()) {
+      if (!cell->isOwned() && other_cell->isOwned()) {
         cell->getCellData().fromVectorOfData(other_cell->getCellData().toVectorOfData());
       }
     }

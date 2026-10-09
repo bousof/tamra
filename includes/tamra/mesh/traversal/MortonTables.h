@@ -16,7 +16,7 @@
 //-----------------------------------------------------------//
 
 template<typename CellType, short MORTON_ORIENTATION>
-constexpr std::array<unsigned, CellType::number_children> make_orderings();
+constexpr std::array<unsigned, CellType::child_count> make_orderings();
 
 template<size_t ARRAY_SIZE>
 std::array<unsigned, ARRAY_SIZE> reverse_orderings(const std::array<unsigned, ARRAY_SIZE> &orderings);
@@ -29,7 +29,7 @@ std::array<unsigned, ARRAY_SIZE> reverse_orderings(const std::array<unsigned, AR
 template<class CellType, short MORTON_ORIENTATION>
 struct MortonTables {
   static const auto& get_orderings()         { static const auto t = make_orderings<CellType, MORTON_ORIENTATION>(); return t; }
-  static const auto& get_reverse_orderings() { static const auto t = reverse_orderings<CellType::number_children>(get_orderings()); return t; }
+  static const auto& get_reverse_orderings() { static const auto t = reverse_orderings<CellType::child_count>(get_orderings()); return t; }
 };
 
 
@@ -38,8 +38,8 @@ struct MortonTables {
 //-----------------------------------------------------------//
 
 template<typename CellType, short MORTON_ORIENTATION>
-constexpr std::array<unsigned, CellType::number_children> make_orderings() {
-  std::array<unsigned, CellType::number_children> orderings{};
+constexpr std::array<unsigned, CellType::child_count> make_orderings() {
+  std::array<unsigned, CellType::child_count> orderings{};
   const unsigned Nx = std::max(CellType::Nx, 1),
                  Ny = std::max(CellType::Ny, 1),
                  Nz = std::max(CellType::Nz, 1);

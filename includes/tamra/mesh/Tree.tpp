@@ -12,11 +12,11 @@ Tree<CellType, TreeIteratorType>::Tree(const unsigned min_level, const unsigned 
   max_level(max_level),
   rank(rank),
   size(size),
-  balanceManager(min_level, max_level, rank, size),
-  coarseManager(min_level, max_level, rank, size),
-  ghostManager(min_level, max_level, rank, size),
-  minLevelMeshManager(min_level, max_level, rank, size),
-  refineManager(min_level, max_level, rank, size) {}
+  load_balance_manager(min_level, max_level, rank, size),
+  coarsening_manager(min_level, max_level, rank, size),
+  ghost_manager(min_level, max_level, rank, size),
+  min_level_mesh_manager(min_level, max_level, rank, size),
+  refinement_manager(min_level, max_level, rank, size) {}
 
 // Destructor
 template<typename CellType, typename TreeIteratorType>
@@ -40,7 +40,7 @@ void Tree<CellType, TreeIteratorType>::createRootCells(const std::vector<RootCel
       cell->splitRoot(max_level, cell);
 
     // Connect the neighbors in the root's child_oct
-    for (unsigned dir{0}; dir<CellType::number_neighbors; ++dir) {
+    for (unsigned dir{0}; dir<CellType::neighbor_count; ++dir) {
       const auto &neighbor = entry.neighbor_cells[dir];
       if (neighbor)
         cell->getChildOct()->setNeighborCell(dir, neighbor);
@@ -74,7 +74,7 @@ unsigned Tree<CellType, TreeIteratorType>::getMaxLevel() const {
 // Get ghost manager
 template<typename CellType, typename TreeIteratorType>
 typename Tree<CellType, TreeIteratorType>::GhostManagerType Tree<CellType, TreeIteratorType>::getGhostManager() const {
-  return ghostManager;
+  return ghost_manager;
 }
 
 // Get ghost manager
@@ -103,7 +103,7 @@ void Tree<CellType, TreeIteratorType>::meshAtMinLevel() {
 template<typename CellType, typename TreeIteratorType>
 void Tree<CellType, TreeIteratorType>::meshAtMinLevel(TreeIteratorType &iterator) {
   // Meshing at minimum level
-	minLevelMeshManager.meshAtMinLevel(root_cells, iterator);
+	min_level_mesh_manager.meshAtMinLevel(root_cells, iterator);
 }
 
 // Split all the leaf cells belonging to this proc that need to
@@ -111,76 +111,76 @@ void Tree<CellType, TreeIteratorType>::meshAtMinLevel(TreeIteratorType &iterator
 template<typename CellType, typename TreeIteratorType>
 bool Tree<CellType, TreeIteratorType>::refine(ExtrapolationFunctionType extrapolation_function) {
 	// Refining mesh
-	return refineManager.refine(root_cells, extrapolation_function);
+	return refinement_manager.refine(root_cells, extrapolation_function);
 }
 
 // Creation of ghost cells
 template<typename CellType, typename TreeIteratorType>
-typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, TreeIteratorType>::buildGhostLayer(InterpolationFunctionType interpolation_function, const std::vector<int> &directions) {
+typename Tree<CellType, TreeIteratorType>::GhostManagerTaskType Tree<CellType, TreeIteratorType>::buildGhostLayer(ExtrapolationFunctionType extrapolation_function, const std::vector<int> &directions) {
   TreeIteratorType iterator(root_cells, max_level);
-  return ghostManager.buildGhostLayer(root_cells, iterator, directions, interpolation_function);
+  return ghost_manager.buildGhostLayer(root_cells, iterator, directions, extrapolation_function);
 }
 
 // Creation of ghost cells
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::exchangeGhostValues(GhostManagerTaskType &task, InterpolationFunctionType interpolation_function) {
+void Tree<CellType, TreeIteratorType>::exchangeGhostValues(GhostManagerTaskType &task, ExtrapolationFunctionType extrapolation_function) {
   TreeIteratorType iterator(root_cells, max_level);
-  ghostManager.exchangeGhostValues(task, iterator, interpolation_function);
+  ghost_manager.exchangeGhostValues(task, iterator, extrapolation_function);
 }
 
 // Coarse all the cells for which all child are set to be coarsened
 template<typename CellType, typename TreeIteratorType>
 bool Tree<CellType, TreeIteratorType>::coarsen(InterpolationFunctionType interpolation_function) {
 	// Coarsening mesh
-	return coarseManager.coarsen(root_cells, interpolation_function);
+	return coarsening_manager.coarsen(root_cells, interpolation_function);
 }
 
 // Redistribute cells among processes to balance computation load
 template<typename CellType, typename TreeIteratorType>
-void Tree<CellType, TreeIteratorType>::loadBalance(InterpolationFunctionType interpolation_function, const double max_pct_unbalance) {
+void Tree<CellType, TreeIteratorType>::loadBalance(ExtrapolationFunctionType extrapolation_function, const double max_relative_load_imbalance) {
 	TreeIteratorType iterator(root_cells, max_level);
-  return balanceManager.loadBalance(root_cells, iterator, max_pct_unbalance, interpolation_function);
+  return load_balance_manager.loadBalance(root_cells, iterator, max_relative_load_imbalance, extrapolation_function);
 }
 
 // Count the number of owned leaf cells
 template<typename CellType, typename TreeIteratorType>
 unsigned Tree<CellType, TreeIteratorType>::countOwnedLeaves() const {
-  unsigned nb_owned_leaves = 0;
+  unsigned owned_leaf_count = 0;
 
   for (const auto &root_cell : root_cells)
-    if (root_cell->belongToThisProc())
-      nb_owned_leaves += root_cell->countOwnedLeaves();
-  return nb_owned_leaves;
+    if (root_cell->isOwned())
+      owned_leaf_count += root_cell->countOwnedLeaves();
+  return owned_leaf_count;
 }
 
 // Count the number of cells
 template<typename CellType, typename TreeIteratorType>
 unsigned Tree<CellType, TreeIteratorType>::countCells(const std::shared_ptr<CellType> &cell) const {
   if (cell) {
-    unsigned nb_cells = 1;
+    unsigned cell_count = 1;
     if (!cell->isLeaf())
       for (const auto &child_cell : cell->getChildCells())
-        nb_cells += countCells(child_cell);
-    return nb_cells;
+        cell_count += countCells(child_cell);
+    return cell_count;
   }
 
-  unsigned nb_cells{0};
+  unsigned cell_count{0};
 
   for (const auto &root_cell : root_cells)
-    nb_cells += countCells(root_cell);
+    cell_count += countCells(root_cell);
 
-  return nb_cells;
+  return cell_count;
 }
 
 // Count the number of owned leaf cells
 template<typename CellType, typename TreeIteratorType>
 unsigned Tree<CellType, TreeIteratorType>::countGhostLeaves() const {
-  unsigned nb_ghost_leaves = 0;
+  unsigned ghost_leaf_count = 0;
 
   for (const auto &root_cell : root_cells)
-    if (root_cell->belongToOtherProc())
-      nb_ghost_leaves += root_cell->countGhostLeaves();
-  return nb_ghost_leaves;
+    if (root_cell->isRemote())
+      ghost_leaf_count += root_cell->countGhostLeaves();
+  return ghost_leaf_count;
 }
 
 // Apply a function to owned leaf cells
@@ -215,7 +215,7 @@ void Tree<CellType, TreeIteratorType>::sharePartitions(std::vector<std::vector<u
 // Share the partiion start and end cells
 template<typename CellType, typename TreeIteratorType>
 void Tree<CellType, TreeIteratorType>::sharePartitions(std::vector<std::vector<unsigned>> &begin_ids, std::vector<std::vector<unsigned>> &end_ids, TreeIteratorType &iterator) const {
-  ghostManager.sharePartitions(begin_ids, end_ids, iterator);
+  ghost_manager.sharePartitions(begin_ids, end_ids, iterator);
 }
 
 // Share the partiion start and end cells
@@ -250,7 +250,7 @@ void Tree<CellType, TreeIteratorType>::applyToGhostLeavesRanks(const std::functi
 
   // Determine if there is any rank higher that have ghost cells and loop through them
   {
-    iterator.toEnd();
+    iterator.toLast();
     std::shared_ptr<CellType> end_cell = iterator.getCell();
     iterator.toOwnedEnd();
     if (iterator.getCell() != end_cell) {
@@ -285,7 +285,7 @@ void Tree<CellType, TreeIteratorType>::applyToGhostLeaves(const std::function<vo
       continue;
     }
     // Move iterator and check if still in partition
-    loop = iterator.next() && iterator.getCell()->belongToOtherProc();
+    loop = iterator.next() && iterator.getCell()->isRemote();
   } while (loop);
 }
 
@@ -314,7 +314,7 @@ void Tree<CellType, TreeIteratorType>::mergeWith(const Tree &other_tree, Extrapo
     throw std::runtime_error("Tree::mergeWith: Cannot merge trees with different numbers of root cells");
 
   for (size_t i{0}; i<root_cells.size(); ++i)
-    for (unsigned dir{0}; dir<CellType::number_neighbors; ++dir) {
+    for (unsigned dir{0}; dir<CellType::neighbor_count; ++dir) {
       const auto this_neighbor = root_cells[i]->getNeighborCell(dir);
       const auto other_neighbor = other_tree.root_cells[i]->getNeighborCell(dir);
       if (!this_neighbor != !other_neighbor)
@@ -364,10 +364,10 @@ void Tree<CellType, TreeIteratorType>::mergeCellRecurs(const std::shared_ptr<Cel
 
   // Recursive call at deeper tree levels
   if (!other_cell->isLeaf())
-    for (unsigned i{0}; i<CellType::number_children; ++i)
+    for (unsigned i{0}; i<CellType::child_count; ++i)
       mergeCellRecurs(cell->getChildCell(i), other_cell->getChildCell(i), extrapolation_function, merge_function);
 
   // Add the cell to the destination partition after merging its children so newly split cells keep their previous ownership while their data is merged.
-  if (other_cell->belongToThisProc())
-    cell->setToThisProc();
+  if (other_cell->isOwned())
+    cell->markOwned();
 }

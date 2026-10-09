@@ -4,10 +4,10 @@
 //  IMPLEMENTATIONS                                          //
 //-----------------------------------------------------------//
 
-void boolAndAllreduce(const bool value, bool &reduction) {
+void bool_and_allreduce(const bool value, bool &reduction) {
 #ifdef USE_MPI
-  allreduce::detail::scalarAllreduceT(value, reduction, MPI_C_BOOL, MPI_LAND);
+  allreduce::detail::scalar_allreduce_impl(value, reduction, MPI_C_BOOL, MPI_LAND);
 #else
-  allreduce::detail::scalarAllreduceT(value, reduction);
+  allreduce::detail::scalar_allreduce_impl(value, reduction);
 #endif // USE_MPI
 }
