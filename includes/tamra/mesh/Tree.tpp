@@ -172,14 +172,13 @@ unsigned Tree<CellType, TreeIteratorType>::countCells(const std::shared_ptr<Cell
   return cell_count;
 }
 
-// Count the number of owned leaf cells
+// Count the number of ghost leaf cells
 template<typename CellType, typename TreeIteratorType>
 unsigned Tree<CellType, TreeIteratorType>::countGhostLeaves() const {
   unsigned ghost_leaf_count = 0;
 
   for (const auto &root_cell : root_cells)
-    if (root_cell->isRemote())
-      ghost_leaf_count += root_cell->countGhostLeaves();
+    ghost_leaf_count += root_cell->countGhostLeaves();
   return ghost_leaf_count;
 }
 

@@ -168,12 +168,13 @@ unsigned Cell<Nx, Ny, Nz, DataType>::countOwnedLeaves() const {
 // Count the number of ghost leaf cells
 template<int Nx, int Ny, int Nz, typename DataType>
 unsigned Cell<Nx, Ny, Nz, DataType>::countGhostLeaves() const {
-  if (!this->isOwned())
+  if (isBoundaryCell())
     return 0;
 
   if (isLeaf())
-    return 1;
+    return isRemote() ? 1 : 0;
 
+  // An owned parent can contain remote descendants at partition boundaries.
   unsigned ghost_leaf_count = 0;
   for (const auto &child : getChildCells())
     ghost_leaf_count += child->countGhostLeaves();
