@@ -41,6 +41,8 @@ void scalar_alltoall_impl(const std::vector<int> &send_buffer, std::vector<T> &r
   );
 
 	// Sharing of values between all processors
+  // There is one send and receive value per rank.
+  recv_buffer.resize(send_buffer.size());
   MPI_Alltoall(send_buffer.data(), 1, data_type, recv_buffer.data(), 1, data_type, MPI_COMM_WORLD);
 }
 
