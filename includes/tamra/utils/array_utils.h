@@ -20,7 +20,7 @@ T cumulative_sum(const std::vector<T> &counts, std::vector<T> &displacements, co
   );
 
   displacements.resize(counts.size());
-  int sum = 0;
+  T sum{};
   for (size_t i{0}; i<counts.size(); ++i) {
     if (start_at_zero)
       displacements[i] = sum;
