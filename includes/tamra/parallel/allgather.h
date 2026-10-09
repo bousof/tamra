@@ -86,7 +86,7 @@ void vector_allgather_impl(std::vector<T> &send_buffer, std::vector<T> &recv_buf
 template<typename T>
 void matrix_allgather_impl(const std::vector<std::vector<T>> &send_buffers, std::vector<std::vector<T>> &recv_buffers, const unsigned size, const MPI_Datatype data_type) {
   unsigned row_count = send_buffers.size(),
-           col_count = send_buffers[0].size();
+           col_count = send_buffers.empty() ? 0 : send_buffers[0].size();
   // Call the merging all to all function
 	std::vector<T> send_buffer, recv_buffer;
   send_buffer.reserve(row_count * col_count);

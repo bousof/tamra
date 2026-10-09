@@ -100,26 +100,31 @@ void matrix_bcast_impl(std::vector<std::vector<T>> &buffer, const unsigned root,
 	// Number of elements to broadcast to all processes
   if (col_count == 0) {
     if (rank == root)
-      col_count = buffer[0].size();
+      col_count = buffer.empty() ? 0 : buffer[0].size();
     scalar_bcast<unsigned>(col_count, root);
   }
 
-  // Call the merging all to all function
+  // Share rows explicitly so that zero-column matrices retain their shape.
+  if (row_count == 0) {
+    if (rank == root)
+      row_count = buffer.size();
+    scalar_bcast<unsigned>(row_count, root);
+  }
+
+  // Flatten the rectangular matrix and broadcast its contents.
 	std::vector<T> vector_buffer;
   unsigned count = row_count * col_count;
   if (rank == root) {
-    row_count = buffer.size();
-    vector_buffer.resize(row_count * col_count);
+    vector_buffer.resize(count);
     for (unsigned i{0}, j; i<row_count; ++i)
       for (j=0; j<col_count; ++j)
         vector_buffer[i * col_count + j] = buffer[i][j];
   }
-  vector_bcast_impl(vector_buffer, root, rank, data_type, count);
+  if (count != 0)
+    vector_bcast_impl(vector_buffer, root, rank, data_type, count);
 
   // Split received data from each processor
   if (rank != root) {
-    count = vector_buffer.size();
-    row_count = count / col_count;
     buffer.resize(row_count);
     for (unsigned i{0}; i<row_count; ++i)
       buffer[i].assign(vector_buffer.begin() + i * col_count, vector_buffer.begin() + (i+1) * col_count);

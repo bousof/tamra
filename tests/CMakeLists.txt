@@ -20,6 +20,8 @@ set(TAMRA_SERIAL_TESTS_SRC
 # only in tamra_mpi_tests when USE_MPI is enabled.
 set(TAMRA_COLLECTIVE_TESTS_SRC
   parallel/test_allreduce.cpp
+  parallel/test_bcast.cpp
+  parallel/test_gather.cpp
   parallel/test_wrapper.cpp
 )
 
