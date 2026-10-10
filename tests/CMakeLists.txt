@@ -19,6 +19,7 @@ set(TAMRA_SERIAL_TESTS_SRC
 # The MPI-enabled tamra_tests executable has no MPI_Init, so these sources belong
 # only in tamra_mpi_tests when USE_MPI is enabled.
 set(TAMRA_COLLECTIVE_TESTS_SRC
+  mesh/distributed/test_load_balance_decision.cpp
   parallel/test_allreduce.cpp
   parallel/test_alltoall.cpp
   parallel/test_bcast.cpp
