@@ -29,9 +29,10 @@ void vector_data_allgatherv(const std::vector<std::unique_ptr<ParallelData>> &se
 
 	// Sending buffer, data come as a vector of doubles and must be transformed to a vector of ParallelData
 	recv_buffer.resize(recv_counts.size());
-	int data_counter = 0;
+	std::size_t data_counter = 0;
 	for (size_t i{0}; i<recv_counts.size(); ++i) {
-		std::vector<double> subdata(&recv_data_buffer[data_counter], &recv_data_buffer[data_counter+recv_counts[i]]);
+		std::vector<double> subdata(recv_data_buffer.begin() + data_counter,
+                                recv_data_buffer.begin() + data_counter + recv_counts[i]);
 		data_counter += recv_counts[i];
 
     recv_buffer[i] = create_data();

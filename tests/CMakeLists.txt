@@ -23,6 +23,7 @@ set(TAMRA_COLLECTIVE_TESTS_SRC
   parallel/test_alltoall.cpp
   parallel/test_bcast.cpp
   parallel/test_gather.cpp
+  parallel/test_parallel_data.cpp
   parallel/test_wrapper.cpp
 )
 
@@ -59,6 +60,7 @@ if(USE_MPI)
   add_executable(tamra_mpi_tests
     test_main_mpi.cpp        # MPI doctest main
     ${TAMRA_SERIAL_TESTS_SRC}
+    ${TAMRA_COLLECTIVE_TESTS_SRC}
     ${TAMRA_MPI_TESTS_SRC}
   )
 
@@ -72,6 +74,7 @@ if(USE_MPI)
   add_test(NAME tamra_parallel_tests
     COMMAND ${MPIEXEC_EXECUTABLE}
             ${MPIEXEC_NUMPROC_FLAG} 4
+            ${MPIEXEC_PREFLAGS}
             $<TARGET_FILE:tamra_mpi_tests>
             ${MPIEXEC_POSTFLAGS}
   )
