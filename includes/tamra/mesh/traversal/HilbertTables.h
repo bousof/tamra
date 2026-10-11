@@ -103,7 +103,7 @@ inline std::tuple<std::vector<unsigned>,
     return compute_orderings_1d(Ni);
   else if ((split_dimension_count == 2) && (Ni == 2) && (Nj == 2))
     return compute_orderings_quad_tree();
-  else if ((split_dimension_count == 2) && (Ni == 2) && (Nj == 2) && (Nk == 2))
+  else if ((split_dimension_count == 3) && (Ni == 2) && (Nj == 2) && (Nk == 2))
     return compute_orderings_oct_tree();
   throw std::runtime_error(
     "HilbertIterator does not handle arbitrary cell splitting "

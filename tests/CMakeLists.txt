@@ -11,6 +11,7 @@ set(TAMRA_SERIAL_TESTS_SRC
   mesh/test_ownership.cpp
   mesh/test_tree.cpp
   mesh/traversal/test_cell_id.cpp
+  mesh/traversal/test_iterator_coverage.cpp
   mesh/traversal/test_tree_iterator.cpp
   utils/test_array_utils.cpp
 )

@@ -41,18 +41,17 @@ std::vector<unsigned> HilbertIterator<CellType>::indexToOrderPath(const std::vec
 // the curve) with respect to the mother orientation.
 // For Mortong Z curve sibling_number = order
 template <typename CellType>
-unsigned HilbertIterator<CellType>::orderToSiblingNumber(unsigned order, const bool compute_orientation) const {
-  if (compute_orientation)
-    return child_orderings[nextOrientation(order)][order];
-  else
-    return child_orderings[orientation_path.back()][order];
+unsigned HilbertIterator<CellType>::orderToSiblingNumber(unsigned order, const bool) const {
+  // Select a child using its parent's orientation, including ownership probes.
+  return child_orderings[orientation_path.back()][order];
 }
 
 // Go to child cell
 template <typename CellType>
 void HilbertIterator<CellType>::toChild(const unsigned order) {
-  orientation_path.push_back(nextOrientation(order));
+  const unsigned child_orientation = nextOrientation(order);
   AbstractTreeIterator<CellType>::toChild(order);
+  orientation_path.push_back(child_orientation);
 }
 
 // Go to parent cell
