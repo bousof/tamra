@@ -55,30 +55,26 @@ std::vector<unsigned> CellIdManager<CellType>::idToOrderPath(const std::vector<u
   return order_path;
 }
 
-// Generate the IDs of the first and last leaf cells of the
-// partitions obatined by splitting into equal parts and taking
-// the n-th one
+// Generate partition starts by dividing the level's cells in curve order.
 template<typename CellType>
 std::vector<std::vector<unsigned>> CellIdManager<CellType>::getEqualPartitions(const unsigned level, const unsigned size) const {
-  // Compute all partitions start and end positions
+  if (size == 0)
+    throw std::invalid_argument("Partition count must be positive");
+
   std::vector<std::vector<unsigned>> partitions(size);
-
-  // Start order path and cell ID
   std::vector<unsigned> order_path(level+1, 0);
-  // End order path and cell ID
-  partitions[0] = orderPathToId(order_path);
 
-  // Define the partitions for each processor
-  for (unsigned rank{1}; rank<size; ++rank) {
-    double reminder = static_cast<double>(rank * root_cell_count) / size;
-    for (unsigned i{0}; i<=level; ++i) {
-      reminder = (reminder < 0) ? 0 : reminder;
-      order_path[i] = std::ceil(static_cast<unsigned>(reminder));
-      order_path[i] = (order_path[i] > (CellType::child_count-1)) ? (CellType::child_count-1) : order_path[i];
-      reminder = CellType::child_count * (reminder - order_path[i]);
+  // Long division computes floor(rank * root_count * child_count^level / size)
+  // without floating-point rounding or constructing the potentially huge power.
+  for (unsigned rank{0}; rank<size; ++rank) {
+    std::uint64_t remainder = static_cast<std::uint64_t>(rank) * root_cell_count;
+    order_path[0] = static_cast<unsigned>(remainder / size);
+    remainder %= size;
+    for (unsigned i{1}; i<=level; ++i) {
+      remainder *= CellType::child_count;
+      order_path[i] = static_cast<unsigned>(remainder / size);
+      remainder %= size;
     }
-
-    // Compute cell Id of cell between partitions rank and rank+1
     partitions[rank] = orderPathToId(order_path);
   }
 

@@ -9,6 +9,8 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
+#include <stdexcept>
 #include <vector>
 
 
@@ -49,9 +51,8 @@ class CellIdManager {
   std::vector<unsigned> orderPathToId(const std::vector<unsigned> &order_path) const;
   // Generate an ID from the genealogy of a cell.
   std::vector<unsigned> idToOrderPath(const std::vector<unsigned> &cell_id) const;
-  // Generate the IDs of the first and last leaf cells of the
-  // partitions obatined by splitting into equal parts and taking
-  // the n-th one
+  // Start IDs of equal partitions at the given level. Each end is the next
+  // start (exclusive); repeated starts represent empty partitions.
   std::vector<std::vector<unsigned>> getEqualPartitions(const unsigned level, const unsigned size) const;
   // Moves the cell ID to child cell
   void toChild(std::vector<unsigned> &cell_id, const unsigned order) const;

@@ -129,3 +129,49 @@ TEST_CASE("[core][manager][cell_id] cellIdLte compares descendant to ancestor en
   CHECK(cell_id_manager.cellIdLte(last_child, ancestor));
   CHECK(cell_id_manager.cellIdLte(last_grandchild, ancestor));
 }
+
+using PartitionCell1D = Cell<2>;
+using PartitionCell2D = Cell<3, 2>;
+using PartitionCell3D = Cell<2, 2, 2>;
+
+TEST_CASE_TEMPLATE("[core][manager][cell_id] Equal partitions cover roots and uneven rank counts", CellType,
+                   PartitionCell1D, PartitionCell2D, PartitionCell3D) {
+  for (unsigned root_count : {1u, 2u, 9u}) {
+    CellIdManager<CellType> manager(root_count, 2);
+    for (unsigned level : {0u, 1u, 2u}) {
+      unsigned cells_per_root = 1;
+      for (unsigned l{0}; l < level; ++l)
+        cells_per_root *= CellType::child_count;
+      const unsigned total_cells = root_count * cells_per_root;
+      for (unsigned size : {1u, 2u, 3u, 5u, 17u}) {
+        INFO("roots = " << root_count << ", level = " << level << ", ranks = " << size);
+        const auto partitions = manager.getEqualPartitions(level, size);
+        REQUIRE(partitions.size() == size);
+        for (unsigned rank{0}; rank < size; ++rank) {
+          const auto path = manager.idToOrderPath(partitions[rank]);
+          REQUIRE(path.size() == level + 1);
+          CHECK(path[0] < root_count);
+          unsigned ordinal = path[0];
+          for (unsigned l{1}; l <= level; ++l) {
+            CHECK(path[l] < CellType::child_count);
+            ordinal = ordinal * CellType::child_count + path[l];
+          }
+          CHECK(ordinal == rank * total_cells / size);
+        }
+      }
+    }
+  }
+}
+
+TEST_CASE("[core][manager][cell_id] Deep partition cuts retain exact digits") {
+  CellIdManager<PartitionCell1D> manager(1, 80);
+  const auto partitions = manager.getEqualPartitions(80, 3);
+  const auto one_third = manager.idToOrderPath(partitions[1]);
+  const auto two_thirds = manager.idToOrderPath(partitions[2]);
+  // Binary expansions 0.010101... and 0.101010... extend beyond double precision.
+  for (unsigned level{1}; level <= 80; ++level) {
+    CHECK(one_third[level] == (level + 1) % 2);
+    CHECK(two_thirds[level] == level % 2);
+  }
+  CHECK_THROWS_AS(manager.getEqualPartitions(2, 0), std::invalid_argument);
+}
