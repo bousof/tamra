@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iomanip>
 #include <memory>
+#include <numeric>
 #include <vector>
 
 #include <tamra/mesh/Cell.h>
@@ -466,9 +467,15 @@ TEST_CASE("[core][manager][snapshot][mpi] Restore and merge partitions from a la
   const unsigned rank = mpi_rank();
   const unsigned size = mpi_size();
   const unsigned source_size = 2 * size;
-  const unsigned max_level = (source_size == 1) ? 0 : static_cast<unsigned>(std::log2(source_size));
+  unsigned max_level = 1;
+  while ((1u << max_level) < source_size)
+    ++max_level;
+  const unsigned leaf_cell_count = 1u << max_level;
 
-  std::vector<unsigned> partition_sizes(source_size, 1);
+  // A uniform binary tree has a power-of-two leaf count, regardless of ranks.
+  std::vector<unsigned> partition_sizes(source_size, leaf_cell_count / source_size);
+  for (unsigned p{0}; p < leaf_cell_count % source_size; ++p)
+    ++partition_sizes[p];
   const auto snapshots = core::manager::snapshot::mpi::make_partition_snapshots(source_size, max_level, partition_sizes);
 
   SnapshotManager<BinaryTree> restore_manager(rank, size);
@@ -477,16 +484,19 @@ TEST_CASE("[core][manager][snapshot][mpi] Restore and merge partitions from a la
   std::istringstream second_snapshot(snapshots[2 * rank + 1]);
   restore_manager.readMetaAndMerge(second_snapshot, restored_tree);
 
-  bool passed = restored_tree.countOwnedLeaves() == 2;
+  const unsigned expected_count = partition_sizes[2 * rank] + partition_sizes[2 * rank + 1];
+  const unsigned expected_start = std::accumulate(partition_sizes.begin(),
+                                                 partition_sizes.begin() + 2 * rank, 0u);
+  bool passed = restored_tree.countOwnedLeaves() == expected_count;
   std::vector<double> owned_values;
   restored_tree.applyToOwnedLeaves(
     [&owned_values](const std::shared_ptr<Cell1D>& cell, unsigned) {
       owned_values.push_back(cell->getCellData().getValue());
     }
   );
-  passed &= owned_values.size() == 2;
-  passed &= owned_values[0] == static_cast<double>(2 * rank);
-  passed &= owned_values[1] == static_cast<double>(2 * rank + 1);
+  std::vector<double> expected_values(expected_count);
+  std::iota(expected_values.begin(), expected_values.end(), static_cast<double>(expected_start));
+  passed &= owned_values == expected_values;
 
   bool all_passed;
   bool_and_allreduce(passed, all_passed);
@@ -499,8 +509,10 @@ TEST_CASE("[core][manager][snapshot][mpi] Rebalance a merged snapshot tree") {
   const unsigned rank = mpi_rank();
   const unsigned size = mpi_size();
   const unsigned source_size = 2 * size;
-  const unsigned leaf_cell_count = 4 * size;
-  const unsigned max_level = static_cast<unsigned>(std::log2(leaf_cell_count));
+  unsigned max_level = 1;
+  while ((1u << max_level) < 4 * size)
+    ++max_level;
+  const unsigned leaf_cell_count = 1u << max_level;
 
   std::vector<unsigned> partition_sizes(source_size, 1);
   partition_sizes.back() = leaf_cell_count - (source_size - 1);
