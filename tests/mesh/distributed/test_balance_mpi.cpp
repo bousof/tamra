@@ -31,8 +31,8 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions)") {
   Tree<Cell2D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
-  // Split to level 3 in process 0
-  if (rank == 1) {
+  // Start with all cells on the last rank, including a one-rank run
+  if (rank == size - 1) {
     for (const auto &child : cell_a->getChildCells())
       child->split(max_level);
     for (const auto &child : cell_a->getChildCells())
@@ -53,7 +53,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions)") {
   scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
 
   // Also the number of cells should be equally distributed
-  bool passed = leaf_cell_count >= total_leaf_cells/size-1;
+  bool passed = leaf_cell_count + 1 >= total_leaf_cells/size;
   passed &= leaf_cell_count <= (total_leaf_cells/size+2);
 
   // Test should pass on all processes
@@ -96,8 +96,8 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, data 
   Tree<Cell2D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
-  // Split to level 3 in process 0
-  if (rank == 1) {
+  // Start with all cells on the last rank, including a one-rank run
+  if (rank == size - 1) {
     unsigned counter = 0;
     for (const auto &child : cell_a->getChildCells())
       if (++counter%2 == 0)
@@ -129,7 +129,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, data 
   scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
 
   // Also the number of cells should be equally distributed
-  bool passed = leaf_cell_count >= total_leaf_cells/size-1;
+  bool passed = leaf_cell_count + 1 >= total_leaf_cells/size;
   passed &= leaf_cell_count <= (total_leaf_cells/size+2);
 
   // Check if cell data is valid (value==level)
@@ -164,12 +164,12 @@ class TestCellData : public AbstractCellData {
   }
   // Conversion as vector of double for data communication
   void fromVectorOfData(const std::vector<double> &buffer) override {
-    std::memcpy(&u_value, &buffer[0], sizeof(double));
+    std::memcpy(&u_value, &buffer[0], sizeof(u_value));
     d_value = buffer[1];
   }
   std::vector<double> toVectorOfData() const override {
-    double u_value_as_d;
-    std::memcpy(&u_value_as_d, &u_value, sizeof(double));
+    double u_value_as_d{};
+    std::memcpy(&u_value_as_d, &u_value, sizeof(u_value));
     return { u_value_as_d, d_value };
   }
   unsigned getDataSize() const override {
@@ -199,8 +199,8 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, custo
   Tree<Cell2D> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
-  // Split to level 3 in process 0
-  if (rank == 1) {
+  // Start with all cells on the last rank, including a one-rank run
+  if (rank == size - 1) {
     unsigned counter = 0;
     for (const auto &child : cell_a->getChildCells())
       if (++counter%2 == 0)
@@ -234,7 +234,7 @@ TEST_CASE("[core][manager][balance][mpi] Load balancing (empty partitions, custo
   scalar_sum_allreduce<unsigned>(leaf_cell_count, total_leaf_cells);
 
   // Also the number of cells should be equally distributed
-  bool passed = leaf_cell_count >= total_leaf_cells/size-1;
+  bool passed = leaf_cell_count + 1 >= total_leaf_cells/size;
   passed &= leaf_cell_count <= (total_leaf_cells/size+2);
 
   // Check if cell data is valid (value==level)
@@ -299,10 +299,11 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (one root)") {
   // Mesh until min level (2)
   tree.meshAtMinLevel();
 
-  // Split first 4 cells in process 0
-  if (rank == 0)
+  // Refine owned cells in the first quadrant. It can span multiple ranks,
+  // and rank 0 can have an empty partition when there are more ranks than cells.
+  if (cell_a->getChildCell(0)->isOwned())
     for (const auto &child : cell_a->getChildCell(0)->getChildCells())
-      if (child->isRemote())
+      if (child->isOwned() && child->isLeaf())
         child->split(max_level);
 
   // Load balance the tree
@@ -318,7 +319,7 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (one root)") {
   //std::cout << rank << " " << leaf_cell_count << " " << total_leaf_cells << std::endl;
 
   // Also the number of cells should be equally distributed
-  bool passed = leaf_cell_count >= total_leaf_cells/size-1;
+  bool passed = leaf_cell_count + 1 >= total_leaf_cells/size;
   passed &= leaf_cell_count <= (total_leaf_cells/size+2);
 
   // Test should pass on all processes
@@ -384,22 +385,22 @@ TEST_CASE("[core][manager][balance][mpi] Big load balancing (one root)") {
   std::vector<RootCellEntry<Cell2D>> entries { entry_a };
 
   // Construction of the tree
-  unsigned min_level{2}, max_level{3};
+  unsigned min_level{2}, max_level{4};
   Tree<Cell2D, MortonIterator<Cell2D, 123>> tree(min_level, max_level, rank, size);
   tree.createRootCells(entries);
 
   // Mesh until min level (2)
   tree.meshAtMinLevel();
 
-  // Split first 4 cells in process 0
-  if (rank == 0) {
+  // Refine the owned part of the first quadrant down to level 4.
+  if (cell_a->getChildCell(0)->isOwned()) {
     for (const auto &child : cell_a->getChildCell(0)->getChildCells())
-      if (child->isRemote())
+      if (child->isOwned() && child->isLeaf())
         child->split(max_level);
     for (const auto &child : cell_a->getChildCell(0)->getChildCells())
-      if (child->isRemote())
+      if (child->isOwned() && !child->isLeaf())
         for (const auto &gc : child->getChildCells())
-          if (gc->isRemote())
+          if (gc->isOwned() && gc->isLeaf())
             gc->split(max_level);
   }
 
@@ -481,7 +482,7 @@ TEST_CASE("[core][manager][balance][mpi] Small load balancing (two roots)") {
   //std::cout << rank << " " << leaf_cell_count << " " << total_leaf_cells << std::endl;
 
   // Also the number of cells should be equally distributed
-  bool passed = leaf_cell_count >= total_leaf_cells/size-1;
+  bool passed = leaf_cell_count + 1 >= total_leaf_cells/size;
   passed &= leaf_cell_count <= (total_leaf_cells/size+2);
 
   // Test should pass on all processes
