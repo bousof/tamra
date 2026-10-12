@@ -65,30 +65,34 @@ void MinLevelMeshManager<CellType, TreeIteratorType>::parallelMeshAtMinLevel(con
   // Compute and share partitions for all process
   std::vector<std::vector<unsigned>> partitions;
   if (rank == 0)
-    partitions = iterator.getCellIdManager().getEqualPartitions(min_level, size);;
+    partitions = iterator.getCellIdManager().getEqualPartitions(min_level, size);
   unsigned row_count=size, col_count=iterator.getCellIdManager().getCellIdSize();
   matrix_bcast<unsigned>(partitions, 0, rank, row_count, col_count);
 
+  // Equal consecutive starts mean that this rank owns no cells. All ranks
+  // still participate in the partition broadcast above.
+  if (rank + 1 < size && partitions[rank] == partitions[rank+1])
+    return;
+
   // Create the first partition cell
   iterator.toCellId(partitions[rank], true);
-  bool loop;
-  do {
-    if ((rank==size-1) || iterator.cellIdLte(partitions[rank+1]))
-      if (iterator.getCell()->isLeaf() && (iterator.getCell()->getLevel()<min_level)) {
-        iterator.getCell()->split(max_level);
-        iterator.toLeaf();
-        continue;
-      }
+  iterator.toLeaf();
+  while (rank == size-1 || !iterator.cellIdGte(partitions[rank+1])) {
+    // A coarse cell can straddle the next partition's start. Refine it before
+    // assigning ownership, then check the exclusive boundary again.
+    if (iterator.getCell()->getLevel() < min_level) {
+      iterator.getCell()->split(max_level);
+      iterator.toLeaf();
+      continue;
+    }
 
     // Set the cell to belong to this proc
     iterator.getCell()->markOwned();
 
     // Move iterator and check if still in partition
-    if (rank == size-1)
-      loop = iterator.next();
-    else
-      loop = iterator.next() && !iterator.cellIdGte(partitions[rank+1]);
-  } while (loop);
+    if (!iterator.next())
+      break;
+  }
 
   // Backporpagate isOwned flags
   for (const auto &root_cell : root_cells)

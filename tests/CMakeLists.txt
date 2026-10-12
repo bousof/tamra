@@ -55,6 +55,7 @@ if(USE_MPI)
     mesh/adaptation/test_min_level_mpi.cpp
     mesh/distributed/test_balance_mpi.cpp
     mesh/distributed/test_ghost_mpi.cpp
+    mesh/distributed/test_partition_mpi.cpp
     parallel/test_alltoall_mpi.cpp
     parallel/test_bcast_mpi.cpp
   )
