@@ -41,17 +41,18 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells creation (one root, 1D)") 
 
   // Mesh until min level (2)
   cell_a->markRemoteRecurs();
-  if (rank==0 || rank==1)  {
-    cell_a->markOwned();
-    cell_a->getChildCell(rank)->split(max_level);
-    cell_a->getChildCell(rank)->markOwnedRecurs();
-    cell_a->getChildCell(rank)->getChildCell(0)->getCellData().setValue(2*rank);
-    cell_a->getChildCell(rank)->getChildCell(1)->getCellData().setValue(2*rank+1);
-  }
+  for (unsigned half{0}; half < 2; ++half)
+    if (rank == (size == 1 ? 0 : half)) {
+      cell_a->markOwned();
+      cell_a->getChildCell(half)->split(max_level);
+      cell_a->getChildCell(half)->markOwnedRecurs();
+      cell_a->getChildCell(half)->getChildCell(0)->getCellData().setValue(2*half);
+      cell_a->getChildCell(half)->getChildCell(1)->getCellData().setValue(2*half+1);
+    }
 
   // Ghost parent cell should be leaf at that point
   bool passed = true;
-  if (rank==0 || rank==1)
+  if (size > 1 && rank < 2)
     passed &= cell_a->getChildCell((rank+1)%2)->isLeaf();
 
   // Create ghost cells
@@ -61,11 +62,19 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells creation (one root, 1D)") 
   tree.exchangeGhostValues(task);
 
   // Ghost parent cell Y should not be leaf anymore
-  if (rank==0 || rank==1) {
+  if (size > 1 && rank < 2) {
     unsigned other_rank = (rank+1) % 2;
     passed &= !cell_a->getChildCell(other_rank)->isLeaf();
     // Check value
-    passed &= cell_a->getChildCell(other_rank)->getChildCell(rank)->getCellData().getValue() == (2*other_rank+rank);
+    if (!cell_a->getChildCell(other_rank)->isLeaf())
+      passed &= cell_a->getChildCell(other_rank)->getChildCell(rank)->getCellData().getValue() == (2*other_rank+rank);
+  } else if (size == 1) {
+    passed &= task.is_finished;
+    passed &= tree.countOwnedLeaves() == 4;
+    passed &= tree.countGhostLeaves() == 0;
+    for (unsigned half{0}; half < 2; ++half)
+      for (unsigned child{0}; child < 2; ++child)
+        passed &= cell_a->getChildCell(half)->getChildCell(child)->getCellData().getValue() == 2*half+child;
   }
 
   // Test should pass on all processes
@@ -125,18 +134,25 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells leading to extrapolate con
     cell_a->getChildCell(0)->markOwnedRecurs();
     cell_a->getChildCell(0)->getChildCell(1)->getChildCell(1)->getCellData().setValue(rank);
   }
-  if (rank == 1)  {
+  if (rank == (size == 1 ? 0 : 1))  {
     cell_a->markOwned();
     cell_a->getChildCell(1)->markOwned();
     cell_a->getChildCell(1)->markOwnedRecurs();
     cell_a->getChildCell(1)->getCellData().setValue(rank);
   }
 
+  std::vector<double> local_values;
+  if (size == 1)
+    tree.applyToOwnedLeaves([&local_values](const auto &cell, unsigned index) {
+      cell->getCellData().setValue(index + 1.);
+      local_values.push_back(cell->getCellData().getValue());
+    });
+
   // Create ghost cells
   Tree<Cell1D>::GhostManagerTaskType task = tree.buildGhostLayer();
 
-  // Task should not be finished because of conflicts
-  bool passed = !task.is_finished;
+  // A single rank has no remote interface and therefore no exchange conflict.
+  bool passed = task.is_finished == (size == 1);
 
   // Set up the task conflict resolution strategy that consist nin copying value to child cells
   auto copy_parent_to_children = [](const std::shared_ptr<Cell1D> &parent_cell) -> bool {
@@ -157,18 +173,29 @@ TEST_CASE("[core][manager][ghost][mpi] 1D Ghost Cells leading to extrapolate con
   passed &= task.is_finished;
 
   // Ghost parent cell Y should not be leaf anymore
-  if (rank == 0) {
+  if (size > 1 && rank == 0) {
     unsigned other_rank = 1;
     passed &= !cell_a->getChildCell(1)->isLeaf();
     // Check value
-    passed &= cell_a->getChildCell(1)->getChildCell(0)->getCellData().getValue() == (other_rank);
+    if (!cell_a->getChildCell(1)->isLeaf())
+      passed &= cell_a->getChildCell(1)->getChildCell(0)->getCellData().getValue() == (other_rank);
   }
   if (rank == 1) {
     unsigned other_rank = 0;
     passed &= !cell_a->getChildCell(0)->isLeaf();
-    passed &= !cell_a->getChildCell(0)->getChildCell(1)->isLeaf();
-    // Check value
-    passed &= cell_a->getChildCell(0)->getChildCell(1)->getChildCell(1)->getCellData().getValue() == (other_rank);
+    if (!cell_a->getChildCell(0)->isLeaf()) {
+      passed &= !cell_a->getChildCell(0)->getChildCell(1)->isLeaf();
+      if (!cell_a->getChildCell(0)->getChildCell(1)->isLeaf())
+        passed &= cell_a->getChildCell(0)->getChildCell(1)->getChildCell(1)->getCellData().getValue() == (other_rank);
+    }
+  }
+  if (size == 1) {
+    std::vector<double> after;
+    tree.applyToOwnedLeaves([&after](const auto &cell, unsigned) {
+      after.push_back(cell->getCellData().getValue());
+    });
+    passed &= after == local_values;
+    passed &= tree.countGhostLeaves() == 0;
   }
 
   // Test should pass on all processes
