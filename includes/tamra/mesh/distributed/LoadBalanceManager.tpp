@@ -40,10 +40,12 @@ std::pair<bool, std::vector<double>> LoadBalanceManager<CellType, TreeIteratorTy
   bool balancing_needed = false;
   if (rank == 0) {
     double total_load = std::accumulate(loads.begin(), loads.end(), 0.0);
-    double mean_load = total_load / static_cast<double>(loads.size());
     double max_load = *std::max_element(loads.begin(), loads.end());
 
-    if (mean_load > 0. && (max_load - mean_load) / mean_load > max_relative_load_imbalance)
+    // Avoid subtracting and dividing a rounded mean at the threshold (e.g.
+    // loads {0, 0, 2} and tolerance 2 on three ranks).
+    if (total_load > 0. && max_load / total_load >
+        (1. + max_relative_load_imbalance) / static_cast<double>(loads.size()))
       balancing_needed = true;
   }
 
