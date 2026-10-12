@@ -83,19 +83,17 @@ if(USE_MPI)
   )
   set_tests_properties(tamra_parallel_tests PROPERTIES PROCESSORS 4 TIMEOUT 120)
 
-  # Single-rank MPI exercises MPI paths separately from serial fallbacks; two
-  # ranks cover nonzero roots and asymmetric exchanges without mesh-test rank
-  # assumptions. The complete suite above runs with four ranks.
-  foreach(rank_count IN ITEMS 1 2)
-    add_test(NAME tamra_collectives_${rank_count}_rank
+  # Run the complete suite with single-rank MPI and uneven partition cuts too.
+  # The four-rank entry above is retained for compatibility.
+  foreach(rank_count IN ITEMS 1 2 3 5)
+    add_test(NAME tamra_parallel_${rank_count}_rank
       COMMAND ${MPIEXEC_EXECUTABLE}
               ${MPIEXEC_NUMPROC_FLAG} ${rank_count}
               ${MPIEXEC_PREFLAGS}
               $<TARGET_FILE:tamra_mpi_tests>
               ${MPIEXEC_POSTFLAGS}
-              "--test-case=[parallel]*"
     )
-    set_tests_properties(tamra_collectives_${rank_count}_rank
-      PROPERTIES PROCESSORS ${rank_count} TIMEOUT 60)
+    set_tests_properties(tamra_parallel_${rank_count}_rank
+      PROPERTIES PROCESSORS ${rank_count} TIMEOUT 120)
   endforeach()
 endif()
