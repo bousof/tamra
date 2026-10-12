@@ -40,14 +40,14 @@ TEST_CASE("[communications][alltoall] Vector Int AllToAll") {
 
   std::vector<std::vector<unsigned>> send_buffers(size);
   for (unsigned p{0}; p<size; ++p)
-    send_buffers.at(p).push_back(rank * 10 + p);
+    send_buffers.at(p).push_back(rank * size + p);
 
   std::vector<unsigned> recv_buffer;
   vector_alltoallv<unsigned>(send_buffers, recv_buffer);
 
   bool passed = recv_buffer.size() == size;
   for (unsigned i{0}; i<size && passed; ++i)
-    passed &= (recv_buffer.at(i) % 10 == rank);
+    passed &= recv_buffer.at(i) == i * size + rank;
 
   // Test should pass on all processes
   bool all_passed;
