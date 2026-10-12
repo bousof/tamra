@@ -59,7 +59,10 @@ std::vector<unsigned> CellIdManager<CellType>::idToOrderPath(const std::vector<u
 template<typename CellType>
 std::vector<std::vector<unsigned>> CellIdManager<CellType>::getEqualPartitions(const unsigned level, const unsigned size) const {
   if (size == 0)
-    throw std::invalid_argument("Partition count must be positive");
+    throw std::invalid_argument("Partition count must be positive in CellIdManager::getEqualPartitions()");
+
+  if (level > max_level)
+    throw std::out_of_range("Partition level exceeds maximum cell-ID level in CellIdManager::getEqualPartitions()");
 
   std::vector<std::vector<unsigned>> partitions(size);
   std::vector<unsigned> order_path(level+1, 0);
