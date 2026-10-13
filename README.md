@@ -1,3 +1,11 @@
+<p align="center">
+  <picture>
+    <img src="assets/TAMRA_logo.png"
+         alt="TAMRA — Toolkit for Adaptive Mesh Refinement Applications"
+         width="600">
+  </picture>
+</p>
+
 # TAMRA
 
 **TAMRA** (**T**oolkit for **A**daptive **M**esh **R**efinement **A**pplications) is a modular **C++ HPC framework** designed to accelerate the development of **scalable adaptive numerical simulation codes**.
@@ -24,7 +32,7 @@ TAMRA addresses these issues by providing a framework where:
 
 - **AMR reduces unnecessary computation** by concentrating resolution only in the important parts of the domain,
 - **MPI-based domain decomposition improves scalability** on distributed-memory systems,
-- solver-independent abstractions make it easier to support **2D/3D**, multiple discretizations, and multiphysics extensions.
+- solver-independent abstractions support **1D/2D/3D** meshes and provide a basis for multiple discretizations and multiphysics extensions.
 
 The goal is not only to run simulations faster, but also to make advanced HPC simulation software easier to design, extend, and maintain.
 
@@ -71,7 +79,7 @@ Examples of numerical approaches that can be integrated include:
 TAMRA is being developed around a few core principles:
 
 - **performance-oriented**
-- **dimension-independent (2D / 3D)**
+- **dimension-independent (1D / 2D / 3D)**
 - **solver-agnostic**
 - **modular and extensible**
 - **adapted to large-scale distributed simulations**
@@ -82,8 +90,12 @@ TAMRA is being developed around a few core principles:
 
 TAMRA is an active research and development project.
 
-At this stage, the repository is primarily intended to present the framework and its direction.  
-More material will be added progressively, including:
+The repository contains the framework and automated serial and MPI tests.
+Numerical solvers such as SPH and finite-volume applications are developed in
+separate application projects. Small starter applications and tutorials will be
+added progressively as the library develops.
+
+Further material is planned, including:
 
 - improved user documentation,
 - architecture explanations,
@@ -99,23 +111,148 @@ More material will be added progressively, including:
 
 ### Prerequisites
 
-- C++17 compatible compiler
-- Eigen 3.4.0
-- MPI environment for distributed runs
+| Dependency | Requirement |
+| --- | --- |
+| C++ compiler | C++17 support |
+| CMake | Version 3.16 or newer |
+| Build tool | A tool supported by the selected CMake generator, such as Make or Ninja |
+| Eigen | Version 3.4.0 or a compatible newer release; tested with 3.4.0 |
+| doctest | Required when building tests; tested with version 2.4.12 |
+| MPI | Headers, libraries, and an MPI launcher when `USE_MPI=ON` |
 
-### Usage
+MPI support and tests are enabled by default. A serial build configured with
+`USE_MPI=OFF` does not require MPI. A library-only build with
+`BUILD_TESTING=OFF` does not require doctest.
 
-TAMRA is intended to be integrated into scientific C++ projects requiring adaptive mesh refinement and scalable execution.
+Install the dependencies through your environment's package manager or provide
+local copies as described below. CMake does not download dependencies.
 
-More complete setup instructions and examples will be provided in upcoming documentation updates.
+### Build and test without MPI
+
+Run these commands from the **repository root**: the directory containing
+`CMakeLists.txt`, `includes/`, `src/`, and `tests/`. In a workspace containing the
+library as a subdirectory, this is the `tamra/` directory.
+
+```sh
+cmake -S . -B build-serial \
+  -DUSE_MPI=OFF -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build-serial --parallel 2
+(cd build-serial && ctest --output-on-failure)
+```
+
+The build produces the `tamra_core` static library and the `tamra_tests`
+executable. CTest runs the tests and prints diagnostics if a test fails.
+Adjust `--parallel 2` to select the number of concurrent compilation jobs.
+
+### Build and test with MPI
+
+Use a separate build directory for MPI:
+
+```sh
+cmake -S . -B build-mpi \
+  -DUSE_MPI=ON -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build-mpi --parallel 2
+(cd build-mpi && ctest --output-on-failure)
+```
+
+This build provides both `tamra_tests` and `tamra_mpi_tests`. CTest runs
+`tamra_tests` directly and launches `tamra_mpi_tests` with **1, 2, 3, 4, and 5
+ranks**. The MPI launcher must be allowed to start up to five ranks to run every
+registered test.
+
+Both build configurations are useful: the serial build checks communication
+fallbacks, while even a one-rank MPI run exercises the MPI implementation.
+See the [test guide](tests/README.md) for selecting rank counts, filtering test
+cases, and configuring the launcher.
+
+The examples use a single-configuration generator such as Make or Ninja.
+For a multi-configuration generator such as Xcode, build with `--config Release`
+and pass `-C Release` to CTest instead of selecting `CMAKE_BUILD_TYPE`.
+
+### Dependencies in other locations
+
+For installed dependencies outside the default search locations, pass their
+installation prefixes to CMake:
+
+```sh
+cmake -S . -B build-serial \
+  -DUSE_MPI=OFF -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="/path/to/eigen-prefix;/path/to/doctest-prefix"
+```
+
+Eigen is discovered through its `Eigen3` CMake package. The doctest header is
+located directly, including the usual `include/doctest/` installation layout.
+You may also set `Eigen3_DIR` to the directory containing `Eigen3Config.cmake`.
+See [Eigen's CMake documentation](https://libeigen.gitlab.io/eigen/docs-3.4/TopicCMakeGuide.html)
+for its package layout.
+
+For unpacked header copies, use the explicit directory options instead:
+
+```sh
+cmake -S . -B build-serial \
+  -DUSE_MPI=OFF -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release \
+  -DTAMRA_EIGEN_INCLUDE_DIR="/path/to/eigen-3.4.0" \
+  -DTAMRA_DOCTEST_INCLUDE_DIR="/path/to/doctest-header-directory"
+```
+
+`TAMRA_EIGEN_INCLUDE_DIR` must contain `Eigen/Core`;
+`TAMRA_DOCTEST_INCLUDE_DIR` must contain `doctest.h`. Replace the example paths
+with your local directories, then run the build and CTest commands above.
+
+An existing workspace may keep these dependencies at
+`../third_party/eigen-3.4.0/` and `../third_party/doctest/`, relative to the TAMRA
+repository. The CMake files recognize that layout. Those sibling directories
+are not required for a standalone clone. An explicit Eigen header directory
+takes precedence over package discovery; the workspace Eigen copy is also used
+by default unless an `Eigen3::Eigen` target is already available. Dependency
+locations are cached per build directory.
+
+### Build only the library
+
+```sh
+cmake -S . -B build-lib \
+  -DUSE_MPI=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build-lib --parallel 2
+```
+
+Set `USE_MPI=ON` for an MPI-enabled library. Eigen is required in either mode.
+
+### CMake options
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `USE_MPI` | `ON` | Build and link MPI support |
+| `BUILD_TESTING` | `ON` | Build test executables and register CTest tests |
+| `TAMRA_EIGEN_INCLUDE_DIR` | Automatic selection | Use a specific Eigen header directory |
+| `TAMRA_DOCTEST_INCLUDE_DIR` | Automatic selection | Use a specific doctest header directory |
+
+### Use TAMRA in an application workspace
+
+An application can include the repository with `add_subdirectory(tamra)` and
+link its existing target against `tamra_core`:
+
+```cmake
+add_subdirectory(tamra)
+target_link_libraries(my_application PRIVATE tamra_core)
+```
+
+Here `my_application` is a target created by your application project. Linking
+TAMRA propagates its public header paths, Eigen dependency, C++17 requirement,
+and MPI settings when enabled. The application supplies its own numerical model.
+
+To run tests from the parent build directory, include `CTest` in the parent
+`CMakeLists.txt` after `project()`. The same `BUILD_TESTING` option controls
+whether TAMRA adds its tests. Keep MPI discovery in the parent as well if other
+application targets use `MPI::MPI_CXX` directly.
 
 ---
 
 ## Documentation
 
-Detailed documentation is **coming soon**.
+Build and test instructions are available above and in the
+[test guide](tests/README.md).
 
-Planned documentation includes:
+Further documentation is planned, including:
 
 - framework overview,
 - API documentation,
