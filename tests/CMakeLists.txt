@@ -1,3 +1,18 @@
+# Tests include <doctest.h>; installed copies commonly put it under include/doctest.
+# HINTS preserves the existing workspace layout, while the cache variable allows
+# another header location to be supplied with -DTAMRA_DOCTEST_INCLUDE_DIR=...
+find_path(TAMRA_DOCTEST_INCLUDE_DIR
+  NAMES doctest.h
+  HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/doctest"
+  PATH_SUFFIXES doctest
+)
+if(NOT TAMRA_DOCTEST_INCLUDE_DIR
+   OR NOT EXISTS "${TAMRA_DOCTEST_INCLUDE_DIR}/doctest.h")
+  message(FATAL_ERROR
+    "TAMRA tests require doctest. Install doctest, set TAMRA_DOCTEST_INCLUDE_DIR "
+    "to the directory containing doctest.h, or configure with BUILD_TESTING=OFF.")
+endif()
+
 # Serial-only test sources
 set(TAMRA_SERIAL_TESTS_SRC
   # add serial tests here
@@ -39,9 +54,9 @@ if(NOT USE_MPI)
 endif()
 
 target_include_directories(tamra_tests PRIVATE
-  ${CMAKE_SOURCE_DIR}/third_party/doctest
-  ${CMAKE_CURRENT_SOURCE_DIR}/utils/includes
+  "${CMAKE_CURRENT_SOURCE_DIR}/utils/includes"
 )
+target_include_directories(tamra_tests SYSTEM PRIVATE "${TAMRA_DOCTEST_INCLUDE_DIR}")
 
 target_link_libraries(tamra_tests PRIVATE tamra_core)
 
@@ -68,9 +83,9 @@ if(USE_MPI)
   )
 
   target_include_directories(tamra_mpi_tests PRIVATE
-    ${CMAKE_SOURCE_DIR}/third_party/doctest
-    ${CMAKE_CURRENT_SOURCE_DIR}/utils/includes
+    "${CMAKE_CURRENT_SOURCE_DIR}/utils/includes"
   )
+  target_include_directories(tamra_mpi_tests SYSTEM PRIVATE "${TAMRA_DOCTEST_INCLUDE_DIR}")
 
   target_link_libraries(tamra_mpi_tests PRIVATE tamra_core)
 
